@@ -38,7 +38,8 @@ export function useLaco(ref: RefObject<Element | null>, quadro: (t: number) => v
         let ultimo = -Infinity;
         const intervalo = 1000 / qps - 2;
         const passo = (agora: number) => {
-            if (agora - ultimo >= intervalo) {
+            // com o menu aberto, a cortina cobre a página: nada a desenhar por trás dela
+            if (agora - ultimo >= intervalo && !document.documentElement.hasAttribute('data-menu-aberto')) {
                 ultimo = agora;
                 fn.current(agora / 1000);
             }

@@ -39,6 +39,14 @@ export function Cabecalho() {
     useEffect(() => {
         if (aberto) lenis?.stop();
         else lenis?.start();
+        // quando a cortina termina de descer (1,4 s), a página por trás para de desenhar; ao fechar, volta na hora
+        const html = document.documentElement;
+        if (!aberto) {
+            html.removeAttribute('data-menu-aberto');
+            return;
+        }
+        const id = window.setTimeout(() => html.setAttribute('data-menu-aberto', ''), 1400);
+        return () => window.clearTimeout(id);
     }, [aberto, lenis]);
     useEffect(() => {
         const tecla = (e: KeyboardEvent) => e.key === 'Escape' && setAberto(false);

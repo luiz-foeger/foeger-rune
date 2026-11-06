@@ -1751,16 +1751,18 @@ html:has([data-clone]) {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #fff;
+    /* sem o modo diferença de lá: sobre o preto ele só repetiria a cor, refazendo a mistura a cada quadro */
+    color: #eeeeee;
     font-family: var(--ff-ui), 'Helvetica Neue', Arial, sans-serif;
     font-size: max(54px, calc(16 * var(--fa-r)));
     font-weight: 600;
     line-height: 0.9;
     letter-spacing: -0.03em;
-    mix-blend-mode: difference;
     -webkit-font-smoothing: antialiased;
 }
 .fx-cortina-lista button {
+    /* cada item na sua camada: o desfoque e o apagar do hover ficam na placa de vídeo */
+    will-change: opacity, filter;
     padding: 0;
     border: 0;
     background: none;
@@ -1773,12 +1775,21 @@ html:has([data-clone]) {
         opacity 0.3s ease,
         filter 0.3s ease;
 }
+/* a entrada é uma animação à parte (com o atraso escalonado só nela): numa transição, o atraso valia também para o
+   item que recebe o mouse, que voltava ao foco 0,3 a 0,5 s depois */
 .fx-cortina[data-aberto] .fx-cortina-lista button {
     opacity: 1;
     filter: blur(0);
     transition:
-        opacity 0.5s cubic-bezier(0.5, 1, 0.89, 1) calc(0.3s + var(--i) * 0.05s),
-        filter 0.5s cubic-bezier(0.5, 1, 0.89, 1) calc(0.3s + var(--i) * 0.05s);
+        opacity 1.2s var(--easeOutQuart),
+        filter 1.2s var(--easeOutQuart);
+    animation: fx-item-entra 0.5s cubic-bezier(0.5, 1, 0.89, 1) calc(0.3s + var(--i) * 0.05s) backwards;
+}
+@keyframes fx-item-entra {
+    from {
+        opacity: 0;
+        filter: blur(10px);
+    }
 }
 /* o hover do menu: os outros itens apagam e desfocam em 1,2 s, e o sublinhado do item corre */
 .fx-cortina[data-aberto] .fx-cortina-lista:has(button:hover) button:not(:hover) {
@@ -1826,4 +1837,10 @@ html:has([data-clone]) {
         transform-origin: left;
         transform: scaleX(1);
     }
+}
+
+/* com a cortina toda descida, a página por trás e a faixa de desfoque param de ser desenhadas */
+html[data-menu-aberto] [data-clone],
+html[data-menu-aberto] .fx-desfoque {
+    visibility: hidden;
 }
