@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Regua } from './Painel';
-import Seta from './Seta';
 import { FiltroDesgaste, ajustarDesgaste } from './Desgaste';
 import { CABECALHO, HERO } from '../_lib/conteudo';
-import { LINHAS, PALAVRAS, type Ponto } from '../_lib/glifos';
-import { arco, quinasDe, raioDe } from '../_lib/geometria';
+import { LINHAS, PALAVRAS } from '../_lib/glifos';
 import { useLaco } from '../_lib/movimento';
 
 // o topo da página da Feixen: o cabeçalho branco (a logo digitada em máquina de escrever, o menu e o link da
@@ -90,98 +88,96 @@ export function Cabecalho() {
     );
 }
 
-// ——— o hero: "Rune" no lugar do "Ease", cada letra com o papel da letra da gravação ———
-//   R (cinza, como o E): as quinas de fora se gastam e endireitam, depois as de dentro, com os nós
-//   u (vermelho, como o a): os nós quadrados e as coordenadas, que somem e voltam
-//   n (preto, como o s, que muda de peso): vai da Cut ao desgaste máximo e volta
-//   e (roxo): cai, quica e volta a subir a cada 3 s; no fundo da queda, troca de desenho (e, e.v2, e.v3, e.v4)
-const ESCALA = 265 / LINHAS.maiuscula; // a maiúscula com 265 u, como o E da gravação
-const MARGEM = 160;
-const TOPO = -1020;
-const ALTURA = 1440;
-const BASE = 464; // a linha de base no hero
-
-type Chave = [number, number, ('entra' | 'sai' | 'suave')?];
-// valor de um roteiro em quadros-chave (tempo, valor, curva do trecho que chega nele)
-function roteiro(t: number, chaves: Chave[]) {
-    for (let i = 1; i < chaves.length; i++) {
-        const [t1, v1, curva = 'suave'] = chaves[i];
-        const [t0, v0] = chaves[i - 1];
-        if (t <= t1) {
-            const k = t1 === t0 ? 1 : (t - t0) / (t1 - t0);
-            const e = curva === 'entra' ? k * k : curva === 'sai' ? 1 - (1 - k) * (1 - k) : k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-            return v0 + (v1 - v0) * e;
-        }
-    }
-    return chaves[chaves.length - 1][1];
-}
-const R_FORA: Chave[] = [[0, 50], [0.4, 50], [1.0, 0], [4.4, 0], [5.3, 50], [6, 50]];
-const R_DENTRO: Chave[] = [[0, 0], [2.4, 0], [3.0, 40], [4.4, 40], [5.3, 0], [6, 0]];
-const N_SIGMA: Chave[] = [[0, 50], [0.3, 50], [1.0, 0], [1.33, 0], [2.2, 50], [3.3, 50], [4.0, 0], [5.27, 0], [6, 50]];
-const E_QUEDA: Chave[] = [[0, -51], [0.3, -51], [0.6, 115, 'entra'], [0.9, -9, 'sai'], [1.2, 13], [1.33, 13], [1.5, 0, 'sai'], [2.27, 0], [2.97, -51], [3, -51]];
+// ——— o hero: "Rune" grande na Cut, e cada letra se gasta inteira quando o cursor passa por ela ———
+// Cada letra tem o seu filtro de desgaste, com a mesma conta da fonte (desfoque σ e corte no meio-tom; 26 = Polished,
+// 50 = Worn). Com o cursor em cima, a letra vai da Cut à Worn em ~0,3 s; quando ele sai, ela espera um pouco e volta
+// à Cut (~1,2 s). O corte acompanha a escala da tela (pxPorUnidade), para a borda não serrilhar em nenhum σ. Passar o mouse pela palavra deixa as letras em estágios diferentes. Sem ninguém mexendo (e
+// no começo), uma letra por vez se gasta e volta.
+const ESCALA = 400 / LINHAS.maiuscula; // a maiúscula com 400 u
+const MARGEM = 260;
+const TOPO = -1150;
+const ALTURA = 1500;
+const BASE = 560; // a linha de base no hero, em u
+const WORN = 50;
+const SOBE = WORN / 0.3; // σ por segundo, gastando
+const DESCE = WORN / 1.2; // σ por segundo, voltando
+const ESPERA = 0.4; // segundos parada na Worn depois que o cursor sai
+const VEZ = 1; // sem ninguém mexendo, uma letra nova a cada segundo
 
 export function Hero() {
     const id = useId().replace(/:/g, '');
-    const ref = useRef<HTMLDivElement>(null);
-    const nosR = useRef<(SVGCircleElement | null)[]>([]);
-    const marcasU = useRef<SVGGElement>(null);
-    const letraE = useRef<SVGGElement>(null);
-    const variantes = useRef<(SVGGElement | null)[]>([]);
-    const setas = useRef<(SVGSVGElement | null)[]>([]);
+    const ref = useRef<HTMLElement>(null);
+    const svg = useRef<SVGSVGElement>(null);
+    const letras = useRef<(SVGGElement | null)[]>([]);
     const palavra = PALAVRAS.Rune;
-    const [R, U, N, E] = palavra.glifos;
-    const quinasR = useMemo(() => R.pedras.flatMap(p => quinasDe(p.vertices)), [R]);
-    const verticesU = useMemo(() => U.pedras.flatMap(p => p.vertices.flat()), [U]);
-    const desenhosE = useMemo(() => [E, PALAVRAS['#e.v2'].glifos[0], PALAVRAS['#e.v3'].glifos[0], PALAVRAS['#e.v4'].glifos[0]], [E]);
-
-    useLaco(ref, s => {
-        const t = s % 6;
-        const sf = roteiro(t, R_FORA);
-        const sd = roteiro(t, R_DENTRO);
-        ajustarDesgaste(ref.current?.querySelector('[data-letra="R"]') ?? null, sf, sd);
-        ajustarDesgaste(ref.current?.querySelector('[data-letra="n"]') ?? null, roteiro(t, N_SIGMA), 0);
-        quinasR.forEach((q, i) => {
-            const sg = q.convexa ? sf : sd;
-            const a = arco(q, raioDe(sg));
-            const pts: Ponto[] = sg < 1.5 ? [q.v, q.v] : [a.p, a.t];
-            pts.forEach((p, k) => {
-                const c = nosR.current[i * 2 + k];
-                if (!c) return;
-                c.setAttribute('cx', p[0].toFixed(1));
-                c.setAttribute('cy', p[1].toFixed(1));
-            });
-        });
-        const comPontos = !((t >= 1.43 && t < 2.6) || (t >= 4.53 && t < 5.97));
-        marcasU.current?.setAttribute('opacity', comPontos ? '1' : '0');
-        const c3 = s % 3;
-        letraE.current?.setAttribute('transform', `translate(0 ${(roteiro(c3, E_QUEDA) / ESCALA).toFixed(1)})`);
-        const qual = Math.floor((s + 3 - 0.43) / 3) % 4;
-        variantes.current.forEach((g, i) => g?.setAttribute('opacity', i === qual ? '1' : '0'));
-        // as setas "editando" cada letra, com um balanço pequeno
-        setas.current.forEach((el, i) => {
-            if (!el) return;
-            const dx = Math.sin(s * 0.9 + i * 1.7) * 8;
-            const dy = Math.cos(s * 0.7 + i * 2.3) * 6;
-            el.style.transform = `translate(calc(${dx.toFixed(1)} * var(--u)), calc(${dy.toFixed(1)} * var(--u)))`;
-        });
+    // a letra sob o cursor (ou -1), quando o cursor saiu, e o σ e o último toque de cada letra
+    const estado = useRef({
+        sob: -1,
+        mexeu: -Infinity,
+        antes: 0,
+        sigma: palavra.glifos.map(() => 0),
+        tocada: palavra.glifos.map(() => -Infinity),
+        pu: 0,
     });
+
+    useEffect(() => {
+        const sec = ref.current;
+        if (!sec) return;
+        // qual letra está sob o cursor: pela faixa do avanço de cada uma, na altura das letras
+        const mover = (e: PointerEvent) => {
+            const m = svg.current?.getScreenCTM();
+            if (!m) return;
+            const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+            const dentro = p.y > -900 && p.y < 120;
+            estado.current.sob = dentro ? palavra.glifos.findIndex(g => p.x >= g.x && p.x < g.x + g.avanco) : -1;
+            estado.current.mexeu = performance.now() / 1000;
+        };
+        const sair = () => {
+            estado.current.sob = -1;
+            estado.current.mexeu = performance.now() / 1000;
+        };
+        sec.addEventListener('pointermove', mover);
+        sec.addEventListener('pointerdown', mover);
+        sec.addEventListener('pointerleave', sair);
+        return () => {
+            sec.removeEventListener('pointermove', mover);
+            sec.removeEventListener('pointerdown', mover);
+            sec.removeEventListener('pointerleave', sair);
+        };
+    }, [palavra]);
+
+    useLaco(
+        ref,
+        s => {
+            const e = estado.current;
+            // pixels do aparelho por unidade da fonte (muda com a largura da janela); no primeiro quadro, ajusta tudo
+            const pu = (svg.current?.getScreenCTM()?.a ?? ESCALA) * (window.devicePixelRatio || 1);
+            const mudouEscala = Math.abs(pu - e.pu) > 0.01;
+            e.pu = pu;
+            const dt = Math.min(0.1, Math.max(0, s - e.antes));
+            e.antes = s;
+            // sem ninguém mexendo há 3 s, uma letra por vez, em ordem
+            const sozinha = s - e.mexeu > 3 ? Math.floor(s / VEZ) % palavra.glifos.length : -1;
+            const naVez = sozinha >= 0 && s % VEZ < 0.35 ? sozinha : -1;
+            e.sigma.forEach((sg, i) => {
+                if (i === e.sob || i === naVez) e.tocada[i] = s;
+                const gastando = s - e.tocada[i] < ESPERA;
+                const novo = gastando ? Math.min(WORN, sg + SOBE * dt) : Math.max(0, sg - DESCE * dt);
+                e.sigma[i] = novo;
+                if (novo !== sg || mudouEscala) ajustarDesgaste(letras.current[i], novo, novo, pu);
+            });
+        },
+        30,
+    );
 
     const largura = palavra.largura + 2 * MARGEM;
     const esq = (-palavra.largura / 2 - MARGEM) * ESCALA;
-    const pedras = (g: typeof R, cor: string, filtro?: string) =>
-        g.pedras.map((p, i) => <path key={i} d={p.d} fill={cor} fillRule="evenodd" filter={filtro ? `url(#${filtro})` : undefined} />);
-    // onde ficam as setas, em unidades da fonte (depois convertidas para o hero)
-    const setasFonte: Ponto[] = [
-        [-40, -60],
-        [U.x + 300, 60],
-        [N.x + 120, -110],
-        [E.x + 300, -660],
-    ];
     return (
         <section ref={ref} className="fx-hero" aria-label={HERO.legenda.join('. ')}>
-            {/* a cena (a palavra e as setas) encolhe junto no celular, onde a palavra passaria da largura */}
+            {/* a cena encolhe no celular, onde a palavra passaria da largura */}
             <div className="fx-hero-cena">
                 <svg
+                    ref={svg}
                     className="fx-hero-palavra"
                     viewBox={`${-MARGEM} ${TOPO} ${largura} ${ALTURA}`}
                     style={{ left: `calc(50% + ${esq.toFixed(1)} * var(--u))`, top: u(BASE + TOPO * ESCALA), width: u(largura * ESCALA), height: u(ALTURA * ESCALA) }}
@@ -189,65 +185,20 @@ export function Hero() {
                     aria-label="Rune"
                 >
                     {/* cada filtro fica dentro do grupo da sua letra: o ajuste do σ procura as primitivas ali dentro */}
-                    <g data-letra="R">
-                        <FiltroDesgaste id={`${id}-r`} modo="livre" contorno="#3a3a3a" raioContorno={1.3 / ESCALA} />
-                        {pedras(R, '#bababa', `${id}-r`)}
-                    </g>
-                    {quinasR.flatMap((q, i) =>
-                        [0, 1].map(k => (
-                            <circle
-                                key={`${i}-${k}`}
-                                ref={el => {
-                                    nosR.current[i * 2 + k] = el;
-                                }}
-                                cx={q.v[0]}
-                                cy={q.v[1]}
-                                r={5 / ESCALA}
-                                fill="none"
-                                stroke="#2a2a2a"
-                                strokeWidth={1.2 / ESCALA}
-                            />
-                        )),
-                    )}
-                    <g>{pedras(U, '#fe3700')}</g>
-                    <g ref={marcasU}>
-                        {verticesU.map(([x, y], i) => (
-                            <g key={i}>
-                                <rect x={x - 4 / ESCALA} y={y - 4 / ESCALA} width={8 / ESCALA} height={8 / ESCALA} fill="#111" />
-                                <text x={x + 6 / ESCALA} y={y + (i % 2 ? 14 : -8) / ESCALA} className="fx-hero-coordenada" style={{ fontSize: 8.5 / ESCALA }}>
-                                    {`${(x - U.x).toFixed(1)} ${(-y).toFixed(1)}`}
-                                </text>
-                            </g>
-                        ))}
-                    </g>
-                    <g data-letra="n">
-                        <FiltroDesgaste id={`${id}-n`} modo="ambos" />
-                        {pedras(N, '#111', `${id}-n`)}
-                    </g>
-                    <g ref={letraE}>
-                        {desenhosE.map((g, i) => (
-                            <g
-                                key={i}
-                                ref={el => {
-                                    variantes.current[i] = el;
-                                }}
-                                opacity={i === 0 ? 1 : 0}
-                                transform={i === 0 ? undefined : `translate(${E.x} 0)`}
-                            >
-                                {pedras(g, '#9d5af9')}
-                            </g>
-                        ))}
-                    </g>
+                    {palavra.glifos.map((g, i) => (
+                        <g
+                            key={i}
+                            ref={el => {
+                                letras.current[i] = el;
+                            }}
+                        >
+                            <FiltroDesgaste id={`${id}-${i}`} modo="ambos" />
+                            {g.pedras.map((p, k) => (
+                                <path key={k} d={p.d} fill="#111" fillRule="evenodd" filter={`url(#${id}-${i})`} />
+                            ))}
+                        </g>
+                    ))}
                 </svg>
-                {setasFonte.map(([x, y], i) => (
-                    <Seta
-                        key={i}
-                        ref={el => {
-                            setas.current[i] = el;
-                        }}
-                        style={{ left: `calc(50% + ${((x - palavra.largura / 2) * ESCALA).toFixed(1)} * var(--u))`, top: u(BASE + y * ESCALA) }}
-                    />
-                ))}
             </div>
             <p className="fx-hero-legenda">
                 {HERO.legenda[0]}

@@ -1305,11 +1305,6 @@ html:has([data-clone]) {
     position: absolute;
     overflow: visible;
 }
-.fx-hero-coordenada {
-    font-family: var(--ff-ui), sans-serif;
-    font-weight: 600;
-    fill: #111;
-}
 .fx-hero-legenda {
     position: absolute;
     left: 0;
@@ -1418,9 +1413,9 @@ html:has([data-clone]) {
         scroll-margin-top: 110px;
     }
 
-    /* o hero: a palavra e as setas encolhem juntas */
+    /* o hero: a palavra encolhe para caber (ela tem 1369 u de largura; a página do celular, 945) */
     .fx-hero-cena {
-        transform: scale(0.84);
+        transform: scale(0.56);
         transform-origin: 50% 55%;
     }
     .fx-hero-legenda {

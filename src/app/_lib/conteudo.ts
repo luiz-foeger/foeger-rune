@@ -77,4 +77,4 @@ export const CABECALHO = {
     ],
     pilula: { texto: 'Testar', href: '#testador' },
 };
-export const HERO = { legenda: ['Föeger Rune', 'Desenhada por Luiz Felipe Föeger'] };
+export const HERO = { legenda: ['Föeger Rune', 'Desenhada por Luiz Föeger'] };

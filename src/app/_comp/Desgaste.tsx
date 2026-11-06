@@ -9,10 +9,15 @@
 // caixa da própria pedra: o corte no meio nunca passa dela, e assim o desfoque custa bem menos.
 export type ModoDesgaste = 'ambos' | 'fora' | 'dentro' | 'livre';
 
-export const corte = (sigma: number) => {
-    // o corte fica mais íngreme quando o desfoque cresce, para a borda continuar nítida
-    const k = Math.min(140, Math.max(13, 2.5 * sigma));
-    return `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${k.toFixed(1)} ${(0.5 - k / 2).toFixed(2)}`;
+// pxPorUnidade (pixels da tela por unidade da fonte, opcional): com ele, a inclinação do corte deixa a borda com ~0,6 px
+// de transição em qualquer σ, e no σ 0 o corte vira identidade (a borda fica com a suavização do próprio navegador, sem
+// serrilhar). Sem ele, a inclinação é a fixa dos cartões.
+export const corte = (sigma: number, pxPorUnidade?: number) => {
+    const k = pxPorUnidade
+        ? Math.min(140, Math.max(1, (sigma * Math.sqrt(2 * Math.PI) * pxPorUnidade) / 0.6))
+        : // o corte fica mais íngreme quando o desfoque cresce, para a borda continuar nítida
+          Math.min(140, Math.max(13, 2.5 * sigma));
+    return `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${k.toFixed(2)} ${(0.5 - k / 2).toFixed(3)}`;
 };
 
 const ladrilho = (cor: string, passo: number) =>
@@ -115,7 +120,7 @@ export function DefsDesgaste({ id, modo }: { id: string; modo: ModoDesgaste }) {
 // muda o σ de todos os filtros de desgaste dentro de um elemento (as primitivas ficam guardadas na primeira chamada)
 type Primitivas = { sigma: Element[]; corte: Element[]; lado: ('fora' | 'dentro')[]; ladoCorte: ('fora' | 'dentro')[] };
 const guardadas = new WeakMap<Element, Primitivas>();
-export function ajustarDesgaste(raiz: Element | null, fora: number, dentro: number) {
+export function ajustarDesgaste(raiz: Element | null, fora: number, dentro: number, pxPorUnidade?: number) {
     if (!raiz) return;
     let p = guardadas.get(raiz);
     if (!p) {
@@ -133,8 +138,8 @@ export function ajustarDesgaste(raiz: Element | null, fora: number, dentro: numb
     const sd = Math.max(0.01, dentro);
     const vf = sf.toFixed(2);
     const vd = sd.toFixed(2);
-    const cf = corte(sf);
-    const cd = corte(sd);
+    const cf = corte(sf, pxPorUnidade);
+    const cd = corte(sd, pxPorUnidade);
     p.sigma.forEach((el, i) => el.setAttribute('stdDeviation', p.lado[i] === 'fora' ? vf : vd));
     p.corte.forEach((el, i) => el.setAttribute('values', p.ladoCorte[i] === 'fora' ? cf : cd));
 }
