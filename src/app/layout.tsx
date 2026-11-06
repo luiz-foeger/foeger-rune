@@ -26,9 +26,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="pt-BR">
-            <body>
+            <body className={`${cut.variable} ${polished.variable} ${worn.variable} ${ui.variable} ${mono.variable}`}>
                 <Rolagem>
-                    <div data-clone className={`${cut.variable} ${polished.variable} ${worn.variable} ${ui.variable} ${mono.variable}`}>
+                    <div data-clone>
                         {children}
                     </div>
                 </Rolagem>

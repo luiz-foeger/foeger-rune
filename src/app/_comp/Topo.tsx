@@ -1,90 +1,118 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
+import { useLenis } from 'lenis/react';
 import { Regua } from './Painel';
+import { Logo } from './LogoFoeger';
 import { FiltroDesgaste, ajustarDesgaste } from './Desgaste';
 import { CABECALHO, HERO } from '../_lib/conteudo';
 import { LINHAS, PALAVRAS } from '../_lib/glifos';
 import { useLaco } from '../_lib/movimento';
 
-// o topo da página da Feixen: o cabeçalho branco (a logo digitada em máquina de escrever, o menu e o link da
-// direita), a faixa cinza das fontes e o hero com a palavra animada. Fica preso no alto (sticky), meio transparente.
+// o topo: o cabeçalho e o hero com a palavra que se gasta
 const u = (n: number) => `calc(${n} * var(--u))`;
 
-// a logo: digita a frase, espera ~3,9 s, apaga só o que muda para a próxima e digita o resto (70–230 ms por tecla,
-// ~80 ms para apagar), como na gravação
-function useMaquina(frases: string[]) {
-    const [texto, setTexto] = useState('');
-    const [digitando, setDigitando] = useState(false);
-    useEffect(() => {
-        let s = 3;
-        const sorteio = () => {
-            s = (s * 9301 + 49297) % 233280;
-            return s / 233280;
-        };
-        let atual = '';
-        let alvo = 0;
-        let id = 0;
-        const passo = () => {
-            const destino = frases[alvo];
-            if (!destino.startsWith(atual)) {
-                atual = atual.slice(0, -1);
-                setTexto(atual);
-                setDigitando(true);
-                id = window.setTimeout(passo, 75 + sorteio() * 10);
-            } else if (atual.length < destino.length) {
-                atual = destino.slice(0, atual.length + 1);
-                setTexto(atual);
-                setDigitando(true);
-                id = window.setTimeout(passo, 70 + sorteio() * 160);
-            } else {
-                setDigitando(false);
-                alvo = (alvo + 1) % frases.length;
-                id = window.setTimeout(passo, 3900);
-            }
-        };
-        id = window.setTimeout(passo, 500);
-        return () => window.clearTimeout(id);
-    }, [frases]);
-    return { texto, digitando };
+// ——— o cabeçalho, igual ao do site principal (luizfoeger.vercel.app; portfolio: rumo/_fa/Cabecalho.tsx) ———
+// Fixo e transparente, em modo diferença, com as três peças de lá: à esquerda o "Menu" com o hambúrguer (no hover, as
+// linhas correm e o texto rola; aberto, as linhas viram um X e o rótulo troca para "Fechar"), no meio a logo da
+// Föeger na versão escrita (leva ao topo) e à direita, no lugar do PT/EN de lá, o "Baixar" do PDF. O menu é a cortina
+// de lá, mas preta (lá é azul-marinho), com as seções da página: os itens entram do desfoque e, no hover de um, os outros apagam e
+// desfocam e o sublinhado corre. Fica num portal no body: o [data-clone] tem container-type, que prenderia o fixed.
+function Rola({ texto }: { texto: string }) {
+    return (
+        <span className="fx-rola">
+            <span>{texto}</span>
+            <span aria-hidden>{texto}</span>
+        </span>
+    );
 }
 
 export function Cabecalho() {
-    const { texto, digitando } = useMaquina(CABECALHO.frases);
-    return (
-        <div className="fx-topo">
-            <header className="fx-cabecalho">
-                <a className="fx-logo" href="#" aria-label={CABECALHO.frases[0]}>
-                    <span aria-hidden>{texto}</span>
-                    <i className="fx-logo-cursor" data-digitando={digitando || undefined} aria-hidden />
-                </a>
-                <nav className="fx-menu" aria-label="Menu">
-                    {CABECALHO.menu.map((grupo, g) => (
-                        <div key={g} className="fx-menu-grupo">
-                            {grupo.map((item, i) => (
-                                <a key={item} href="#" data-ativo={(g === 0 && i === 0) || undefined}>
-                                    {item}
-                                </a>
-                            ))}
-                        </div>
+    const lenis = useLenis();
+    const [aberto, setAberto] = useState(false);
+    const [montado, setMontado] = useState(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- o portal só existe no navegador
+    useEffect(() => setMontado(true), []);
+
+    // com a cortina aberta, a página não rola; o Esc fecha
+    useEffect(() => {
+        if (aberto) lenis?.stop();
+        else lenis?.start();
+    }, [aberto, lenis]);
+    useEffect(() => {
+        const tecla = (e: KeyboardEvent) => e.key === 'Escape' && setAberto(false);
+        window.addEventListener('keydown', tecla);
+        return () => window.removeEventListener('keydown', tecla);
+    }, []);
+
+    // a posição do alvo sem o deslocamento da entrada (o painel ainda fora da tela está 80 u abaixo do lugar dele)
+    const rolarPara = (alvo: string | number) => {
+        const el = typeof alvo === 'string' ? document.getElementById(alvo) : null;
+        let y = typeof alvo === 'number' ? alvo : 0;
+        if (el) {
+            const t = getComputedStyle(el).transform;
+            y = el.getBoundingClientRect().top + window.scrollY - new DOMMatrix(t === 'none' ? undefined : t).m42 - 90;
+        }
+        if (lenis) lenis.scrollTo(y);
+        else window.scrollTo({ top: y, behavior: 'smooth' });
+    };
+    // fecha a cortina e rola depois que ela sobe
+    const ir = (alvo: string | number) => () => {
+        const estava = aberto;
+        setAberto(false);
+        window.setTimeout(() => rolarPara(alvo), estava ? 350 : 0);
+    };
+
+    if (!montado) return null;
+    return createPortal(
+        <>
+            <div className="fx-cortina" data-aberto={aberto || undefined} aria-hidden={!aberto}>
+                <nav className="fx-cortina-lista" aria-label="Seções">
+                    {CABECALHO.itens.map((m, i) => (
+                        <button key={m.alvo} type="button" onClick={ir(m.alvo)} tabIndex={aberto ? 0 : -1} style={{ '--i': i } as CSSProperties}>
+                            <span className="fx-sublinha">{m.texto}</span>
+                        </button>
                     ))}
-                    <i className="fx-menu-seta" aria-hidden />
                 </nav>
-                <a className="fx-cabecalho-direita" href={CABECALHO.direita.href}>
-                    {CABECALHO.direita.texto} <span aria-hidden>→</span>
+            </div>
+            <div className="fx-desfoque" aria-hidden />
+            <header className="fx-cab" data-aberto={aberto || undefined}>
+                <button type="button" className="fx-cab-menu" onClick={() => setAberto(a => !a)} aria-expanded={aberto}>
+                    <span className="fx-hamburguer" aria-hidden>
+                        <span>
+                            <i />
+                        </span>
+                        <span>
+                            <i />
+                        </span>
+                    </span>
+                    <span className="fx-cab-rotulo">
+                        <span>
+                            <Rola texto={CABECALHO.menu} />
+                        </span>
+                        <span aria-hidden>
+                            <Rola texto={CABECALHO.fechar} />
+                        </span>
+                    </span>
+                </button>
+                <a
+                    className="fx-cab-logo"
+                    href="#"
+                    aria-label="Föeger"
+                    onClick={e => {
+                        e.preventDefault();
+                        ir(0)();
+                    }}
+                >
+                    <Logo />
+                </a>
+                <a className="fx-cab-acao" href={CABECALHO.acao.href} download>
+                    <Rola texto={`${CABECALHO.acao.texto} ↓`} />
                 </a>
             </header>
-            <nav className="fx-submenu" aria-label="Fontes">
-                {CABECALHO.fontes.map(f => (
-                    <a key={f.texto} href={f.href} data-ativo={f.ativo || undefined}>
-                        {f.texto}
-                    </a>
-                ))}
-                <a className="fx-pilula" href={CABECALHO.pilula.href}>
-                    {CABECALHO.pilula.texto}
-                </a>
-            </nav>
-        </div>
+        </>,
+        document.body,
     );
 }
 

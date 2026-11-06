@@ -66,6 +66,7 @@ export default function Painel({
     estilo,
     solto = false,
     celular,
+    ancora,
 }: {
     colunas: number;
     linhas: number;
@@ -74,6 +75,7 @@ export default function Painel({
     estilo?: CSSProperties; // o lugar na grade dos cartões
     solto?: boolean; // sem moldura, sem trama e sem letras dos lados, só a régua de baixo (as palavras soltas das faixas)
     celular?: { colunas: number; linhas: number }; // o tamanho no celular, quando não é o padrão
+    ancora?: string; // o id, para o menu do cabeçalho levar até o painel
 }) {
     const ref = useRef<HTMLElement>(null);
     // entra quando um quinto dele já está na tela, como na gravação (o painel de baixo aparece ainda apagado)
@@ -84,6 +86,7 @@ export default function Painel({
     const largo = muda ? 'fx-so-largo' : undefined;
     return (
         <section
+            id={ancora}
             ref={ref}
             aria-label={rotulo}
             className="fx-painel fx-revela"

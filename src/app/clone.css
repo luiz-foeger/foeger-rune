@@ -1169,130 +1169,10 @@
     margin: 0 0.18em;
 }
 
-/* 8. o topo: cabeçalho e faixa das fontes presos no alto (meio transparentes) e o hero com a palavra animada */
+/* 8. o hero com a palavra que se gasta (o cabeçalho é o 11, no fim) */
 html:has([data-clone]) {
     scroll-behavior: smooth;
 }
-.fx-faixa,
-#testador {
-    scroll-margin-top: calc(160 * var(--u));
-}
-.fx-topo {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-}
-.fx-cabecalho {
-    position: relative;
-    height: calc(72 * var(--u));
-    background: rgba(255, 255, 255, 0.92);
-}
-.fx-logo {
-    position: absolute;
-    left: calc(44 * var(--u));
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    color: #111;
-    font-size: max(13px, calc(26 * var(--u)));
-    font-weight: 700;
-    line-height: 1;
-    text-decoration: none;
-    white-space: pre;
-}
-.fx-logo-cursor {
-    display: inline-block;
-    width: max(1px, calc(1.6 * var(--u)));
-    height: calc(30 * var(--u));
-    margin-left: calc(2 * var(--u));
-    background: #111;
-    animation: fx-piscar-logo 1.5s steps(1) infinite;
-}
-.fx-logo-cursor[data-digitando] {
-    animation: none;
-}
-@keyframes fx-piscar-logo {
-    0% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0;
-    }
-}
-.fx-menu {
-    position: absolute;
-    left: calc(319 * var(--u));
-    top: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    gap: calc(62 * var(--u));
-}
-.fx-menu-grupo {
-    display: flex;
-    gap: calc(19 * var(--u));
-}
-.fx-menu a,
-.fx-submenu a {
-    color: #b3b3b3;
-    font-size: max(10px, calc(18 * var(--u)));
-    font-weight: 500;
-    line-height: 1;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-.fx-menu a:hover,
-.fx-submenu a:hover,
-.fx-cabecalho-direita:hover {
-    color: #111;
-}
-.fx-menu-seta {
-    position: absolute;
-    left: calc(21 * var(--u));
-    bottom: 0;
-    width: 0;
-    height: 0;
-    border-left: calc(7 * var(--u)) solid transparent;
-    border-right: calc(7 * var(--u)) solid transparent;
-    border-bottom: calc(7 * var(--u)) solid #ececec;
-}
-.fx-cabecalho-direita {
-    position: absolute;
-    right: calc(49 * var(--u));
-    top: 50%;
-    transform: translateY(-50%);
-    color: #bdbdbd;
-    font-size: max(12px, calc(24 * var(--u)));
-    font-weight: 700;
-    line-height: 1;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-.fx-submenu {
-    display: flex;
-    align-items: center;
-    gap: calc(26 * var(--u));
-    height: calc(74 * var(--u));
-    padding-left: calc(325 * var(--u));
-    background: rgba(236, 236, 236, 0.92);
-}
-.fx-submenu a {
-    color: #a9a9a9;
-}
-.fx-submenu a[data-ativo] {
-    color: #111;
-}
-.fx-submenu .fx-pilula {
-    display: inline-flex;
-    align-items: center;
-    height: calc(32 * var(--u));
-    padding: 0 calc(12 * var(--u));
-    border-radius: calc(16 * var(--u));
-    background: #dedede;
-    color: #a3a3a3;
-}
-
 .fx-hero {
     position: relative;
     height: calc(849 * var(--u));
@@ -1371,46 +1251,6 @@ html:has([data-clone]) {
     .fx-faixa-miolo,
     .fx-hero-regua {
         width: calc(885 * var(--u));
-    }
-
-    /* o cabeçalho: logo e link; o menu sai e a faixa das fontes rola para o lado */
-    .fx-cabecalho {
-        height: 52px;
-    }
-    .fx-logo {
-        left: 16px;
-        font-size: 17px;
-    }
-    .fx-logo-cursor {
-        height: 20px;
-    }
-    .fx-menu {
-        display: none;
-    }
-    .fx-cabecalho-direita {
-        right: 16px;
-        font-size: 15px;
-    }
-    .fx-submenu {
-        height: 44px;
-        padding: 0 16px;
-        gap: 18px;
-        overflow-x: auto;
-        scrollbar-width: none;
-        white-space: nowrap;
-    }
-    .fx-submenu a {
-        flex: none;
-        font-size: 14px;
-    }
-    .fx-submenu .fx-pilula {
-        height: 28px;
-        padding: 0 12px;
-        border-radius: 14px;
-    }
-    .fx-faixa,
-    #testador {
-        scroll-margin-top: 110px;
     }
 
     /* o hero: a palavra encolhe para caber (ela tem 1369 u de largura; a página do celular, 945) */
@@ -1673,5 +1513,317 @@ html:has([data-clone]) {
         width: 88%;
         text-align: center;
         white-space: normal;
+    }
+}
+
+/* 11. o cabeçalho, igual ao do site principal (portfolio: rumo/fa.css, .fa-cab e .fa-menu): fixo, transparente e em
+   modo diferença, com o "Menu" à esquerda, a logo da Föeger no meio e o "Baixar" à direita (no lugar do PT/EN de lá);
+   as medidas são as de lá (--fa-r, a unidade do site). Fica num portal no body, fora do [data-clone] */
+.fx-cab,
+.fx-cortina {
+    --fa-r: max(0.5208333333vw, 1px);
+    /* a cortina do menu é preta (a do site principal é azul-marinho): a página já tem as cores dos estilos */
+    --fundo-menu: #111111;
+    --easeOutQuart: cubic-bezier(0.165, 0.84, 0.44, 1);
+    --power3Out: cubic-bezier(0.215, 0.61, 0.355, 1);
+    --logo-h: max(18px, calc(2.7933 * var(--fa-r)));
+}
+.fx-cab {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: start;
+    padding: max(18px, calc(4.8 * var(--fa-r)));
+    color: #fff;
+    font-family: var(--ff-ui), 'Helvetica Neue', Arial, sans-serif;
+    font-size: max(13px, 0.88vw);
+    font-weight: 400;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    mix-blend-mode: difference;
+    pointer-events: none;
+}
+.fx-cab > * {
+    pointer-events: auto;
+}
+.fx-cab a {
+    color: inherit;
+    text-decoration: none;
+}
+.fx-cab-menu {
+    justify-self: start;
+    margin-top: calc(0.5 * var(--fa-r));
+    display: flex;
+    align-items: center;
+    gap: calc(1.2 * var(--fa-r));
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: -0.042em;
+    text-align: left;
+}
+.fx-hamburguer {
+    position: relative;
+    width: max(14px, calc(1.6 * var(--fa-r)));
+    height: max(12px, calc(1.4 * var(--fa-r)));
+}
+.fx-hamburguer > span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: max(1px, calc(0.1 * var(--fa-r)));
+    overflow: clip;
+    transition: transform 0.6s var(--easeOutQuart);
+}
+.fx-hamburguer > span:first-child {
+    top: calc(50% - calc(0.35 * var(--fa-r)));
+}
+.fx-hamburguer > span:last-child {
+    top: calc(50% + calc(0.25 * var(--fa-r)));
+}
+.fx-hamburguer i {
+    display: block;
+    height: 100%;
+    background: currentColor;
+}
+/* no hover, as linhas saem pela direita e voltam pela esquerda (0,4 s cada, a de baixo 0,1 s depois) */
+.fx-cab-menu:hover .fx-hamburguer i {
+    animation: fx-passa 0.9s linear;
+}
+.fx-cab-menu:hover .fx-hamburguer > span:last-child i {
+    animation-delay: 0.1s;
+}
+@keyframes fx-passa {
+    0% {
+        transform: translateX(0);
+        animation-timing-function: var(--power3Out);
+    }
+    44.4% {
+        transform: translateX(105%);
+    }
+    55.5% {
+        transform: translateX(-105%);
+        animation-timing-function: var(--power3Out);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+.fx-cab[data-aberto] .fx-hamburguer > span:first-child {
+    transform: translateY(calc(0.3 * var(--fa-r))) rotate(45deg);
+}
+.fx-cab[data-aberto] .fx-hamburguer > span:last-child {
+    transform: translateY(calc(-0.3 * var(--fa-r))) rotate(-45deg);
+}
+/* o texto que rola no hover: o texto sobe e a cópia entra por baixo (1,2 s); sem volta, porque os dois são iguais */
+.fx-rola {
+    position: relative;
+    display: inline-block;
+    overflow: clip;
+    vertical-align: top;
+    /* um respiro à direita: com o espaçamento negativo, o corte comia a ponta da última letra (o r de "Fechar") */
+    padding-right: 0.1em;
+    margin-right: -0.1em;
+}
+.fx-rola > span {
+    display: block;
+}
+.fx-rola > span + span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translateY(100%);
+}
+.fx-cab-menu:hover .fx-rola > span:first-child,
+.fx-cab-acao:hover .fx-rola > span:first-child {
+    animation: fx-rola-sai 1.2s var(--power3Out);
+}
+.fx-cab-menu:hover .fx-rola > span + span,
+.fx-cab-acao:hover .fx-rola > span + span {
+    animation: fx-rola-entra 1.2s var(--power3Out);
+}
+@keyframes fx-rola-sai {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-100%);
+    }
+}
+@keyframes fx-rola-entra {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+/* "Menu" e "Fechar" empilhados: aberto, um sobe e o outro entra por baixo (1,2 s) */
+.fx-cab-rotulo {
+    position: relative;
+    display: inline-grid;
+    overflow: clip;
+    padding-right: 0.15em;
+    margin-right: -0.15em;
+}
+.fx-cab-rotulo > span {
+    grid-area: 1 / 1;
+    transition: transform 1.2s var(--power3Out);
+}
+.fx-cab-rotulo > span:last-child {
+    transform: translateY(100%);
+}
+.fx-cab[data-aberto] .fx-cab-rotulo > span:first-child {
+    transform: translateY(-100%);
+}
+.fx-cab[data-aberto] .fx-cab-rotulo > span:last-child {
+    transform: translateY(0);
+}
+.fx-cab-logo {
+    justify-self: center;
+    display: block;
+    height: var(--logo-h);
+    width: calc(var(--logo-h) * 2580 / 890);
+}
+.fx-cab-logo svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.fx-cab-acao {
+    justify-self: end;
+    margin-top: calc(0.5 * var(--fa-r));
+    letter-spacing: -0.042em;
+}
+.fx-cab :focus-visible {
+    outline: 1px solid currentColor;
+    outline-offset: 4px;
+}
+
+/* a faixa de desfoque leve no alto da tela, por trás do cabeçalho */
+.fx-desfoque {
+    position: fixed;
+    top: -5px;
+    left: 0;
+    width: 100%;
+    height: 30vh;
+    z-index: 99;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    -webkit-mask-image: linear-gradient(0deg, transparent, #000);
+    mask-image: linear-gradient(0deg, transparent, #000);
+}
+
+/* a cortina do menu: desce de cima (1,4 s) e sobe ao fechar (0,8 s); os itens entram do desfoque. Preta, e não
+   azul-marinho como no site principal */
+.fx-cortina {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    background: var(--fundo-menu);
+    clip-path: inset(0 0 100% 0);
+    visibility: hidden;
+    transition:
+        clip-path 0.8s var(--power3Out),
+        visibility 0s 0.8s;
+}
+.fx-cortina[data-aberto] {
+    clip-path: inset(0 0 0 0);
+    visibility: visible;
+    transition:
+        clip-path 1.4s var(--power3Out),
+        visibility 0s;
+}
+.fx-cortina-lista {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #fff;
+    font-family: var(--ff-ui), 'Helvetica Neue', Arial, sans-serif;
+    font-size: max(54px, calc(16 * var(--fa-r)));
+    font-weight: 600;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    mix-blend-mode: difference;
+    -webkit-font-smoothing: antialiased;
+}
+.fx-cortina-lista button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    opacity: 0;
+    filter: blur(10px);
+    transition:
+        opacity 0.3s ease,
+        filter 0.3s ease;
+}
+.fx-cortina[data-aberto] .fx-cortina-lista button {
+    opacity: 1;
+    filter: blur(0);
+    transition:
+        opacity 0.5s cubic-bezier(0.5, 1, 0.89, 1) calc(0.3s + var(--i) * 0.05s),
+        filter 0.5s cubic-bezier(0.5, 1, 0.89, 1) calc(0.3s + var(--i) * 0.05s);
+}
+/* o hover do menu: os outros itens apagam e desfocam em 1,2 s, e o sublinhado do item corre */
+.fx-cortina[data-aberto] .fx-cortina-lista:has(button:hover) button:not(:hover) {
+    opacity: 0.2;
+    filter: blur(10px);
+    transition:
+        opacity 1.2s var(--easeOutQuart),
+        filter 1.2s var(--easeOutQuart);
+}
+.fx-sublinha {
+    position: relative;
+    display: inline-block;
+}
+.fx-sublinha::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: max(1px, calc(0.1 * var(--fa-r)));
+    background: currentColor;
+    transform-origin: right;
+}
+.fx-cortina-lista button:hover .fx-sublinha::after {
+    animation:
+        fx-sub-a 0.3s var(--easeOutQuart) forwards,
+        fx-sub-b 0.3s var(--easeOutQuart) 0.3s forwards;
+}
+@keyframes fx-sub-a {
+    from {
+        transform-origin: right;
+        transform: scaleX(1);
+    }
+    to {
+        transform-origin: right;
+        transform: scaleX(0);
+    }
+}
+@keyframes fx-sub-b {
+    from {
+        transform-origin: left;
+        transform: scaleX(0);
+    }
+    to {
+        transform-origin: left;
+        transform: scaleX(1);
     }
 }

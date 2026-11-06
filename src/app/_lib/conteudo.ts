@@ -60,21 +60,18 @@ export const TITULO_RECURSOS = 'Recursos';
 // o título do livro, digitado como o dos estilos, com a nota no pé do painel
 export const TITULO_LIVRO = { texto: 'O Livro', asteriscoDepois: 7, nota: '* O espécime da Föeger Rune, para folhear aqui ou baixar em PDF' };
 
-// o topo: a logo digitada (as combinações, como "Studio Fonts / Studio Feixen / Feixen Fonts" da Feixen), o menu, a
-// faixa das fontes (aqui, a Rune e os três estilos, que levam às faixas) e a legenda do hero
+// o cabeçalho, igual ao do site principal: o menu (as seções da página, pelas âncoras), a logo da Föeger no meio e,
+// no lugar do PT/EN de lá, o PDF à direita
 export const CABECALHO = {
-    frases: ['Föeger Fontes', 'Föeger Rune', 'Rune Fontes', 'Fontes Föeger'],
-    menu: [
-        ['Início', 'Editor', 'Em uso', 'Wiki'],
-        ['Loja', 'Carrinho', 'Conta'],
+    menu: 'Menu',
+    fechar: 'Fechar',
+    itens: [
+        { texto: 'Alfabeto', alvo: 'alfabeto' },
+        { texto: 'Estilos', alvo: 'estilos' },
+        { texto: 'Testar', alvo: 'testador' },
+        { texto: 'Recursos', alvo: 'recursos' },
+        { texto: 'O Livro', alvo: 'livro' },
     ],
-    direita: { texto: 'Föeger', href: 'https://luizfoeger.vercel.app' },
-    fontes: [
-        { texto: 'Föeger Rune', href: '#', ativo: true },
-        { texto: 'Cut', href: '#faixa-cut' },
-        { texto: 'Polished', href: '#faixa-polished' },
-        { texto: 'Worn', href: '#faixa-worn' },
-    ],
-    pilula: { texto: 'Testar', href: '#testador' },
+    acao: { texto: 'Baixar', href: '/foeger-rune-especime.pdf' },
 };
 export const HERO = { legenda: ['Föeger Rune', 'Desenhada por Luiz Föeger'] };

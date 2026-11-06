@@ -38,10 +38,12 @@ export default function TituloEstilos({
     texto = TITULO_ESTILOS.texto,
     asteriscoDepois = TITULO_ESTILOS.asteriscoDepois,
     nota = TITULO_ESTILOS.nota,
+    ancora,
 }: {
     texto?: string;
     asteriscoDepois?: number | null;
     nota?: string | null;
+    ancora?: string;
 }) {
     const ref = useRef<HTMLDivElement>(null);
     const visivel = useVisivel(ref, { limiar: 0.6, umaVez: true });
@@ -65,7 +67,7 @@ export default function TituloEstilos({
     // recentra enquanto é digitada, começa já no ponto em que a frase pronta fica centrada
     const letras = texto.split('');
     return (
-        <Painel colunas={4} linhas={1} rotulo={texto}>
+        <Painel colunas={4} linhas={1} rotulo={texto} ancora={ancora}>
             <div ref={ref} className="fx-digitada">
                 <div className="fx-titulo-estilos" aria-label={texto}>
                     {letras.map((ch, i) => (

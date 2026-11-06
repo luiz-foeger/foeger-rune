@@ -44,8 +44,8 @@ export default function Pagina() {
                     <CartaoInspetor cfg={A} estilo={col('3 / span 2', 2)} />
                     <CartaoFrase cfg={AGUA} estilo={col('1 / span 2')} />
                 </div>
-                <TituloEstilos />
-                {/* a âncora da pílula "Testar" do cabeçalho */}
+                <TituloEstilos ancora="estilos" />
+                {/* a âncora do "Testar" do menu */}
                 <div id="testador" />
                 <Testador />
                 {/* as faixas coloridas, uma por estilo, coladas umas nas outras */}
@@ -71,10 +71,10 @@ export default function Pagina() {
                         <TextoVariacoes />
                     </Escura>
                 </div>
-                <TituloEstilos texto={TITULO_RECURSOS} asteriscoDepois={null} nota={null} />
+                <TituloEstilos texto={TITULO_RECURSOS} asteriscoDepois={null} nota={null} ancora="recursos" />
                 <Recursos />
                 {/* o livro: o espécime para folhear (o livro realista do clone-tantan) e o PDF para baixar */}
-                <TituloEstilos texto={TITULO_LIVRO.texto} asteriscoDepois={TITULO_LIVRO.asteriscoDepois} nota={TITULO_LIVRO.nota} />
+                <TituloEstilos texto={TITULO_LIVRO.texto} asteriscoDepois={TITULO_LIVRO.asteriscoDepois} nota={TITULO_LIVRO.nota} ancora="livro" />
                 <SecaoLivro />
             </main>
         </>
