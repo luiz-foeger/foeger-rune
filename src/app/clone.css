@@ -1,0 +1,1682 @@
+/* o clone da Feixen: tudo medido no vídeo com a página em 1889 px de largura e escalado por --u (1 px do vídeo).
+   A grade é de módulos de 413 com calhas de 59 (4 colunas = 1829, a largura dos painéis); a trama pontilhada de
+   dentro dos painéis tem células de 29,5 (14 por módulo, 2 por calha). */
+[data-clone] {
+    container-type: inline-size;
+    --u: calc(100cqw / 1889);
+    --M: calc(413 * var(--u));
+    --G: calc(59 * var(--u));
+    --fundo: #f8f8f8;
+    --tinta: #111111;
+    --borda: #333333;
+    --laranja: #fd5100;
+    --verde: #00d372;
+    --roxo: #9d5af9;
+    --faixa: #bfc3c5;
+    --linha-fina: max(1px, calc(1.5 * var(--u)));
+    /* a trama pontilhada dos painéis (nas faixas coloridas, a mesma em tom mais escuro) */
+    --trama: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 29.5 29.5' preserveAspectRatio='none'%3E%3Cg stroke='%23c4c4c4' stroke-width='1' stroke-dasharray='2 2.9167' fill='none'%3E%3Cpath d='M0 0.5H29.5'/%3E%3Cpath d='M0.5 0V29.5'/%3E%3C/g%3E%3C/svg%3E");
+    background: var(--fundo);
+    color: var(--tinta);
+    min-height: 100vh;
+    font-family: var(--ff-ui), system-ui, sans-serif;
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+}
+
+[data-clone] ::selection {
+    background: var(--laranja);
+    color: #fff;
+}
+
+.fx-corpo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(62 * var(--u));
+    padding: calc(60 * var(--u)) 0 calc(200 * var(--u));
+}
+
+/* a grade dos cartões: 4 colunas de módulo, fileiras de módulo, calhas nos dois sentidos */
+.fx-grade {
+    display: grid;
+    grid-template-columns: repeat(4, var(--M));
+    grid-auto-rows: var(--M);
+    gap: var(--G);
+}
+
+/* o painel: a moldura com a trama pontilhada, as réguas de cima e de baixo (4 3 2 1 por par de colunas) e as letras
+   dos lados (B A na fileira de baixo, D C na de cima) */
+.fx-painel {
+    position: relative;
+    width: calc(var(--col) * var(--M) + (var(--col) - 1) * var(--G));
+    height: calc(var(--lin) * var(--M) + (var(--lin) - 1) * var(--G));
+    flex: none;
+}
+
+.fx-tela {
+    position: absolute;
+    inset: 0;
+    border: var(--linha-fina) solid var(--borda);
+    border-radius: calc(2 * var(--u));
+    background-color: var(--fundo);
+    background-image: var(--trama);
+    background-size: calc(29.5 * var(--u)) calc(29.5 * var(--u));
+    background-position: calc(-0.5 * var(--u)) calc(-0.5 * var(--u));
+    overflow: hidden;
+}
+
+.fx-regua {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: calc(26 * var(--u));
+    pointer-events: none;
+}
+.fx-regua[data-lado='topo'] {
+    bottom: 100%;
+}
+.fx-regua[data-lado='base'] {
+    top: 100%;
+}
+.fx-regua-num,
+.fx-lado-letra {
+    position: absolute;
+    font-size: max(9px, calc(16 * var(--u)));
+    line-height: 1;
+    color: #1d1d1d;
+    transform: translate(-50%, -50%);
+}
+.fx-regua[data-lado='topo'] .fx-regua-num {
+    top: calc(13 * var(--u));
+}
+.fx-regua[data-lado='base'] .fx-regua-num {
+    top: calc(14 * var(--u));
+}
+.fx-regua-traco {
+    position: absolute;
+    width: 1px;
+    height: calc(17 * var(--u));
+    background: #2a2a2a;
+}
+.fx-regua[data-lado='topo'] .fx-regua-traco {
+    bottom: calc(3 * var(--u));
+}
+.fx-regua[data-lado='base'] .fx-regua-traco {
+    top: calc(5 * var(--u));
+}
+
+.fx-lado {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: calc(30 * var(--u));
+    pointer-events: none;
+}
+.fx-lado[data-lado='esq'] {
+    right: 100%;
+}
+.fx-lado[data-lado='dir'] {
+    left: 100%;
+}
+.fx-lado[data-lado='esq'] .fx-lado-letra {
+    left: calc(16 * var(--u));
+}
+.fx-lado[data-lado='dir'] .fx-lado-letra {
+    left: calc(14 * var(--u));
+}
+.fx-lado-traco {
+    position: absolute;
+    height: 1px;
+    width: calc(18 * var(--u));
+    background: #2a2a2a;
+}
+.fx-lado[data-lado='esq'] .fx-lado-traco {
+    right: 0;
+}
+.fx-lado[data-lado='dir'] .fx-lado-traco {
+    left: 0;
+}
+
+/* entrada: sobe e aparece quando o painel chega à tela */
+.fx-revela {
+    opacity: 0;
+    transform: translateY(calc(80 * var(--u)));
+    transition:
+        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fx-revela[data-visivel='true'] {
+    opacity: 1;
+    transform: none;
+}
+
+/* 1. o alfabeto no estilo escolhido e os três desgastes no lugar dos pesos */
+.fx-alfabeto {
+    position: absolute;
+    top: calc(55 * var(--u));
+    left: 0;
+    right: 0;
+    margin: 0;
+    text-align: center;
+    font-size: calc(152 * var(--u));
+    line-height: calc(146 * var(--u));
+    font-feature-settings: 'calt' 0;
+    text-box: trim-both cap alphabetic;
+    white-space: nowrap;
+}
+
+.fx-estilos {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(95 * var(--u));
+    display: flex;
+    justify-content: center;
+}
+.fx-estilo {
+    width: calc(200 * var(--u));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(23 * var(--u));
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--tinta);
+    cursor: pointer;
+}
+.fx-estilo[data-ativo='true'] {
+    color: var(--verde);
+}
+.fx-estilo-nome {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: max(10px, calc(19 * var(--u)));
+    font-weight: 600;
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+}
+.fx-estilo-aa {
+    font-size: calc(88 * var(--u));
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+}
+
+/* 2. a frase digitada, com o cursor laranja */
+.fx-digitada {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.fx-digitada-texto {
+    position: relative;
+    font-family: var(--ff-cut), sans-serif;
+    font-size: calc(152 * var(--u));
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+    white-space: pre;
+    padding-right: calc(24 * var(--u));
+    min-height: calc(115 * var(--u));
+}
+.fx-cursor-texto {
+    position: absolute;
+    right: 0;
+    top: calc(-35 * var(--u));
+    width: calc(12 * var(--u));
+    height: calc(196 * var(--u));
+    background: var(--laranja);
+    animation: fx-piscar 1.2s ease-in-out infinite;
+}
+.fx-digitada-texto[data-digitando='true'] .fx-cursor-texto {
+    animation: none;
+}
+@keyframes fx-piscar {
+    0%,
+    42% {
+        opacity: 1;
+    }
+    55%,
+    90% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* 3. os cartões: a palavra que se gasta */
+.fx-cartao-titulo {
+    position: absolute;
+    top: calc(43 * var(--u));
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: max(10px, calc(19 * var(--u)));
+    font-weight: 500;
+    line-height: 1;
+    transform: translateY(-50%);
+}
+.fx-seta {
+    position: absolute;
+    width: calc(30 * var(--u));
+    height: calc(44 * var(--u));
+    pointer-events: none;
+    z-index: 3;
+}
+
+.fx-palavra {
+    position: absolute;
+    overflow: visible;
+}
+
+.fx-ferramentas {
+    position: absolute;
+    left: calc(14 * var(--u));
+    top: calc(13 * var(--u));
+    width: calc(52 * var(--u));
+    padding: 0 calc(3 * var(--u)) calc(3 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: #fff;
+    z-index: 2;
+}
+.fx-janela-barra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: calc(13 * var(--u));
+    font-size: calc(11 * var(--u));
+    line-height: 1;
+}
+.fx-ferramenta {
+    display: grid;
+    place-items: center;
+    width: calc(41 * var(--u));
+    height: calc(41 * var(--u));
+    margin-top: calc(3 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(4 * var(--u));
+}
+.fx-ferramenta svg {
+    width: calc(30 * var(--u));
+    height: calc(30 * var(--u));
+}
+
+.fx-regua-v {
+    position: absolute;
+    right: calc(8 * var(--u));
+    top: 0;
+    width: calc(49 * var(--u));
+    height: 100%;
+}
+
+.fx-controle {
+    position: absolute;
+    width: calc(137 * var(--u));
+    padding: 0 calc(5 * var(--u)) calc(9 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: #fff;
+    z-index: 2;
+}
+.fx-controle-nome {
+    margin-top: calc(5 * var(--u));
+    padding: calc(4 * var(--u)) calc(4 * var(--u)) calc(9 * var(--u));
+    border: 1px solid #9a9a9a;
+    font-size: max(7px, calc(9.5 * var(--u)));
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
+}
+.fx-controle-trilho {
+    position: relative;
+    height: calc(14 * var(--u));
+    margin: calc(-8 * var(--u)) calc(8 * var(--u)) 0;
+}
+.fx-controle-trilho::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--tinta);
+}
+.fx-controle-pegador {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+    margin: calc(-7 * var(--u)) 0 0 calc(-7 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: 50%;
+    background: var(--laranja);
+}
+
+/* 4. os cartões com lupa (S, R, H, Seixo Rolado, Ahá, b, n, A, Água mole) */
+.fx-cartao-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.fx-coordenada {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    fill: #111;
+}
+.fx-raio {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+}
+.fx-leitura text {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    fill: #111;
+    white-space: pre;
+}
+.fx-guia-rotulo {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.fx-ferramenta[data-escura] {
+    background: var(--tinta);
+}
+.fx-controle[data-escura] .fx-janela-barra {
+    margin: 0 calc(-5 * var(--u));
+    padding: 0 calc(4 * var(--u));
+    background: var(--tinta);
+    color: #fff;
+}
+.fx-controle-item + .fx-controle-item {
+    margin-top: calc(4 * var(--u));
+}
+
+.fx-seta-lupa {
+    position: absolute;
+    width: calc(64 * var(--u));
+    height: calc(64 * var(--u));
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* a etiqueta do canto dos cartões de lupa: a letra inteira, pequena, com o círculo onde a lupa olha */
+.fx-etiqueta {
+    position: absolute;
+    left: calc(15 * var(--u));
+    top: calc(283 * var(--u));
+    width: calc(112 * var(--u));
+    height: calc(115 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: #fff;
+    z-index: 2;
+}
+.fx-etiqueta svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* a ficha do glifo do S: ícones, o código, a fonte, o estilo e a miniatura preta */
+.fx-ficha {
+    position: absolute;
+    left: calc(566 * var(--u));
+    bottom: calc(15 * var(--u));
+    width: calc(286 * var(--u));
+    height: calc(168 * var(--u));
+    display: grid;
+    grid-template-columns: calc(170 * var(--u)) 1fr;
+    grid-template-rows: calc(50 * var(--u)) calc(50 * var(--u)) 1fr 1fr;
+    border: var(--linha-fina) solid var(--tinta);
+    background: #fff;
+    z-index: 2;
+    font-family: var(--ff-ui), sans-serif;
+    color: var(--tinta);
+}
+.fx-ficha-icones {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    border-bottom: 1px solid var(--tinta);
+}
+.fx-ficha-icones > * {
+    width: 100%;
+    height: 100%;
+    padding: calc(6 * var(--u));
+    border-right: 1px solid var(--tinta);
+    box-sizing: border-box;
+}
+.fx-ficha-letra {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    font-size: calc(36 * var(--u));
+    font-weight: 500;
+    line-height: 1;
+}
+.fx-ficha-codigo {
+    display: grid;
+    place-items: center;
+    border-bottom: 1px solid var(--tinta);
+    border-right: 1px solid var(--tinta);
+    font-size: calc(40 * var(--u));
+    font-weight: 500;
+    line-height: 1;
+}
+.fx-ficha-linha {
+    display: grid;
+    place-items: center;
+    border-right: 1px solid var(--tinta);
+    font-size: max(8px, calc(15 * var(--u)));
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+.fx-ficha-linha + .fx-ficha-linha {
+    border-top: 1px solid var(--tinta);
+}
+.fx-ficha-icones,
+.fx-ficha-codigo,
+.fx-ficha-linha {
+    grid-column: 1;
+}
+.fx-ficha-mini {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 5. o "Três* Estilos" (a letra pendurada) e o testador com o seletor e o humor */
+.fx-titulo-estilos {
+    font-family: var(--ff-cut), sans-serif;
+    font-size: calc(152 * var(--u));
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+    white-space: pre;
+    min-height: calc(115 * var(--u));
+}
+.fx-letra,
+.fx-asterisco {
+    display: inline-block;
+    transition:
+        transform 0.09s ease-out,
+        color 0.12s ease-out;
+}
+.fx-letra[data-oculta],
+.fx-asterisco[data-oculta] {
+    visibility: hidden;
+}
+.fx-letra[data-pendente] {
+    color: #8c8c8c;
+    transform: translateY(0.42em);
+}
+.fx-asterisco {
+    font-size: 0.55em;
+    transform: translateY(-0.62em);
+}
+.fx-asterisco[data-pendente] {
+    color: #8c8c8c;
+    transform: translateY(0.2em);
+}
+.fx-nota {
+    position: absolute;
+    right: calc(37 * var(--u));
+    bottom: calc(22 * var(--u));
+    margin: 0;
+    font-size: max(9px, calc(17 * var(--u)));
+    font-weight: 600;
+    line-height: 1;
+}
+
+.fx-testador {
+    position: absolute;
+    inset: 0;
+}
+.fx-testador-nome {
+    position: absolute;
+    top: calc(47 * var(--u));
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    font-size: max(11px, calc(30 * var(--u)));
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+.fx-testador-texto {
+    position: absolute;
+    top: calc(88 * var(--u));
+    left: 0;
+    right: 0;
+    margin: 0;
+    text-align: center;
+    font-size: calc(152 * var(--u));
+    line-height: calc(147 * var(--u));
+    text-box: trim-both cap alphabetic;
+    white-space: nowrap;
+}
+
+.fx-seletor {
+    position: absolute;
+    left: calc(1491 * var(--u));
+    top: calc(20 * var(--u));
+    width: calc(292 * var(--u));
+    padding: 0 calc(4 * var(--u)) calc(5 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: #fff;
+    z-index: 2;
+}
+.fx-seletor > .fx-janela-barra {
+    margin: 0 calc(-4 * var(--u));
+    padding: 0 calc(4 * var(--u));
+    background: var(--tinta);
+    color: #fff;
+}
+.fx-seletor-corpo {
+    display: flex;
+    gap: calc(6 * var(--u));
+    padding-top: calc(3 * var(--u));
+}
+.fx-seletor-lista {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: calc(6 * var(--u));
+    padding-top: calc(3 * var(--u));
+}
+.fx-seletor-item {
+    height: calc(39 * var(--u));
+    padding: 0 calc(12 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: #fff;
+    color: var(--tinta);
+    font-family: var(--ff-ui), sans-serif;
+    font-size: max(9px, calc(21 * var(--u)));
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background-color 0.25s ease,
+        color 0.25s ease;
+}
+.fx-seletor-item[data-ativo] {
+    background: var(--cor-item);
+    color: #fff;
+}
+
+.fx-humor-titulo {
+    position: absolute;
+    top: calc(578 * var(--u));
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    font-size: max(11px, calc(32 * var(--u)));
+    font-weight: 600;
+    line-height: 1;
+}
+.fx-humor-barras {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(619 * var(--u));
+    height: calc(148 * var(--u));
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+.fx-humor-coluna {
+    width: calc(236 * var(--u));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.fx-humor-trilho {
+    width: calc(178 * var(--u));
+    height: calc(148 * var(--u));
+    display: flex;
+    align-items: flex-end;
+}
+.fx-humor-barra {
+    width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.55);
+    border-radius: calc(9 * var(--u));
+    background: var(--cor-estilo);
+    transition:
+        height 1s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.45s ease;
+}
+.fx-humor-valor,
+.fx-humor-nome {
+    margin: 0;
+    font-size: max(10px, calc(30 * var(--u)));
+    font-weight: 600;
+    line-height: 1;
+}
+.fx-humor-valor {
+    margin-top: calc(33 * var(--u));
+}
+.fx-humor-nome {
+    margin-top: calc(9 * var(--u));
+}
+.fx-humor-regua {
+    position: absolute;
+    top: 0;
+    height: calc(148 * var(--u));
+    width: calc(60 * var(--u));
+    font-size: max(7px, calc(15 * var(--u)));
+    font-weight: 500;
+}
+.fx-humor-regua[data-lado='esq'] {
+    left: calc(29 * var(--u));
+}
+.fx-humor-regua[data-lado='dir'] {
+    right: calc(29 * var(--u));
+}
+.fx-humor-regua::before,
+.fx-humor-regua::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+.fx-humor-regua::before {
+    width: calc(5 * var(--u));
+    background: var(--tinta);
+}
+.fx-humor-regua::after {
+    width: calc(8 * var(--u));
+    background: repeating-linear-gradient(to bottom, var(--tinta) 0 1px, transparent 1px calc(3.7 * var(--u)));
+}
+.fx-humor-regua[data-lado='esq']::before {
+    left: 0;
+}
+.fx-humor-regua[data-lado='esq']::after {
+    left: calc(7 * var(--u));
+}
+.fx-humor-regua[data-lado='dir']::before {
+    right: 0;
+}
+.fx-humor-regua[data-lado='dir']::after {
+    right: calc(7 * var(--u));
+}
+.fx-humor-regua span {
+    position: absolute;
+    transform: translateY(50%);
+    line-height: 1;
+}
+.fx-humor-regua[data-lado='esq'] span {
+    right: 0;
+}
+.fx-humor-regua[data-lado='dir'] span {
+    left: 0;
+}
+
+/* 6. as faixas coloridas: o fundo inteiro na cor do estilo, os painéis da mesma cor com a trama escura */
+.fx-faixas {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+}
+.fx-faixa {
+    --fundo: var(--cor-faixa);
+    --trama: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 29.5 29.5' preserveAspectRatio='none'%3E%3Cg stroke='%23000' stroke-opacity='0.2' stroke-width='1' stroke-dasharray='2 2.9167' fill='none'%3E%3Cpath d='M0 0.5H29.5'/%3E%3Cpath d='M0.5 0V29.5'/%3E%3C/g%3E%3C/svg%3E");
+    background: var(--cor-faixa);
+}
+.fx-faixa-miolo {
+    width: calc(1829 * var(--u));
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: calc(62 * var(--u));
+    padding: calc(64 * var(--u)) 0 calc(100 * var(--u));
+}
+.fx-painel[data-solto] .fx-tela {
+    border: 0;
+    background: none;
+    overflow: visible;
+}
+.fx-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.fx-manchete {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+.fx-manchete-texto {
+    position: absolute;
+    top: calc(59 * var(--u));
+    left: 0;
+    margin: 0;
+    font-size: calc(390 * var(--u));
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+    white-space: nowrap;
+    will-change: transform;
+}
+.fx-etiqueta-estilo {
+    position: absolute;
+    left: calc(14 * var(--u));
+    top: calc(22 * var(--u));
+    padding: calc(14 * var(--u)) calc(18 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: var(--cor-faixa);
+    font-size: max(12px, calc(56 * var(--u)));
+    font-weight: 600;
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+    z-index: 1;
+}
+
+.fx-texto-painel {
+    position: absolute;
+    inset: 0;
+    padding: calc(32 * var(--u)) calc(27 * var(--u));
+    overflow: hidden;
+}
+.fx-texto-tamanho {
+    margin: 0 0 calc(10 * var(--u));
+    font-size: max(9px, calc(19 * var(--u)));
+    font-weight: 500;
+    line-height: 1.2;
+}
+.fx-texto-corpo {
+    margin: 0;
+    line-height: 1.24;
+}
+
+.fx-solto {
+    position: absolute;
+    inset: 0;
+}
+.fx-pilha {
+    position: absolute;
+    left: 0;
+    top: 0;
+    white-space: nowrap;
+}
+.fx-contador {
+    position: absolute;
+    left: calc(76 * var(--u));
+    top: calc(46 * var(--u));
+    width: calc(212 * var(--u));
+    height: calc(336 * var(--u));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(30 * var(--u)) 0 calc(34 * var(--u));
+    box-sizing: border-box;
+    background: var(--tinta);
+    color: #fff;
+    box-shadow:
+        inset 0 0 0 calc(7 * var(--u)) var(--tinta),
+        inset 0 0 0 calc(9 * var(--u)) rgba(255, 255, 255, 0.92);
+}
+.fx-contador-letra {
+    font-size: calc(150 * var(--u));
+    line-height: 0.8;
+}
+.fx-contador-numero {
+    font-size: calc(112 * var(--u));
+    line-height: 0.8;
+}
+.fx-codigos {
+    position: absolute;
+    right: 0;
+    top: calc(24 * var(--u));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: max(7px, calc(17 * var(--u)));
+    line-height: 1.2;
+}
+.fx-caixa-letra {
+    position: absolute;
+    width: calc(110 * var(--u));
+    height: calc(150 * var(--u));
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: var(--linha-fina) solid var(--tinta);
+    background: var(--cor-faixa);
+    font-size: calc(150 * var(--u));
+    line-height: 1;
+}
+
+.fx-simbolo {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+}
+.fx-simbolo > span {
+    font-size: calc(330 * var(--u));
+    line-height: 1;
+}
+
+.fx-cartaz-r {
+    position: absolute;
+    left: calc(58 * var(--u));
+    top: 0;
+    font-size: calc(540 * var(--u));
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+}
+.fx-cartaz-lente {
+    position: absolute;
+    left: calc(300 * var(--u));
+    top: calc(140 * var(--u));
+    width: calc(200 * var(--u));
+    height: calc(200 * var(--u));
+    border: max(1px, calc(2 * var(--u))) solid var(--tinta);
+    border-radius: 50%;
+    background: var(--cor-faixa);
+    overflow: hidden;
+}
+.fx-cartaz-lente span {
+    position: absolute;
+    left: calc(-640 * var(--u));
+    top: calc(-520 * var(--u));
+    font-size: calc(1300 * var(--u));
+    line-height: 1;
+}
+.fx-cartaz-lente i {
+    position: absolute;
+    width: calc(34 * var(--u));
+    height: calc(34 * var(--u));
+    margin: calc(-17 * var(--u)) 0 0 calc(-17 * var(--u));
+    border: max(1px, calc(2 * var(--u))) solid #fff;
+    border-radius: 50%;
+}
+.fx-cartaz-pilha {
+    position: absolute;
+    left: calc(500 * var(--u));
+    right: calc(6 * var(--u));
+    top: 0;
+    line-height: 0.92;
+}
+.fx-dupla {
+    display: flex;
+    justify-content: space-between;
+}
+.fx-citacao {
+    position: absolute;
+    left: calc(10 * var(--u));
+    right: calc(10 * var(--u));
+    top: 0;
+    height: calc(270 * var(--u));
+    display: grid;
+    place-items: center;
+    border: var(--linha-fina) solid var(--tinta);
+    text-align: center;
+    font-size: calc(100 * var(--u));
+    line-height: 1;
+}
+.fx-citacao-linhas {
+    position: absolute;
+    left: calc(10 * var(--u));
+    right: calc(10 * var(--u));
+    top: calc(288 * var(--u));
+    font-size: calc(32 * var(--u));
+    line-height: 1.1;
+}
+.fx-citacao-linhas div {
+    display: flex;
+    align-items: baseline;
+    gap: calc(10 * var(--u));
+}
+.fx-citacao-linhas small {
+    width: calc(26 * var(--u));
+    font-family: var(--ff-ui), sans-serif;
+    font-size: max(6px, calc(11 * var(--u)));
+    line-height: 1;
+}
+.fx-citacao-linhas span {
+    flex: 1;
+}
+
+.fx-onomatopeias {
+    position: absolute;
+    left: calc(72 * var(--u));
+    top: calc(-4 * var(--u));
+    font-size: calc(136 * var(--u));
+    line-height: 1.02;
+    white-space: nowrap;
+}
+.fx-letra-grande {
+    position: absolute;
+    left: calc(52 * var(--u));
+    top: calc(64 * var(--u));
+    font-size: calc(520 * var(--u));
+    line-height: 1;
+    text-box: trim-both ex alphabetic;
+}
+.fx-selecao {
+    position: absolute;
+    left: calc(236 * var(--u));
+    top: calc(36 * var(--u));
+    width: calc(170 * var(--u));
+    height: calc(170 * var(--u));
+    border: max(1px, calc(1.5 * var(--u))) dashed var(--tinta);
+    border-radius: calc(30 * var(--u));
+}
+.fx-selecao i {
+    position: absolute;
+    width: calc(18 * var(--u));
+    height: calc(18 * var(--u));
+    margin: calc(-9 * var(--u)) 0 0 calc(-9 * var(--u));
+    border: max(1px, calc(2 * var(--u))) solid var(--tinta);
+    border-radius: 50%;
+    background: var(--cor-faixa);
+}
+.fx-selecao i:nth-child(2) {
+    left: 100%;
+}
+.fx-selecao i:nth-child(3) {
+    top: 100%;
+}
+.fx-selecao i:nth-child(4) {
+    left: 100%;
+    top: 100%;
+}
+.fx-pena {
+    position: absolute;
+    left: calc(20 * var(--u));
+    top: calc(36 * var(--u));
+    width: calc(60 * var(--u));
+    height: calc(60 * var(--u));
+}
+.fx-moldura-palavras {
+    position: absolute;
+    inset: 0;
+    padding: calc(30 * var(--u)) calc(22 * var(--u));
+    font-size: calc(82 * var(--u));
+    line-height: 1.02;
+}
+
+/* 7. a seção escura e os recursos */
+.fx-escura {
+    --fundo: #111111;
+    --borda: #6a6a6a;
+    --trama: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 29.5 29.5' preserveAspectRatio='none'%3E%3Cg stroke='%23fff' stroke-opacity='0.17' stroke-width='1' stroke-dasharray='2 2.9167' fill='none'%3E%3Cpath d='M0 0.5H29.5'/%3E%3Cpath d='M0.5 0V29.5'/%3E%3C/g%3E%3C/svg%3E");
+    background: #111111;
+    color: #ececec;
+}
+.fx-escura .fx-regua-num,
+.fx-escura .fx-lado-letra {
+    color: #d4d4d4;
+}
+.fx-escura .fx-regua-traco,
+.fx-escura .fx-lado-traco {
+    background: #9a9a9a;
+}
+.fx-letra-rune {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: calc(400 * var(--u));
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+}
+.fx-variacoes {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+.fx-variacoes-metade {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: calc(10 * var(--u));
+}
+.fx-variacoes-metade + .fx-variacoes-metade {
+    border-left: 1px dashed #5a5a5a;
+}
+.fx-variacoes-titulo {
+    margin: 0 0 calc(14 * var(--u));
+    font-size: max(9px, calc(21 * var(--u)));
+    font-weight: 500;
+    line-height: 1;
+    color: #e8e8e8;
+}
+.fx-variacoes-texto {
+    margin: 0;
+    text-align: center;
+    font-size: calc(86 * var(--u));
+    line-height: 0.95;
+    white-space: nowrap;
+}
+.fx-variacoes[data-maiusculas] .fx-variacoes-texto {
+    text-transform: uppercase;
+}
+
+.fx-alterna {
+    position: absolute;
+    width: calc(52 * var(--u));
+    padding: 0 calc(3 * var(--u)) calc(3 * var(--u));
+    display: flex;
+    flex-direction: column;
+    gap: calc(3 * var(--u));
+    border: var(--linha-fina) solid #111;
+    border-radius: calc(3 * var(--u));
+    background: #fff;
+    color: #111;
+    z-index: 2;
+}
+.fx-alterna-botao {
+    display: grid;
+    place-items: center;
+    height: calc(41 * var(--u));
+    border: var(--linha-fina) solid #111;
+    border-radius: calc(4 * var(--u));
+    background: #fff;
+    color: #111;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: max(8px, calc(19 * var(--u)));
+    font-weight: 500;
+    line-height: 1;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+.fx-alterna-botao[data-ativo] {
+    background: var(--cor-botao, #111);
+    color: #fff;
+}
+.fx-icone-quadrado,
+.fx-icone-circulo {
+    display: block;
+    width: calc(17 * var(--u));
+    height: calc(17 * var(--u));
+    background: currentColor;
+}
+.fx-icone-circulo {
+    border-radius: 50%;
+}
+
+.fx-recursos-dupla {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+.fx-recurso {
+    position: relative;
+    height: 100%;
+}
+.fx-recurso[data-largo] {
+    position: absolute;
+    inset: 0;
+}
+.fx-recurso-cabeca {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: calc(40 * var(--u));
+    display: grid;
+    grid-template-columns: calc(101 * var(--u)) calc(122 * var(--u)) auto;
+    align-items: center;
+    padding-left: calc(39 * var(--u));
+    font-size: max(9px, calc(21 * var(--u)));
+    line-height: 1;
+    white-space: nowrap;
+}
+.fx-recurso-cabeca[data-largo] {
+    grid-template-columns: calc(177 * var(--u)) calc(472 * var(--u)) auto;
+}
+.fx-recurso-letras {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(40 * var(--u));
+    bottom: 0;
+    display: grid;
+    place-items: center;
+    font-size: calc(280 * var(--u));
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+    white-space: nowrap;
+}
+.fx-recurso-letras[data-minusculas] {
+    text-box: trim-both ex alphabetic;
+}
+.fx-recurso-letras[data-largo] {
+    font-size: calc(250 * var(--u));
+}
+.fx-fracao {
+    margin: 0 0.18em;
+}
+
+/* 8. o topo: cabeçalho e faixa das fontes presos no alto (meio transparentes) e o hero com a palavra animada */
+html:has([data-clone]) {
+    scroll-behavior: smooth;
+}
+.fx-faixa,
+#testador {
+    scroll-margin-top: calc(160 * var(--u));
+}
+.fx-topo {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+.fx-cabecalho {
+    position: relative;
+    height: calc(72 * var(--u));
+    background: rgba(255, 255, 255, 0.92);
+}
+.fx-logo {
+    position: absolute;
+    left: calc(44 * var(--u));
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    color: #111;
+    font-size: max(13px, calc(26 * var(--u)));
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    white-space: pre;
+}
+.fx-logo-cursor {
+    display: inline-block;
+    width: max(1px, calc(1.6 * var(--u)));
+    height: calc(30 * var(--u));
+    margin-left: calc(2 * var(--u));
+    background: #111;
+    animation: fx-piscar-logo 1.5s steps(1) infinite;
+}
+.fx-logo-cursor[data-digitando] {
+    animation: none;
+}
+@keyframes fx-piscar-logo {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+.fx-menu {
+    position: absolute;
+    left: calc(319 * var(--u));
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: calc(62 * var(--u));
+}
+.fx-menu-grupo {
+    display: flex;
+    gap: calc(19 * var(--u));
+}
+.fx-menu a,
+.fx-submenu a {
+    color: #b3b3b3;
+    font-size: max(10px, calc(18 * var(--u)));
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.fx-menu a:hover,
+.fx-submenu a:hover,
+.fx-cabecalho-direita:hover {
+    color: #111;
+}
+.fx-menu-seta {
+    position: absolute;
+    left: calc(21 * var(--u));
+    bottom: 0;
+    width: 0;
+    height: 0;
+    border-left: calc(7 * var(--u)) solid transparent;
+    border-right: calc(7 * var(--u)) solid transparent;
+    border-bottom: calc(7 * var(--u)) solid #ececec;
+}
+.fx-cabecalho-direita {
+    position: absolute;
+    right: calc(49 * var(--u));
+    top: 50%;
+    transform: translateY(-50%);
+    color: #bdbdbd;
+    font-size: max(12px, calc(24 * var(--u)));
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.fx-submenu {
+    display: flex;
+    align-items: center;
+    gap: calc(26 * var(--u));
+    height: calc(74 * var(--u));
+    padding-left: calc(325 * var(--u));
+    background: rgba(236, 236, 236, 0.92);
+}
+.fx-submenu a {
+    color: #a9a9a9;
+}
+.fx-submenu a[data-ativo] {
+    color: #111;
+}
+.fx-submenu .fx-pilula {
+    display: inline-flex;
+    align-items: center;
+    height: calc(32 * var(--u));
+    padding: 0 calc(12 * var(--u));
+    border-radius: calc(16 * var(--u));
+    background: #dedede;
+    color: #a3a3a3;
+}
+
+.fx-hero {
+    position: relative;
+    height: calc(849 * var(--u));
+    background-color: var(--fundo);
+    background-image: var(--trama);
+    background-size: calc(29.5 * var(--u)) calc(29.5 * var(--u));
+    border-bottom: var(--linha-fina) solid var(--borda);
+}
+.fx-hero-palavra {
+    position: absolute;
+    overflow: visible;
+}
+.fx-hero-coordenada {
+    font-family: var(--ff-ui), sans-serif;
+    font-weight: 600;
+    fill: #111;
+}
+.fx-hero-legenda {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(653 * var(--u));
+    margin: 0;
+    color: #b9b9b9;
+    font-size: max(9px, calc(17 * var(--u)));
+    font-weight: 500;
+    line-height: 1.24;
+    text-align: center;
+}
+.fx-hero-regua {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: calc(1829 * var(--u));
+    height: 0;
+    transform: translateX(-50%);
+}
+
+/* 9. o que muda com variáveis (tamanhos que o celular ajusta) e a versão de celular */
+.fx-so-celular {
+    display: none !important;
+}
+.fx-texto-corpo {
+    font-size: calc(var(--tam) * var(--u) * var(--fator-texto, 1));
+}
+.fx-humor-barra {
+    height: var(--v);
+}
+.fx-hero-cena {
+    position: absolute;
+    inset: 0;
+}
+.fx-recurso-letras[data-fracoes] {
+    font-size: calc(180 * var(--u));
+}
+
+/* no celular (até 899 px): a página tem 2 colunas de módulo (885 u, mais as margens das letras dos lados); os painéis
+   de 4 colunas passam a 2, alguns com mais fileiras, e o que era largo se rearruma */
+@media (max-width: 899px) {
+    [data-clone] {
+        --u: calc(100cqw / 945);
+    }
+    .fx-so-largo {
+        display: none !important;
+    }
+    .fx-so-celular {
+        display: block !important;
+    }
+    .fx-painel {
+        width: calc(var(--col-c) * var(--M) + (var(--col-c) - 1) * var(--G));
+        height: calc(var(--lin-c) * var(--M) + (var(--lin-c) - 1) * var(--G));
+    }
+    .fx-grade {
+        grid-template-columns: repeat(2, var(--M));
+        grid-auto-flow: row dense;
+    }
+    .fx-grade > .fx-painel {
+        grid-column: span var(--col-c) !important;
+        grid-row: span var(--lin-c) !important;
+    }
+    .fx-faixa-miolo,
+    .fx-hero-regua {
+        width: calc(885 * var(--u));
+    }
+
+    /* o cabeçalho: logo e link; o menu sai e a faixa das fontes rola para o lado */
+    .fx-cabecalho {
+        height: 52px;
+    }
+    .fx-logo {
+        left: 16px;
+        font-size: 17px;
+    }
+    .fx-logo-cursor {
+        height: 20px;
+    }
+    .fx-menu {
+        display: none;
+    }
+    .fx-cabecalho-direita {
+        right: 16px;
+        font-size: 15px;
+    }
+    .fx-submenu {
+        height: 44px;
+        padding: 0 16px;
+        gap: 18px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        white-space: nowrap;
+    }
+    .fx-submenu a {
+        flex: none;
+        font-size: 14px;
+    }
+    .fx-submenu .fx-pilula {
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 14px;
+    }
+    .fx-faixa,
+    #testador {
+        scroll-margin-top: 110px;
+    }
+
+    /* o hero: a palavra e as setas encolhem juntas */
+    .fx-hero-cena {
+        transform: scale(0.84);
+        transform-origin: 50% 55%;
+    }
+    .fx-hero-legenda {
+        font-size: 11px;
+    }
+
+    /* o alfabeto em sete linhas, a frase e os títulos digitados menores */
+    .fx-alfabeto {
+        top: calc(60 * var(--u));
+        font-size: calc(118 * var(--u));
+        line-height: calc(114 * var(--u));
+    }
+    .fx-digitada-texto {
+        font-size: calc(80 * var(--u));
+        padding-right: calc(14 * var(--u));
+        min-height: calc(61 * var(--u));
+    }
+    .fx-cursor-texto {
+        top: calc(-18 * var(--u));
+        width: calc(7 * var(--u));
+        height: calc(103 * var(--u));
+    }
+    .fx-titulo-estilos {
+        font-size: calc(100 * var(--u));
+        min-height: calc(76 * var(--u));
+    }
+    .fx-nota {
+        right: calc(24 * var(--u));
+        bottom: calc(18 * var(--u));
+        font-size: 9px;
+    }
+
+    /* o testador: o seletor à direita, o parágrafo embaixo dele e o humor em barras deitadas */
+    .fx-seletor {
+        left: auto;
+        right: calc(14 * var(--u));
+    }
+    .fx-testador-texto {
+        top: calc(232 * var(--u));
+        font-size: calc(72 * var(--u));
+        line-height: calc(80 * var(--u));
+    }
+    .fx-humor-titulo {
+        top: calc(530 * var(--u));
+    }
+    .fx-humor-barras {
+        top: calc(590 * var(--u));
+        left: calc(40 * var(--u));
+        right: calc(40 * var(--u));
+        height: auto;
+        flex-direction: column;
+        align-items: stretch;
+        gap: calc(20 * var(--u));
+    }
+    .fx-humor-regua {
+        display: none;
+    }
+    .fx-humor-coluna {
+        width: auto;
+        display: grid;
+        grid-template-columns: calc(250 * var(--u)) 1fr calc(110 * var(--u));
+        align-items: center;
+        gap: calc(16 * var(--u));
+    }
+    .fx-humor-nome {
+        order: 1;
+        margin: 0;
+    }
+    .fx-humor-trilho {
+        order: 2;
+        width: 100%;
+        height: calc(54 * var(--u));
+        align-items: stretch;
+    }
+    .fx-humor-barra {
+        width: var(--v);
+        height: 100%;
+        transition:
+            width 1s cubic-bezier(0.16, 1, 0.3, 1),
+            background-color 0.45s ease;
+    }
+    .fx-humor-valor {
+        order: 3;
+        margin: 0;
+        text-align: right;
+    }
+
+    /* faixas: os painéis de texto ocupam a largura inteira, com letra maior */
+    .fx-texto-corpo {
+        --fator-texto: 1.45;
+    }
+
+    /* a seção escura: as duas metades do texto uma embaixo da outra */
+    .fx-variacoes {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+    }
+    .fx-variacoes-metade + .fx-variacoes-metade {
+        border-left: 0;
+        border-top: 1px dashed #5a5a5a;
+    }
+
+    /* os recursos largos */
+    .fx-recurso-cabeca[data-largo] {
+        grid-template-columns: calc(150 * var(--u)) calc(250 * var(--u)) auto;
+    }
+    .fx-recurso-letras[data-largo] {
+        font-size: calc(115 * var(--u));
+    }
+    .fx-recurso-letras[data-fracoes] {
+        font-size: calc(80 * var(--u));
+    }
+
+    /* as barras de ferramentas das palavras soltas ficariam fora da tela (passam da margem): no celular, saem */
+    .fx-painel[data-solto] .fx-ferramentas {
+        display: none;
+    }
+}
+
+/* 10. o livro: o espécime da Rune na mesa escura (o motor do clone-tantan) dentro de um painel, com as setas, as
+   páginas abertas e o botão do PDF embaixo, como na página antiga da fonte */
+.fx-livro-tela {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #141312;
+    outline: none;
+    touch-action: pan-y;
+}
+.fx-livro-tela:focus-visible {
+    outline: 2px solid var(--laranja);
+    outline-offset: -2px;
+}
+.fx-livro-carregando,
+.fx-livro-dica {
+    position: absolute;
+    margin: 0;
+    color: rgba(239, 238, 234, 0.62);
+    font-family: var(--ff-mono), monospace;
+    font-size: max(10px, calc(15 * var(--u)));
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+.fx-livro-carregando {
+    inset: 0;
+    display: grid;
+    place-items: center;
+    transition: opacity 0.6s ease;
+}
+.fx-livro-carregando[data-pronto='true'] {
+    opacity: 0;
+}
+.fx-livro-dica {
+    left: 50%;
+    bottom: calc(26 * var(--u));
+    transform: translateX(-50%);
+    line-height: 1.4;
+    white-space: nowrap;
+    transition: opacity 0.8s ease;
+}
+.fx-livro-dica[data-oculta='true'] {
+    opacity: 0;
+}
+.fx-livro-controles {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(28 * var(--u));
+    width: calc(1829 * var(--u));
+}
+.fx-livro-seta {
+    display: grid;
+    place-items: center;
+    width: max(36px, calc(84 * var(--u)));
+    height: max(36px, calc(84 * var(--u)));
+    padding: 0;
+    border: var(--linha-fina) solid var(--borda);
+    border-radius: 50%;
+    background: var(--fundo);
+    color: var(--tinta);
+    /* as setas da Rune (a Inter Tight do recorte latino não tem ← e →) */
+    font-family: var(--ff-cut), sans-serif;
+    font-size: max(16px, calc(38 * var(--u)));
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        opacity 0.2s ease;
+}
+.fx-livro-seta:hover:not(:disabled) {
+    background: #e6e6e6;
+}
+.fx-livro-seta:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+.fx-livro-seta:focus-visible {
+    outline: 2px solid var(--tinta);
+    outline-offset: 3px;
+}
+.fx-livro-paginas {
+    min-width: calc(340 * var(--u));
+    text-align: center;
+    font-size: max(12px, calc(26 * var(--u)));
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.fx-livro-baixar {
+    display: flex;
+    height: max(40px, calc(96 * var(--u)));
+    margin-left: calc(24 * var(--u));
+    color: var(--tinta);
+    text-decoration: none;
+}
+.fx-livro-baixar i {
+    width: max(20px, calc(48 * var(--u)));
+    background: #ff1a00;
+}
+.fx-livro-baixar i:first-child {
+    border-radius: 999px 0 0 999px;
+}
+.fx-livro-baixar i:last-child {
+    border-radius: 0 999px 999px 0;
+}
+.fx-livro-baixar span {
+    display: grid;
+    place-items: center;
+    padding: 0 calc(20 * var(--u));
+    background: #00ff9d;
+    font-size: max(13px, calc(34 * var(--u)));
+    font-weight: 500;
+    white-space: nowrap;
+}
+.fx-livro-baixar:hover span {
+    background: #3dffb4;
+}
+.fx-livro-baixar:focus-visible {
+    outline: 2px solid var(--tinta);
+    outline-offset: 4px;
+}
+
+@media (max-width: 899px) {
+    .fx-livro-controles {
+        width: calc(885 * var(--u));
+        flex-wrap: wrap;
+        row-gap: 14px;
+    }
+    .fx-livro-baixar {
+        margin-left: 0;
+    }
+    .fx-livro-dica {
+        width: 88%;
+        text-align: center;
+        white-space: normal;
+    }
+}
