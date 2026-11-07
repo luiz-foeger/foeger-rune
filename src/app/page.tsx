@@ -6,7 +6,8 @@ import { Faixa, Manchete, Textos } from './_comp/Faixa';
 import { Escura, LetrasRune, Recursos, TextoVariacoes } from './_comp/Livro';
 import SecaoLivro from './_comp/SecaoLivro';
 import Testador from './_comp/Testador';
-import { Cabecalho, Hero } from './_comp/Topo';
+import { Cabecalho } from './_comp/Topo';
+import { HeroPedras } from './_comp/HeroPedras';
 import TituloEstilos from './_comp/TituloEstilos';
 import { TITULO_LIVRO, TITULO_RECURSOS } from './_lib/conteudo';
 
@@ -19,7 +20,7 @@ export default function Pagina() {
     return (
         <>
             <Cabecalho />
-            <Hero />
+            <HeroPedras />
             <main className="fx-corpo">
                 <Alfabeto />
                 <Digitada />

@@ -1086,14 +1086,6 @@ html:has([data-clone]) {
     line-height: 1.24;
     text-align: center;
 }
-.fx-hero-regua {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: calc(1829 * var(--u));
-    height: 0;
-    transform: translateX(-50%);
-}
 
 /* 9. o que muda com variáveis (tamanhos que o celular ajusta) e a versão de celular */
 .fx-so-celular {
@@ -1137,8 +1129,7 @@ html:has([data-clone]) {
         grid-column: span var(--col-c) !important;
         grid-row: span var(--lin-c) !important;
     }
-    .fx-faixa-miolo,
-    .fx-hero-regua {
+    .fx-faixa-miolo {
         width: calc(885 * var(--u));
     }
 
@@ -1788,4 +1779,54 @@ html[data-paleta='azul'] [data-clone] {
     .fx-divisa .fx-divisa-pegador {
         transform: scale(1.9);
     }
+}
+
+/* 14. as pedras que rolam: o hero ocupa a tela menos o pé, onde já aparece a régua de cima do alfabeto (a de
+   verdade, que sobe com a página); ele fica preso no alto e a página sobe por cima dele. As letras moram numa camada
+   dentro do hero (por baixo da página, por cima da cena), e o SVG da cena só mede onde elas ficam */
+.fx-hero-pedras {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    height: calc(100vh - 62 * var(--u));
+    height: calc(100svh - 62 * var(--u));
+    border-bottom: 0;
+}
+/* depois que a página cobre o hero inteiro, ele rola com ela até voltar ao topo (a palavra desce junto) */
+.fx-hero-pedras[data-preso='nao'] {
+    position: relative;
+}
+/* a cena de antes (849 u, com a palavra e a legenda) fica no meio da tela */
+.fx-hero-pedras .fx-hero-cena {
+    inset: auto 0;
+    top: calc(50% - 424.5 * var(--u));
+    height: calc(849 * var(--u));
+}
+@media (max-width: 899px) {
+    /* a legenda agora encolhe junto com a cena (0,56) */
+    .fx-hero-pedras .fx-hero-legenda {
+        font-size: 19px;
+    }
+}
+.fx-hero-medida {
+    visibility: hidden;
+}
+.fx-corpo {
+    position: relative;
+    z-index: 1;
+    background: var(--fundo);
+}
+.fx-pedras {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+.fx-pedra {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: visible;
+    transform-origin: 0 0;
+    will-change: transform;
 }
