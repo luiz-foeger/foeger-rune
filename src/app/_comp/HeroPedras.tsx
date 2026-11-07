@@ -43,16 +43,25 @@ const MIN_CHOQUE = 3;
 const MIN_ARRASTO = 2;
 const PASSOS = 4; // subpassos da física por quadro (o chão anda aos poucos, sem atravessar as letras)
 const ALCANCE = 60; // px: se o chão passou do alto da letra mais que isso de uma vez (um salto de rolagem), ela não se solta
-const VOLTA = 0.9; // segundos da volta para o lugar (pelo logo)
+const VOLTA = 0.9; // segundos do voo de volta para o lugar (pelo logo)
+// a volta da pedra partida ou rachada é a quebra ao contrário: os cacos voam de volta em arco, cada um no seu tempo
+// (até ESCALONA de atraso), se encaixam com as emendas, que viram as rachaduras, e elas se fecham de volta até o ponto
+// da batida (em FECHA); só então a pedra volta a ficar lisa e, aos poucos, afiada (da Worn para a Cut)
+const ESCALONA = 0.22; // segundos
+const FECHA = 0.7; // segundos
 // a quebra: o dano é o desgaste que passa da Worn; com ele, as rachaduras crescem, e a pedra se parte em QUEBRA
 const QUEBRA = 14;
 const PERTO = 8; // sementes dos cacos em volta do ponto da batida (lascas pequenas)
 const LONGE = 11; // e espalhadas pela letra (blocos maiores)
 const RAIO_PERTO = 140; // unidades da fonte
-const CACO_MIN = 1200; // unidades²: um pedaço menor que isso vira pó (não entra)
+const CACO_MIN = 1200; // unidades²: um pedaço menor que isso gruda no caco vizinho
 const EMPURRAO = 2.2; // px a cada 1/60 s: os cacos se afastam do ponto da batida ao se partir
 // ao se soltar, cada letra leva um tranco: um pulo curto, um giro e um empurrão contra a vizinha (o R contra o u, o n
-// contra o e); pesada, ela cai logo, tombada, por cima das outras (velocidades em px e radianos a cada 1/60 s)
+// contra o e); pesada, ela cai logo, tombada, por cima das outras (velocidades em px e radianos a cada 1/60 s). O tranco
+// segue a velocidade da página no toque: nenhum com ela quase parada (até TRANCO_MIN; a letra só tomba com o próprio
+// peso, em vez de saltar como se levasse uma pancada) e inteiro numa rolagem normal (a partir de TRANCO_CHEIO)
+const TRANCO_MIN = 150; // px/s
+const TRANCO_CHEIO = 900; // px/s
 const LANCE = [
     { vx: 4.5, vy: -11, giro: 0.06 },
     { vx: -3.5, vy: -14, giro: -0.075 },
@@ -66,7 +75,7 @@ const SEM_TROCAS = { fontFeatureSettings: '"calt" 0, "kern" 0' } as CSSPropertie
 const u = (n: number) => `calc(${n} * var(--u))`;
 
 type Ponto = { x: number; y: number };
-type Estado = 'casa' | 'solta' | 'quebrada' | 'volta';
+type Estado = 'casa' | 'solta' | 'quebrada' | 'volta' | 'fecha';
 type Aresta = { d: string; d0: number; comp: number }; // uma rachadura: o caminho, a distância do começo à batida e o comprimento
 type Caco = { id: string; d: string; centro: Ponto; casco: Ponto[] }; // em unidades da fonte, nas contas da palavra
 type Racha = { geracao: number; origem: Ponto; arestas: Aresta[]; alcance: number; cacos: Caco[] };
@@ -87,12 +96,21 @@ type Pedra = {
     danoAplicado: number;
     de: Pose; // de onde a letra sai na volta
     desde: number;
+    danoFecha: number; // o dano quando as rachaduras começam a se fechar
 };
 
 const palavra = PALAVRAS.Rune;
 const suave = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const caminho = (pts: Ponto[], fechado = true) =>
     pts.map((p, k) => `${k ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join('') + (fechado ? 'Z' : '');
+// o voo de volta: um arco (curva de Bézier com o ponto de controle acima das duas pontas), não uma reta
+const voo = (de: Ponto, para: Ponto, e: number) => {
+    const d = Math.hypot(para.x - de.x, para.y - de.y);
+    const cx = (de.x + para.x) / 2;
+    const cy = Math.min(de.y, para.y) - Math.max(40, d * 0.28);
+    const r = 1 - e;
+    return { x: r * r * de.x + 2 * r * e * cx + e * e * para.x, y: r * r * de.y + 2 * r * e * cy + e * e * para.y };
+};
 // o menor giro até o ângulo 0
 const semVoltas = (a: number) => a - 2 * Math.PI * Math.round(a / (2 * Math.PI));
 
@@ -237,35 +255,60 @@ function rachar(gl: Glifo, origem: Ponto): Racha {
         arestas.push({ d: caminho(ord, false), d0: Math.min(ini, fim), comp: comprimento(ord) });
     }
     const alcance = Math.max(1, ...arestas.map(a => a.d0 + a.comp));
-    // os cacos
+    // os cacos: cada célula recortada pela letra. O pedaço pequeno demais (menos de CACO_MIN) gruda no caco vizinho com
+    // quem divide a aresta mais longa, em vez de sumir: assim nenhum pedaço da letra some na quebra nem aparece de
+    // repente na volta (só sobra como pó o que não tem vizinho grande, raro)
     const geracao = ++geracoes;
-    const cacos: Caco[] = [];
-    celulas.forEach((cel, i) => {
+    type Pedaco = { i: number; liquida: number; pontos: Ponto[]; serrado: Ponto[]; dono: number };
+    const pedacos: (Pedaco | null)[] = celulas.map((cel, i) => {
         const convexo = cel.map(v => v.p);
-        if (convexo.length < 3) return;
-        const pedacos = fora.map(c => recortar(c, convexo));
+        if (convexo.length < 3) return null;
+        const recortes = fora.map(c => recortar(c, convexo));
         const liquida =
-            pedacos.reduce((s, p) => s + Math.abs(area(p)), 0) - furos.reduce((s, c) => s + Math.abs(area(recortar(c, convexo))), 0);
-        if (liquida < CACO_MIN) return;
-        const pontos = pedacos.flat();
-        if (pontos.length < 3) return;
-        const casco = semRepetidos(Matter.Vertices.hull(pontos as unknown as Matter.Vertex[]).map(p => ({ x: p.x, y: p.y })));
-        if (casco.length < 3) return;
-        const centro = Matter.Vertices.centre(casco as unknown as Matter.Vertex[]);
-        // o contorno do caco é a célula com as arestas quebradas (as mesmas das rachaduras)
+            recortes.reduce((s, p) => s + Math.abs(area(p)), 0) - furos.reduce((s, c) => s + Math.abs(area(recortar(c, convexo))), 0);
+        if (liquida <= 1) return null; // a célula não pega a letra
+        // o contorno do pedaço é a célula com as arestas quebradas (as mesmas das rachaduras)
         const serrado = cel.flatMap(v => {
             if (v.viz < 0) return [v.p];
             const s = i < v.viz ? serras.get(`${i}-${v.viz}`) : serras.get(`${v.viz}-${i}`)?.slice().reverse();
             return s ? s.slice(0, -1) : [v.p];
         });
+        return { i, liquida, pontos: recortes.flat(), serrado, dono: i };
+    });
+    for (const pd of pedacos) {
+        if (!pd || pd.liquida >= CACO_MIN) continue;
+        const cel = celulas[pd.i];
+        let maior = 0;
+        pd.dono = -1;
+        cel.forEach((v, k) => {
+            const viz = v.viz >= 0 ? pedacos[v.viz] : null;
+            if (!viz || viz.liquida < CACO_MIN) return;
+            const q = cel[(k + 1) % cel.length].p;
+            const L = Math.hypot(q.x - v.p.x, q.y - v.p.y);
+            if (L > maior) {
+                maior = L;
+                pd.dono = v.viz;
+            }
+        });
+    }
+    const cacos: Caco[] = [];
+    for (const pd of pedacos) {
+        if (!pd || pd.liquida < CACO_MIN) continue;
+        const juntos = pedacos.filter((q): q is Pedaco => !!q && (q === pd || (q.liquida < CACO_MIN && q.dono === pd.i)));
+        const pontos = juntos.flatMap(q => q.pontos);
+        if (pontos.length < 3) continue;
+        const casco = semRepetidos(Matter.Vertices.hull(pontos as unknown as Matter.Vertex[]).map(p => ({ x: p.x, y: p.y })));
+        if (casco.length < 3) continue;
+        const centro = Matter.Vertices.centre(casco as unknown as Matter.Vertex[]);
         cacos.push({
-            id: `${geracao}-${i}`,
-            d: caminho(serrado),
+            id: `${geracao}-${pd.i}`,
+            // o recorte do caco: a célula dele e as dos pedaços pequenos que grudaram nele
+            d: juntos.map(q => caminho(q.serrado)).join(''),
             centro: { x: centro.x, y: centro.y },
             // o casco um pouco para dentro: a pedra gasta é menor que o polígono do Cut
             casco: casco.map(p => ({ x: centro.x + (p.x - centro.x) * 0.94, y: centro.y + (p.y - centro.y) * 0.94 })),
         });
-    });
+    }
     return { geracao, origem, arestas, alcance, cacos };
 }
 
@@ -297,11 +340,13 @@ function cascos(): Pedra[] {
             danoAplicado: -1,
             de: { x: 0, y: 0, a: 0 },
             desde: 0,
+            danoFecha: 0,
         };
     });
 }
 
-// a letra na Worn, desenhada pela fonte (a letra rachada e os cacos)
+// a Worn da fonte, só como máscara das rachaduras: elas são da cor da página, então onde a máscara passa um pouco da
+// pedra gasta pelo filtro, não aparecem
 function Gasta({ gl, cor }: { gl: Glifo; cor: string }) {
     return (
         <text x={gl.x + (DESVIO_WORN[gl.ch] ?? 0)} y={0} fontSize={1000} fill={cor} style={{ fontFamily: 'var(--ff-worn)', ...SEM_TROCAS }}>
@@ -336,7 +381,7 @@ export function HeroPedras() {
         const pagina = document.querySelector('.fx-corpo');
         const alfabeto = document.getElementById('alfabeto');
         // os cacos na física: o corpo, a letra, o caco e de onde ele sai na volta
-        const cacos = new Map<string, { corpo: Matter.Body; letra: number; caco: Caco; de: Pose }>();
+        const cacos = new Map<string, { corpo: Matter.Body; letra: number; caco: Caco; de: Pose; atraso: number }>();
         let sPx = 0;
         let largura = 0;
         let alturaTela = 0;
@@ -366,13 +411,19 @@ export function HeroPedras() {
         const atualizarRachas = () => setRachas(ps.map(p => p.racha));
         const temCacos = (i: number) => [...cacos.values()].some(k => k.letra === i);
 
-        // a letra de volta em casa, inteira (os cacos dela saem da física)
-        const paraCasa = (p: Pedra, i: number, choque: number, casa?: Ponto) => {
+        // os cacos de uma letra saem da física (e os desenhos deles se escondem até a rachadura sumir da página)
+        const tirarCacos = (i: number) => {
             for (const [k, c] of cacos) {
                 if (c.letra !== i) continue;
                 Matter.Composite.remove(mundo, c.corpo);
                 cacos.delete(k);
+                const el = cacosEl.current.get(k);
+                if (el) el.style.visibility = 'hidden';
             }
+        };
+        // a letra de volta em casa, inteira
+        const paraCasa = (p: Pedra, i: number, choque: number, casa?: Ponto) => {
+            tirarCacos(i);
             const c = p.corpo;
             if (c) {
                 if (!Matter.Composite.get(mundo, c.id, 'body')) Matter.Composite.add(mundo, c);
@@ -493,7 +544,7 @@ export function HeroPedras() {
                 });
                 Matter.Body.setAngularVelocity(corpo, w + (Math.random() * 2 - 1) * 0.06);
                 Matter.Composite.add(mundo, corpo);
-                cacos.set(caco.id, { corpo, letra: i, caco, de: { x: 0, y: 0, a: 0 } });
+                cacos.set(caco.id, { corpo, letra: i, caco, de: { x: 0, y: 0, a: 0 }, atraso: 0 });
             }
             Matter.Composite.remove(mundo, c);
             p.estado = 'quebrada';
@@ -504,11 +555,12 @@ export function HeroPedras() {
             const s = performance.now() / 1000;
             ps.forEach((p, i) => {
                 const c = p.corpo;
-                if (!c || p.estado === 'casa' || p.estado === 'volta') return;
+                if (!c || p.estado === 'casa' || p.estado === 'volta' || p.estado === 'fecha') return;
                 if (p.estado === 'quebrada')
                     for (const k of cacos.values()) {
                         if (k.letra !== i) continue;
                         k.de = { x: k.corpo.position.x, y: k.corpo.position.y, a: semVoltas(k.corpo.angle) };
+                        k.atraso = Math.random() * ESCALONA;
                         Matter.Body.setStatic(k.corpo, true);
                         colide(k.corpo, false);
                     }
@@ -565,24 +617,57 @@ export function HeroPedras() {
                     const baixo = casa.y + p.baixo * sPx;
                     if (!reduzido && chaoAntes > baixo + 1 && chaoAgora <= baixo + 1 && chaoAgora >= casa.y + p.cima * sPx - ALCANCE) {
                         const l = LANCE[i % LANCE.length];
+                        const vel = (chaoAntes - chaoAgora) / Math.max(dt, 1 / 240);
+                        const forca = Math.min(1, Math.max(0, (vel - TRANCO_MIN) / (TRANCO_CHEIO - TRANCO_MIN)));
                         Matter.Body.setStatic(c, false);
-                        Matter.Body.setVelocity(c, { x: l.vx, y: l.vy });
-                        Matter.Body.setAngularVelocity(c, l.giro);
+                        Matter.Body.setVelocity(c, { x: l.vx * forca, y: l.vy * forca });
+                        Matter.Body.setAngularVelocity(c, l.giro * forca);
                         p.estado = 'solta';
                     }
                 } else if (p.estado === 'volta') {
-                    const t = suave(Math.min(1, (s - p.desde) / VOLTA));
-                    if (!temCacos(i)) {
-                        Matter.Body.setPosition(c, mistura(p.de, casa, t));
-                        Matter.Body.setAngle(c, p.de.a * (1 - t));
+                    // o voo de volta, em arco (os cacos, cada um com o seu atraso)
+                    const emCacos = temCacos(i);
+                    let chegou = true;
+                    if (!emCacos) {
+                        const t = Math.min(1, (s - p.desde) / VOLTA);
+                        Matter.Body.setPosition(c, voo(p.de, casa, suave(t)));
+                        Matter.Body.setAngle(c, p.de.a * (1 - suave(t)));
+                        chegou = t >= 1;
                     } else
                         for (const k of cacos.values()) {
                             if (k.letra !== i) continue;
+                            const t = Math.min(1, Math.max(0, (s - p.desde - k.atraso) / VOLTA));
                             const alvo = { x: casa.x + (k.caco.centro.x - p.centro.x) * sPx, y: casa.y + (k.caco.centro.y - p.centro.y) * sPx };
-                            Matter.Body.setPosition(k.corpo, mistura(k.de, alvo, t));
-                            Matter.Body.setAngle(k.corpo, k.de.a * (1 - t));
+                            Matter.Body.setPosition(k.corpo, voo(k.de, alvo, suave(t)));
+                            Matter.Body.setAngle(k.corpo, k.de.a * (1 - suave(t)));
+                            if (t < 1) chegou = false;
                         }
-                    // no lugar: inteira de novo, ainda gasta, voltando aos poucos para a Cut
+                    if (chegou) {
+                        if (p.racha) {
+                            // encaixou: a letra rachada no lugar dos cacos (as emendas viram as rachaduras, todas abertas
+                            // na que se partiu), e elas começam a se fechar
+                            if (emCacos) {
+                                tirarCacos(i);
+                                p.dano = QUEBRA;
+                            }
+                            Matter.Body.setPosition(c, casa);
+                            Matter.Body.setAngle(c, 0);
+                            p.choque = WORN;
+                            p.danoFecha = p.dano;
+                            p.desde = s;
+                            p.estado = 'fecha';
+                        } else {
+                            // inteira: fica com o desgaste que tinha e daí volta aos poucos para a Cut
+                            paraCasa(p, i, p.choque, casa);
+                            atualizarRachas();
+                        }
+                    }
+                } else if (p.estado === 'fecha') {
+                    // as rachaduras se fecham de volta até o ponto da batida; fechadas, a pedra volta a ser lisa (da Worn
+                    // para a Cut, aos poucos)
+                    Matter.Body.setPosition(c, casa);
+                    const t = Math.min(1, (s - p.desde) / FECHA);
+                    p.dano = p.danoFecha * (1 - suave(t));
                     if (t >= 1) {
                         paraCasa(p, i, WORN, casa);
                         atualizarRachas();
@@ -725,22 +810,21 @@ export function HeroPedras() {
                             height="1"
                         >
                             <g transform={`scale(${escala || 0.0001}) translate(${-p.centro.x} ${-p.centro.y})`}>
-                                {/* a letra inteira, gasta pelo filtro (até rachar) */}
+                                {/* a letra, gasta pelo filtro: é o único desenho dela (rachada, ela continua assim, e os cacos são
+                                    recortes dele), para nenhuma troca mudar a forma */}
                                 <g
                                     ref={el => {
                                         filtros.current[i] = el;
                                     }}
-                                    style={r ? { display: 'none' } : undefined}
                                 >
                                     <FiltroDesgaste id={`${id}-${i}`} modo="ambos" />
                                     {g.pedras.map((pd, k) => (
                                         <path key={k} d={pd.d} fill="#111" fillRule="evenodd" filter={`url(#${id}-${i})`} />
                                     ))}
                                 </g>
-                                {/* rachada: a Worn desenhada pela fonte, com as rachaduras (da cor da página) só por dentro dela */}
+                                {/* rachada: as rachaduras (da cor da página) por cima da letra, só por dentro dela */}
                                 {r && (
                                     <g key={r.geracao}>
-                                        <Gasta gl={g} cor="#111" />
                                         <mask id={`${id}-m${i}`} maskUnits="userSpaceOnUse" x={g.x - 200} y={-1100} width={g.avanco + 400} height={1500}>
                                             <Gasta gl={g} cor="#fff" />
                                         </mask>
@@ -781,8 +865,11 @@ export function HeroPedras() {
                                       <clipPath id={`${id}-k${c.id}`}>
                                           <path d={c.d} />
                                       </clipPath>
+                                      {/* o caco é um recorte da própria letra, com o filtro dela (a mesma forma, sem troca) */}
                                       <g clipPath={`url(#${id}-k${c.id})`}>
-                                          <Gasta gl={palavra.glifos[i]} cor="#111" />
+                                          {palavra.glifos[i].pedras.map((pd, k) => (
+                                              <path key={k} d={pd.d} fill="#111" fillRule="evenodd" filter={`url(#${id}-${i})`} />
+                                          ))}
                                       </g>
                                   </g>
                               </svg>
