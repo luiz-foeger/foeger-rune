@@ -56,6 +56,9 @@ const LONGE = 11; // e espalhadas pela letra (blocos maiores)
 const RAIO_PERTO = 140; // unidades da fonte
 const CACO_MIN = 1200; // unidades²: um pedaço menor que isso gruda no caco vizinho
 const EMPURRAO = 2.2; // px a cada 1/60 s: os cacos se afastam do ponto da batida ao se partir
+// a espessura da rachadura, em px do aparelho (em qualquer tela): a do fio que aparece entre dois cacos encaixados. Mais
+// grossa que isso, ela engrossaria de repente quando os cacos remontados viram a letra rachada
+const RACHA_PX = 0.35;
 // ao se soltar, cada letra leva um tranco: um pulo curto, um giro e um empurrão contra a vizinha (o R contra o u, o n
 // contra o e); pesada, ela cai logo, tombada, por cima das outras (velocidades em px e radianos a cada 1/60 s). O tranco
 // segue a velocidade da página no toque: nenhum com ela quase parada (até TRANCO_MIN; a letra só tomba com o próprio
@@ -774,7 +777,9 @@ export function HeroPedras() {
 
     const largura = palavra.largura + 2 * MARGEM;
     const esq = (-palavra.largura / 2 - MARGEM) * ESCALA;
-    const fino = 1.2 / (escala || 1); // a rachadura com ~1,2 px na tela
+    // as rachaduras só existem no navegador (nascem depois da hidratação), então a densidade da tela já está aqui
+    const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
+    const fino = RACHA_PX / ((escala || 1) * dpr);
     return (
         <section ref={ref} className="fx-hero fx-hero-pedras" aria-label={HERO.legenda.join('. ')}>
             {/* a cena (849 u de altura) fica no meio da tela e encolhe no celular, onde a palavra passaria da largura; o
