@@ -5,8 +5,10 @@ import Painel from './Painel';
 import { FRASE } from '../_lib/conteudo';
 import { useVisivel } from '../_lib/movimento';
 
-// a frase digitada letra a letra quando o painel chega à tela (70 a 230 ms por tecla, como na gravação), com o
-// cursor laranja, que fica aceso enquanto digita e depois pisca. Texto e cursor ficam centrados juntos.
+// a frase digitada letra a letra quando a linha dela chega à tela (70 a 230 ms por tecla, como na gravação), com o
+// cursor laranja, que fica aceso enquanto digita e depois pisca. Texto e cursor ficam centrados juntos. A conta é
+// pela linha, não pelo painel: com o painel parado pela metade na tela, a frase já aparece (antes, com 60% do painel,
+// ele ficava em branco).
 // O calt fica ligado: as letras repetidas saem com as variações da fonte.
 function intervalos(n: number) {
     // sorteio fixo (o mesmo ritmo a cada visita)
@@ -19,7 +21,7 @@ function intervalos(n: number) {
 
 export default function Digitada() {
     const ref = useRef<HTMLDivElement>(null);
-    const visivel = useVisivel(ref, { limiar: 0.6, umaVez: true });
+    const visivel = useVisivel(ref, { limiar: 0.3, umaVez: true });
     const [n, setN] = useState(0);
     useEffect(() => {
         if (!visivel) return;
@@ -34,8 +36,8 @@ export default function Digitada() {
     }, [visivel]);
     return (
         <Painel colunas={4} linhas={1} rotulo={FRASE}>
-            <div ref={ref} className="fx-digitada">
-                <div className="fx-digitada-texto" data-digitando={n > 0 && n < FRASE.length}>
+            <div className="fx-digitada">
+                <div ref={ref} className="fx-digitada-texto" data-digitando={n > 0 && n < FRASE.length}>
                     {FRASE.slice(0, n)}
                     <i className="fx-cursor-texto" aria-hidden />
                 </div>

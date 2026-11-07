@@ -46,7 +46,8 @@ export default function TituloEstilos({
     ancora?: string;
 }) {
     const ref = useRef<HTMLDivElement>(null);
-    const visivel = useVisivel(ref, { limiar: 0.6, umaVez: true });
+    // começa quando a linha do título chega à tela (não 60% do painel: parado pela metade, ele ficava em branco)
+    const visivel = useVisivel(ref, { limiar: 0.3, umaVez: true });
     const [passo, setPasso] = useState<Passo>({ n: 0, asterisco: false, pendente: null, espera: 0 });
     useEffect(() => {
         if (!visivel) return;
@@ -68,8 +69,8 @@ export default function TituloEstilos({
     const letras = texto.split('');
     return (
         <Painel colunas={4} linhas={1} rotulo={texto} ancora={ancora}>
-            <div ref={ref} className="fx-digitada">
-                <div className="fx-titulo-estilos" aria-label={texto}>
+            <div className="fx-digitada">
+                <div ref={ref} className="fx-titulo-estilos" aria-label={texto}>
                     {letras.map((ch, i) => (
                         <span key={i} className="fx-letra" data-oculta={i >= passo.n || undefined} data-pendente={passo.pendente === i || undefined} aria-hidden>
                             {ch}
