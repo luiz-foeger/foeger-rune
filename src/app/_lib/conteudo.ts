@@ -16,7 +16,7 @@ export const TITULO_ESTILOS = { texto: 'Três Estilos', asteriscoDepois: 4, nota
 
 // o testador: a cor de cada estilo (a da faixa dele, mais adiante na página), o parágrafo (o "Hi, my name is George…")
 // e o humor de cada um, de 0 a 100
-export const CORES_ESTILO: Record<Estilo, string> = { cut: '#b3806c', polished: '#fd9dcd', worn: '#00d372' };
+export const CORES_ESTILO: Record<Estilo, string> = { cut: 'var(--p-cut)', polished: 'var(--p-polished)', worn: 'var(--p-worn)' };
 export const PARAGRAFO = ['Oi, meu nome é Rune.', 'Sou feita de pedra e', 'o uso me arredonda.'];
 export const HUMOR = {
     titulo: 'Humor',
@@ -30,7 +30,7 @@ export const HUMOR = {
 
 // as faixas coloridas, uma por estilo (as da Ease são sete): a cor do fundo, a manchete que corre com a rolagem e os
 // textos dos quatro painéis de texto (a história da fonte, em tamanhos crescentes)
-export const COR_FAIXA: Record<Estilo, string> = { cut: '#b3806d', polished: '#ffc6dc', worn: '#00d470' };
+export const COR_FAIXA: Record<Estilo, string> = { cut: 'var(--p-cut)', polished: 'var(--p-polished)', worn: 'var(--p-worn)' };
 export const MANCHETES: Record<Estilo, string> = {
     cut: 'Toda pedra começa bruta!',
     polished: 'Rolando no rio, a pedra fica lisa!',
@@ -47,10 +47,10 @@ export const TAMANHOS_TEXTO = [20, 24, 27, 30];
 // o começo do "text book" da Ease (até 0:25): a seção escura com R U N E e o texto que troca de caixa (em minúsculas,
 // as letras repetidas mostram as variações da fonte; em maiúsculas, não) e os recursos
 export const RUNE = [
-    { letra: 'R', estilo: 'cut' as Estilo, cor: '#ff3502' },
-    { letra: 'U', estilo: 'polished' as Estilo, cor: '#9d5af9' },
+    { letra: 'R', estilo: 'cut' as Estilo, cor: 'var(--p-quente-claro)' },
+    { letra: 'U', estilo: 'polished' as Estilo, cor: 'var(--p-polished)' },
     { letra: 'N', estilo: 'worn' as Estilo, cor: '#c8c8c8' },
-    { letra: 'E', estilo: 'cut' as Estilo, cor: '#00ffb1' },
+    { letra: 'E', estilo: 'cut' as Estilo, cor: 'var(--p-cut)' },
 ];
 export const VARIACOES = [
     { estilo: 'cut' as Estilo, titulo: 'Cut, com as variações', linhas: ['Sonhei ontem', 'que uma pedra', 'rolava, rolava', 'e não paraaava!'] },

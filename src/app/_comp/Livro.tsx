@@ -63,7 +63,7 @@ export function LetrasRune() {
     );
 }
 
-const CORES_LETRA = ['#9d5af9', '#ff3d00', '#bdbdbd'];
+const CORES_LETRA = ['var(--p-polished)', 'var(--p-quente-claro)', '#bdbdbd'];
 function colorir(texto: string, semente: number) {
     const sorteio = sorteador(semente);
     return texto.split('').map((ch, i) => (
@@ -117,12 +117,12 @@ type Parte = { t: string; destaque?: boolean };
 type Recurso = { tag: string; nome: string; partes: Parte[]; cor: string; estilo?: CSSProperties };
 const CARTAS: Recurso[][] = [
     [
-        { tag: 'calt', nome: 'Variação do s', partes: [{ t: 's' }, { t: 's', destaque: true }], cor: '#00d372' },
-        { tag: 'calt', nome: 'Variação do e', partes: [{ t: 'e' }, { t: 'e', destaque: true }], cor: '#9d5af9' },
+        { tag: 'calt', nome: 'Variação do s', partes: [{ t: 's' }, { t: 's', destaque: true }], cor: 'var(--p-worn)' },
+        { tag: 'calt', nome: 'Variação do e', partes: [{ t: 'e' }, { t: 'e', destaque: true }], cor: 'var(--p-frio)' },
     ],
     [
-        { tag: 'calt', nome: 'L do meio', partes: [{ t: 'A' }, { t: 'L', destaque: true }], cor: '#ff3502' },
-        { tag: 'calt', nome: 'f do começo', partes: [{ t: 'f', destaque: true }, { t: 'é' }], cor: '#00d372' },
+        { tag: 'calt', nome: 'L do meio', partes: [{ t: 'A' }, { t: 'L', destaque: true }], cor: 'var(--p-quente)' },
+        { tag: 'calt', nome: 'f do começo', partes: [{ t: 'f', destaque: true }, { t: 'é' }], cor: 'var(--p-worn)' },
     ],
 ];
 

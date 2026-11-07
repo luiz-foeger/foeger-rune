@@ -9,9 +9,24 @@
     --fundo: #f8f8f8;
     --tinta: #111111;
     --borda: #333333;
-    --laranja: #fd5100;
-    --verde: #00d372;
-    --roxo: #9d5af9;
+    /* a paleta: as cores por papel (--p-*). Esta é a dos pigmentos minerais (cores que vêm de pedras moídas); a
+       monocromática em azul fica em html[data-paleta='azul'] (seção 12, no fim) */
+    --p-cut: #e3b55a;
+    --p-polished: #8aa4da;
+    --p-worn: #62b08d;
+    --p-quente: #c95a40;
+    --p-frio: #2d4ca3;
+    --p-quente-claro: #e2805f;
+    --p-pontos-quente: #8a3422;
+    --p-pontos-frio: #1e3473;
+    --p-tinta-quente: #f6e0d8;
+    --p-tinta-frio: #dde3f3;
+    --p-tinta-polished: #dfe6f5;
+    --p-worn-escuro: #2e7d5c;
+    --p-frio-escuro: #1e3473;
+    --p-claro-frio: #f2f4fb;
+    --p-botao: #e3b55a;
+    --p-botao-hover: #ecc574;
     --faixa: #bfc3c5;
     --linha-fina: max(1px, calc(1.5 * var(--u)));
     /* a trama pontilhada dos painéis (nas faixas coloridas, a mesma em tom mais escuro) */
@@ -25,7 +40,7 @@
 }
 
 [data-clone] ::selection {
-    background: var(--laranja);
+    background: var(--p-quente);
     color: #fff;
 }
 
@@ -187,7 +202,7 @@
     cursor: pointer;
 }
 .fx-estilo[data-ativo='true'] {
-    color: var(--verde);
+    color: var(--p-worn);
 }
 .fx-estilo-nome {
     font-family: var(--ff-ui), sans-serif;
@@ -226,7 +241,7 @@
     top: calc(-35 * var(--u));
     width: calc(12 * var(--u));
     height: calc(196 * var(--u));
-    background: var(--laranja);
+    background: var(--p-quente);
     animation: fx-piscar 1.2s ease-in-out infinite;
 }
 .fx-digitada-texto[data-digitando='true'] .fx-cursor-texto {
@@ -246,29 +261,12 @@
     }
 }
 
-/* 3. os cartões: a palavra que se gasta */
-.fx-cartao-titulo {
-    position: absolute;
-    top: calc(43 * var(--u));
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: max(10px, calc(19 * var(--u)));
-    font-weight: 500;
-    line-height: 1;
-    transform: translateY(-50%);
-}
 .fx-seta {
     position: absolute;
     width: calc(30 * var(--u));
     height: calc(44 * var(--u));
     pointer-events: none;
     z-index: 3;
-}
-
-.fx-palavra {
-    position: absolute;
-    overflow: visible;
 }
 
 .fx-ferramentas {
@@ -353,39 +351,7 @@
     margin: calc(-7 * var(--u)) 0 0 calc(-7 * var(--u));
     border: var(--linha-fina) solid var(--tinta);
     border-radius: 50%;
-    background: var(--laranja);
-}
-
-/* 4. os cartões com lupa (S, R, H, Seixo Rolado, Ahá, b, n, A, Água mole) */
-.fx-cartao-svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-}
-.fx-coordenada {
-    font-family: var(--ff-ui), sans-serif;
-    font-size: 13.5px;
-    font-weight: 600;
-    fill: #111;
-}
-.fx-raio {
-    font-family: var(--ff-ui), sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-}
-.fx-leitura text {
-    font-family: var(--ff-ui), sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    fill: #111;
-    white-space: pre;
-}
-.fx-guia-rotulo {
-    font-family: var(--ff-ui), sans-serif;
-    font-size: 12.5px;
-    font-weight: 500;
+    background: var(--p-quente);
 }
 
 .fx-ferramenta[data-escura] {
@@ -401,14 +367,6 @@
     margin-top: calc(4 * var(--u));
 }
 
-.fx-seta-lupa {
-    position: absolute;
-    width: calc(64 * var(--u));
-    height: calc(64 * var(--u));
-    pointer-events: none;
-    z-index: 3;
-}
-
 /* a etiqueta do canto dos cartões de lupa: a letra inteira, pequena, com o círculo onde a lupa olha */
 .fx-etiqueta {
     position: absolute;
@@ -422,75 +380,6 @@
     z-index: 2;
 }
 .fx-etiqueta svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-/* a ficha do glifo do S: ícones, o código, a fonte, o estilo e a miniatura preta */
-.fx-ficha {
-    position: absolute;
-    left: calc(566 * var(--u));
-    bottom: calc(15 * var(--u));
-    width: calc(286 * var(--u));
-    height: calc(168 * var(--u));
-    display: grid;
-    grid-template-columns: calc(170 * var(--u)) 1fr;
-    grid-template-rows: calc(50 * var(--u)) calc(50 * var(--u)) 1fr 1fr;
-    border: var(--linha-fina) solid var(--tinta);
-    background: #fff;
-    z-index: 2;
-    font-family: var(--ff-ui), sans-serif;
-    color: var(--tinta);
-}
-.fx-ficha-icones {
-    display: grid;
-    grid-template-columns: 1fr 1.4fr 1fr;
-    border-bottom: 1px solid var(--tinta);
-}
-.fx-ficha-icones > * {
-    width: 100%;
-    height: 100%;
-    padding: calc(6 * var(--u));
-    border-right: 1px solid var(--tinta);
-    box-sizing: border-box;
-}
-.fx-ficha-letra {
-    display: grid;
-    place-items: center;
-    padding: 0;
-    font-size: calc(36 * var(--u));
-    font-weight: 500;
-    line-height: 1;
-}
-.fx-ficha-codigo {
-    display: grid;
-    place-items: center;
-    border-bottom: 1px solid var(--tinta);
-    border-right: 1px solid var(--tinta);
-    font-size: calc(40 * var(--u));
-    font-weight: 500;
-    line-height: 1;
-}
-.fx-ficha-linha {
-    display: grid;
-    place-items: center;
-    border-right: 1px solid var(--tinta);
-    font-size: max(8px, calc(15 * var(--u)));
-    font-weight: 500;
-    letter-spacing: 0.02em;
-}
-.fx-ficha-linha + .fx-ficha-linha {
-    border-top: 1px solid var(--tinta);
-}
-.fx-ficha-icones,
-.fx-ficha-codigo,
-.fx-ficha-linha {
-    grid-column: 1;
-}
-.fx-ficha-mini {
-    grid-column: 2;
-    grid-row: 1 / span 4;
     width: 100%;
     height: 100%;
     display: block;
@@ -1387,8 +1276,21 @@ html:has([data-clone]) {
     outline: none;
     touch-action: pan-y;
 }
+/* no celular, o painel encolhe para menos da metade: os nomes da divisa crescem (em unidades do SVG) e a legenda sai */
+@media (max-width: 899px) {
+    .fx-divisa .fx-divisa-rotulo {
+        font-size: 30px !important;
+    }
+    .fx-divisa .fx-divisa-legenda,
+    .fx-divisa .fx-divisa-longo {
+        display: none;
+    }
+    .fx-divisa .fx-divisa-pegador {
+        transform: scale(1.9);
+    }
+}
 .fx-livro-tela:focus-visible {
-    outline: 2px solid var(--laranja);
+    outline: 2px solid var(--p-quente);
     outline-offset: -2px;
 }
 .fx-livro-carregando,
@@ -1475,7 +1377,7 @@ html:has([data-clone]) {
 }
 .fx-livro-baixar i {
     width: max(20px, calc(48 * var(--u)));
-    background: #ff1a00;
+    background: var(--p-botao);
 }
 .fx-livro-baixar i:first-child {
     border-radius: 999px 0 0 999px;
@@ -1487,13 +1389,13 @@ html:has([data-clone]) {
     display: grid;
     place-items: center;
     padding: 0 calc(20 * var(--u));
-    background: #00ff9d;
+    background: var(--p-botao);
     font-size: max(13px, calc(34 * var(--u)));
     font-weight: 500;
     white-space: nowrap;
 }
 .fx-livro-baixar:hover span {
-    background: #3dffb4;
+    background: var(--p-botao-hover);
 }
 .fx-livro-baixar:focus-visible {
     outline: 2px solid var(--tinta);
@@ -1843,4 +1745,47 @@ html:has([data-clone]) {
 html[data-menu-aberto] [data-clone],
 html[data-menu-aberto] .fx-desfoque {
     visibility: hidden;
+}
+
+/* 12. a paleta monocromática em azul: as mesmas cores por papel, em tons de um azul só (com ?paleta=azul) */
+html[data-paleta='azul'] [data-clone] {
+    --p-cut: #7f9ce0;
+    --p-polished: #b3c5ef;
+    --p-worn: #5677cf;
+    --p-quente: #17296b;
+    --p-frio: #3f63c7;
+    --p-quente-claro: #9fb6ee;
+    --p-pontos-quente: #0d1a44;
+    --p-pontos-frio: #142c6e;
+    --p-tinta-quente: #e2e8f7;
+    --p-tinta-frio: #d8e1f6;
+    --p-tinta-polished: #e6ecf9;
+    --p-worn-escuro: #23409a;
+    --p-frio-escuro: #142c6e;
+    --p-claro-frio: #eef2fc;
+    --p-botao: #7f9ce0;
+    --p-botao-hover: #94ade6;
+}
+
+/* 13. os blocos do desgaste: a letra dividida pela divisa, que segue o mouse (no toque, o arrasto de lado é dela) */
+.fx-divisa {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: ew-resize;
+    touch-action: pan-y;
+}
+/* no celular, o painel encolhe para menos da metade: os nomes da divisa crescem (em unidades do SVG) e a legenda sai */
+@media (max-width: 899px) {
+    .fx-divisa .fx-divisa-rotulo {
+        font-size: 30px !important;
+    }
+    .fx-divisa .fx-divisa-legenda,
+    .fx-divisa .fx-divisa-longo {
+        display: none;
+    }
+    .fx-divisa .fx-divisa-pegador {
+        transform: scale(1.9);
+    }
 }

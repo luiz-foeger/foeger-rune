@@ -19,6 +19,18 @@ const ESCURA = '#1b1a18';
 const MAIUSCULA = 0.778;
 const ALTURA_X = 0.57;
 
+// a tinta que se lê sobre um fundo da paleta: clara nos fundos escuros (como o tom mais fundo da paleta azul) e escura
+// nos claros, pela luminância relativa
+function luminancia(hex: string) {
+    const h = hex.replace('#', '');
+    const [r, g, b] = [0, 2, 4].map(i => {
+        const c = parseInt(h.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const tintaSobre = (fundo: string) => (luminancia(fundo) < 0.18 ? COR.claroFrio : ESCURA);
+
 // ---------- ajudantes de texto (entrada em unidades da página) ----------
 
 type Linha = { tam: number; fam?: Familia; peso?: number; cor?: string; alinhar?: 'left' | 'right' | 'center'; espaco?: number; semCalt?: boolean };
@@ -175,13 +187,13 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
         c.p.ret(x, y, l, a, COR.cut);
         if (a > l * 1.2) {
             // a página inteira: o Aa enorme, com o a cortado pela borda como uma foto de perto
-            linha(c, 'Aa', x - 34, y + a * 0.73, { tam: a * 0.62, fam: 'cut', peso: 400, cor: ESCURA });
-        } else centrado(c, 'Aa', 'cut', ESCURA, x, y, l, a, { frac: 0.86 });
+            linha(c, 'Aa', x - 34, y + a * 0.73, { tam: a * 0.62, fam: 'cut', peso: 400, cor: tintaSobre(COR.cut) });
+        } else centrado(c, 'Aa', 'cut', tintaSobre(COR.cut), x, y, l, a, { frac: 0.86 });
     },
     // os quatro cortes do s, um depois do outro, com o nome de cada glifo embaixo
     ssss(c, x, y, l, a) {
         c.p.ret(x, y, l, a, COR.roxo);
-        const claro = '#f6f3ff';
+        const claro = COR.claroFrio;
         const pagina = a > l * 1.2;
         const frac = pagina ? 0.9 : 0.86;
         const { tam, base } = centrado(c, 'ssss', 'worn', claro, x, y, l, a, { frac, altura: ALTURA_X, dy: pagina ? -40 : -a * 0.04 });
@@ -200,15 +212,15 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
     seixo(c, x, y, l, a) {
         c.p.ret(x, y, l, a, COR.polished);
         const tam = ajustar(c, 'Seixo', { fam: 'polished' }, l * 0.9);
-        linha(c, 'Seixo', x + l / 2, y + a * 0.68, { tam, fam: 'polished', peso: 400, cor: ESCURA, alinhar: 'center' });
+        linha(c, 'Seixo', x + l / 2, y + a * 0.68, { tam, fam: 'polished', peso: 400, cor: tintaSobre(COR.polished), alinhar: 'center' });
     },
     // a frase em duas linhas, nas duas páginas (a abertura dupla do capítulo 4)
     acai(c, x, y, l, a) {
         c.p.ret(x, y, l, a, COR.laranja);
         const linhas = ['Ôh, é só', 'açaí!'];
         const tam = Math.min(...linhas.map(t => ajustar(c, t, { fam: 'cut' }, l * 0.78)));
-        linha(c, linhas[0], x + l * 0.06, y + a * 0.47, { tam, fam: 'cut', peso: 400, cor: ESCURA });
-        linha(c, linhas[1], x + l * 0.94, y + a * 0.47 + tam * 0.98, { tam, fam: 'cut', peso: 400, cor: ESCURA, alinhar: 'right' });
+        linha(c, linhas[0], x + l * 0.06, y + a * 0.47, { tam, fam: 'cut', peso: 400, cor: tintaSobre(COR.laranja) });
+        linha(c, linhas[1], x + l * 0.94, y + a * 0.47 + tam * 0.98, { tam, fam: 'cut', peso: 400, cor: tintaSobre(COR.laranja), alinhar: 'right' });
     },
     maiusculas(c, x, y, l, a) {
         c.p.ret(x, y, l, a, '#e4e1da');
@@ -229,7 +241,7 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
     },
     // a mesma palavra nos três estilos: cada um mais estreito que o anterior
     'tres-pedras'(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#f6dbe5');
+        c.p.ret(x, y, l, a, COR.tintaPolished);
         const tam = ajustar(c, 'Pedra', { fam: 'cut' }, l * 0.66);
         const estilos: [Familia, string][] = [['cut', 'Cut'], ['polished', 'Polished'], ['worn', 'Worn']];
         const entre = Math.min(tam * 1.02, (a * 0.86) / 3);
@@ -249,10 +261,10 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
         const x0 = x + (l - w) / 2;
         const base = y + a / 2 + (MAIUSCULA * tam) / 2;
         linha(c, 'R', x0, base, { tam, fam: 'cut', peso: 400, cor: '#cfcac1' });
-        c.p.contornoTexto('R', x0, base, { fam: 'polished', tam }, { cor: '#c2307a', esp: 1.6 });
-        c.p.contornoTexto('R', x0, base, { fam: 'worn', tam }, { cor: '#00894a', esp: 1.6 });
+        c.p.contornoTexto('R', x0, base, { fam: 'polished', tam }, { cor: COR.roxo, esp: 1.6 });
+        c.p.contornoTexto('R', x0, base, { fam: 'worn', tam }, { cor: COR.wornEscuro, esp: 1.6 });
         const tl = Math.max(9, a * 0.026);
-        const chaves: [string, string][] = [['Cut', '#a39d93'], ['Polished', '#c2307a'], ['Worn', '#00894a']];
+        const chaves: [string, string][] = [['Cut', '#a39d93'], ['Polished', COR.roxo], ['Worn', COR.wornEscuro]];
         chaves.forEach(([nome, cor], i) => {
             const yy = y + a - 22 - (chaves.length - 1 - i) * tl * 1.6;
             c.p.ret(x + 18, yy - tl * 0.75, tl * 0.8, tl * 0.8, cor);
@@ -262,17 +274,17 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
     // o ditado na Worn, no verde (a prancha do pé)
     tanto(c, x, y, l, a) {
         c.p.ret(x, y, l, a, COR.worn);
-        linhasNaCaixa(c, ['Tanto bate até', 'que fura!'], 'worn', ESCURA, x, y, l, a, { frac: 0.9, entre: 1.08, alinhar: 'left' });
+        linhasNaCaixa(c, ['Tanto bate até', 'que fura!'], 'worn', tintaSobre(COR.worn), x, y, l, a, { frac: 0.9, entre: 1.08, alinhar: 'left' });
     },
     // as mesmas letras sem e com as trocas: em cima, sempre o mesmo corte; embaixo, quatro cortes
     trocas(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#e9e2fb');
+        c.p.ret(x, y, l, a, COR.tintaFrio);
         const t = 'ssss eeee';
         const tam = ajustar(c, t, { fam: 'worn' }, l * 0.8);
         const tl = Math.max(9, a * 0.026);
         [true, false].forEach((sem, i) => {
             const base = y + a * (i === 0 ? 0.4 : 0.78);
-            rotulo(c, sem ? 'Sem as trocas' : 'Com as trocas', x + l * 0.1, base - ALTURA_X * tam - tl * 1.4, { tam: tl, cor: '#4b3d75' });
+            rotulo(c, sem ? 'Sem as trocas' : 'Com as trocas', x + l * 0.1, base - ALTURA_X * tam - tl * 1.4, { tam: tl, cor: COR.frioEscuro });
             linha(c, t, x + l * 0.1, base, { tam, fam: 'worn', peso: 400, cor: ESCURA, semCalt: sem });
         });
     },
@@ -292,10 +304,10 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
     // a frase das variações, clara no escuro (a prancha do pé)
     correnteza(c, x, y, l, a) {
         c.p.ret(x, y, l, a, ESCURA);
-        linhasNaCaixa(c, ['Nossa, essssa', 'correnteeeeza'], 'worn', '#efeaff', x, y, l, a, { frac: 0.9, entre: 1.05, alinhar: 'left' });
+        linhasNaCaixa(c, ['Nossa, essssa', 'correnteeeeza'], 'worn', COR.claroFrio, x, y, l, a, { frac: 0.9, entre: 1.05, alinhar: 'left' });
     },
     acentos(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#fbe0d4');
+        c.p.ret(x, y, l, a, COR.tintaQuente);
         linhasNaCaixa(c, ['ÁÂÃÀÇÉÊÍ', 'ÓÔÕÚÜÑ', 'áâãçéêíóôõú', '½ ¼ ¾ ¹ ² ³'], 'cut', ESCURA, x, y, l, a, { semCalt: true, entre: 1.16, frac: 0.84, alinhar: 'left' });
     },
     // a mesma palavra em seis corpos, com o corpo de cada linha em mono
@@ -315,7 +327,7 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
     // as onomatopeias na Polished, no rosa (a prancha do pé)
     ploc(c, x, y, l, a) {
         c.p.ret(x, y, l, a, COR.polished);
-        linhasNaCaixa(c, ['Ploc! Tum!', 'Crás, Bum!'], 'polished', ESCURA, x, y, l, a, { frac: 0.86, entre: 1.05, alinhar: 'left' });
+        linhasNaCaixa(c, ['Ploc! Tum!', 'Crás, Bum!'], 'polished', tintaSobre(COR.polished), x, y, l, a, { frac: 0.86, entre: 1.05, alinhar: 'left' });
     },
 };
 
@@ -341,6 +353,10 @@ const PRANCHAS_CAP: { abertura: Prancha; esq: Prancha; dir: Prancha; pe: Prancha
     { abertura: 'ssss', esq: 'trocas', dir: 'l-f', pe: 'correnteza', legendaEsq: ['Worn', 'Sem e com as trocas'], legendaDir: ['L.alt e f.ini', 'Pelo lugar na palavra'] },
     { abertura: 'acai', esq: 'acentos', dir: 'tamanhos', pe: 'ploc', legendaEsq: ['Acentos e frações', 'Cut'], legendaDir: ['Do cartaz ao texto', 'Cut'] },
 ];
+
+// a tinta da abertura de cada capítulo, pelo fundo da prancha dela
+const FUNDO_ABERTURA = [() => COR.cut, () => COR.polished, () => COR.roxo, () => COR.laranja];
+const tintaDaAbertura = (cap: number) => tintaSobre(FUNDO_ABERTURA[cap]());
 
 const faixa = (cap: number) => {
     const p = CAPITULOS[cap].paginas;
@@ -480,18 +496,18 @@ function aberturaImagem(c: Ctx, cap: number) {
     const k = PRANCHAS_CAP[cap].abertura;
     if (ch.modo === 'dupla') prancha(c, k, 0, 0, 2000, 1500);
     else prancha(c, k, 0, 0, 1000, 1500);
-    legendaDe(c, ch.legenda, ch.tinta);
+    legendaDe(c, ch.legenda, tintaDaAbertura(cap));
 }
 
 function aberturaTitulo(c: Ctx, cap: number, num?: number) {
     const ch = CAPITULOS[cap];
     if (ch.modo === 'dupla') {
         prancha(c, PRANCHAS_CAP[cap].abertura, -1000, 0, 2000, 1500);
-        rotulo(c, `Capítulo ${ch.n}`, 973, 70, { cor: ch.tinta, alinhar: 'right' });
-        linha(c, ch.sumario[0], 973, 170, { tam: 76, cor: ch.tinta, alinhar: 'right' });
-        linha(c, ch.sumario[1], 973, 250, { tam: 72, fam: ch.estilo, peso: 400, cor: ch.tinta, alinhar: 'right' });
-        rotulo(c, tituloDe(cap), 973, 1468, { cor: ch.tinta, alinhar: 'right' });
-        if (num) rotulo(c, pagina2(num), 29, 1468, { cor: ch.tinta });
+        rotulo(c, `Capítulo ${ch.n}`, 973, 70, { cor: tintaDaAbertura(cap), alinhar: 'right' });
+        linha(c, ch.sumario[0], 973, 170, { tam: 76, cor: tintaDaAbertura(cap), alinhar: 'right' });
+        linha(c, ch.sumario[1], 973, 250, { tam: 72, fam: ch.estilo, peso: 400, cor: tintaDaAbertura(cap), alinhar: 'right' });
+        rotulo(c, tituloDe(cap), 973, 1468, { cor: tintaDaAbertura(cap), alinhar: 'right' });
+        if (num) rotulo(c, pagina2(num), 29, 1468, { cor: tintaDaAbertura(cap) });
         return;
     }
     fundo(c, PAPEL);
@@ -532,7 +548,7 @@ function mostra(c: Ctx, cap: number) {
         const base = 640;
         fio(c, x, base, x + l, base, '#b9b7b0', 1);
         fio(c, x, base - 545 * (tam / 1000), x + l, base - 545 * (tam / 1000), '#b9b7b0', 1);
-        contorno(c, g, gx, base, tam, 'rgba(179,128,109,0.82)', { cor: TINTA, esp: 1.4 });
+        contorno(c, g, gx, base, tam, COR.cut, { cor: TINTA, esp: 1.4 });
         vertices(c, g, gx, base, tam, 6, PAPEL, TINTA);
         rotulo(c, 'Linha de base', x + l, base + 30, { tam: 11, cor: CINZA, alinhar: 'right' });
         rotulo(c, 'Altura do x', x + l, base - 545 * (tam / 1000) - 14, { tam: 11, cor: CINZA, alinhar: 'right' });
@@ -608,8 +624,9 @@ function artigoDir(c: Ctx, cap: number, num?: number) {
     const n = contarLinhas(c, ch.citacao, 700, cit);
     paragrafo(c, ch.citacao, 150, 770 - ((n - 1) * cit.entre) / 2, 700, cit);
     prancha(c, pc.pe, 0, 999, 1000, 501);
-    const claro = pc.pe === 'numeros' || pc.pe === 'correnteza';
-    const cor = claro ? '#f4f3ef' : ESCURA;
+    // a legenda do pé: clara nas pranchas escuras (os números, a correnteza) e nas da paleta que forem escuras
+    const fundoPe: Record<string, string> = { numeros: ESCURA, correnteza: ESCURA, tanto: COR.worn, ploc: COR.polished };
+    const cor = tintaSobre(fundoPe[pc.pe] ?? PAPEL);
     rotulo(c, tituloDe(cap), 29, 1468, { cor });
     if (num) rotulo(c, `PP. ${pagina2(num - 1)}-${pagina2(num)}`, 973, 1468, { cor, alinhar: 'right' });
 }
@@ -640,7 +657,7 @@ function vegetal(c: Ctx, cap: number) {
         // os quatro e, um por cima do outro, cada um numa cor
         const tam = 1200;
         const base = 1010;
-        const cores = ['#1f1f1d', '#c2307a', '#e04a00', '#00894a'];
+        const cores = ['#1f1f1d', COR.roxo, COR.laranja, COR.wornEscuro];
         const glifos = [glifoDe('Rune', 'e'), PALAVRAS['#e.v2'].glifos[0], PALAVRAS['#e.v3'].glifos[0], PALAVRAS['#e.v4'].glifos[0]];
         glifos.forEach((g, i) => {
             const gx = (1000 - g.avanco * (tam / 1000)) / 2;

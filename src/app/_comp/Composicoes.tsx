@@ -128,7 +128,7 @@ export function GradePalavras({ estilo }: { estilo: Estilo }) {
                         <div>Mármore</div>
                     </div>
                     <Ferramentas estilo={{ left: u(-58), top: u(-4) }} />
-                    <Janela itens={[{ nome: 'QUINAS DE FORA', cor: 'var(--laranja)' }]} pegadores={pegFora} seta={0} estilo={{ left: u(150), top: u(300) }} />
+                    <Janela itens={[{ nome: 'QUINAS DE FORA', cor: 'var(--p-quente)' }]} pegadores={pegFora} seta={0} estilo={{ left: u(150), top: u(300) }} />
                 </div>
             </Painel>
             <Painel colunas={1} linhas={1} solto rotulo="Letras alternativas">
@@ -300,7 +300,7 @@ export function Onomatopeias({ estilo }: { estilo: Estilo }) {
                             <path d="M44 52L54 58" stroke="#111" strokeWidth="5" />
                         </svg>
                     </div>
-                    <Janela itens={[{ nome: 'QUINAS DE FORA', cor: 'var(--laranja)' }]} pegadores={pegFora} seta={0} estilo={{ left: u(214), top: u(318) }} />
+                    <Janela itens={[{ nome: 'QUINAS DE FORA', cor: 'var(--p-quente)' }]} pegadores={pegFora} seta={0} estilo={{ left: u(214), top: u(318) }} />
                 </div>
             </Painel>
             <Painel colunas={1} linhas={1} rotulo="Liso, macio, rolado, redondo" estilo={{ gridColumn: '4' }}>

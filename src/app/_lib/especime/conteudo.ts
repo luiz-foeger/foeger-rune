@@ -26,13 +26,48 @@ export type Capitulo = {
     paginas?: [number, number];
 };
 
+// as cores do livro: as da paleta da página (--p-*), lidas por lerCores antes de desenhar (o canvas e o SVG do PDF
+// precisam da cor de verdade, não da variável). Os valores daqui são os da paleta dos pigmentos minerais.
 export const COR = {
-    cut: '#b3806d',
-    polished: '#ffc6dc',
-    worn: '#00d470',
-    laranja: '#fd5100',
-    roxo: '#9d5af9',
+    cut: '#e3b55a',
+    polished: '#8aa4da',
+    worn: '#62b08d',
+    laranja: '#c95a40',
+    roxo: '#2d4ca3',
+    tintaQuente: '#f6e0d8',
+    tintaFrio: '#dde3f3',
+    tintaPolished: '#dfe6f5',
+    wornEscuro: '#2e7d5c',
+    frioEscuro: '#1e3473',
+    claroFrio: '#f2f4fb',
 };
+const VARIAVEIS: Record<keyof typeof COR, string> = {
+    cut: '--p-cut',
+    polished: '--p-polished',
+    worn: '--p-worn',
+    laranja: '--p-quente',
+    roxo: '--p-frio',
+    tintaQuente: '--p-tinta-quente',
+    tintaFrio: '--p-tinta-frio',
+    tintaPolished: '--p-tinta-polished',
+    wornEscuro: '--p-worn-escuro',
+    frioEscuro: '--p-frio-escuro',
+    claroFrio: '--p-claro-frio',
+};
+const rgb = (hex: string): [number, number, number] => {
+    const h = hex.replace('#', '');
+    return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)) as [number, number, number];
+};
+export function lerCores(el: Element) {
+    const cs = getComputedStyle(el);
+    for (const k of Object.keys(VARIAVEIS) as (keyof typeof COR)[]) {
+        const v = cs.getPropertyValue(VARIAVEIS[k]).trim();
+        if (/^#[0-9a-f]{6}$/i.test(v)) COR[k] = v;
+    }
+    // o papel vegetal do capítulo 3 tem a cor do tom frio claro
+    const v = CAPITULOS[2].vegetal;
+    if (v) v.tinta = rgb(COR.tintaFrio);
+}
 
 export const CAPITULOS: Capitulo[] = [
     {
@@ -93,9 +128,9 @@ export const CAPITULOS: Capitulo[] = [
         citacao: 'Sonhei ontem que uma pedra rolava, rolava e não paraaava!',
         modo: 'pagina',
         cor: COR.roxo,
-        tinta: '#f6f3ff',
+        tinta: '#f2f4fb',
         legenda: ['Föeger Rune Worn', 'Nenhuma igual'],
-        vegetal: { tinta: [236, 228, 252], desenho: 'cortes' },
+        vegetal: { tinta: [221, 227, 243], desenho: 'cortes' },
     },
     {
         n: 4,

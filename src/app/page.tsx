@@ -1,9 +1,5 @@
 import Alfabeto from './_comp/Alfabeto';
-import CartaoDetalhe from './_comp/CartaoDetalhe';
-import CartaoFrase from './_comp/CartaoFrase';
-import CartaoInspetor from './_comp/CartaoInspetor';
-import CartaoLetra from './_comp/CartaoLetra';
-import CartaoPalavra from './_comp/CartaoPalavra';
+import Blocos from './_comp/Blocos';
 import Digitada from './_comp/Digitada';
 import { CartazPolido, GradePalavras, Onomatopeias, Simbolos } from './_comp/Composicoes';
 import { Faixa, Manchete, Textos } from './_comp/Faixa';
@@ -12,16 +8,13 @@ import SecaoLivro from './_comp/SecaoLivro';
 import Testador from './_comp/Testador';
 import { Cabecalho, Hero } from './_comp/Topo';
 import TituloEstilos from './_comp/TituloEstilos';
-import { A, AGUA, AHA, B, EI, H, R, S, SEIXO } from './_lib/cartoes';
 import { TITULO_LIVRO, TITULO_RECURSOS } from './_lib/conteudo';
 
 // a página da Föeger Rune: o cabeçalho preso no alto e o hero da palavra Rune; o alfabeto com os três desgastes e a
-// frase digitada; a grade de cartões; o "Três* Estilos" e o testador; as faixas coloridas de cada estilo e a seção
+// frase digitada; os blocos do desgaste (a letra nova e gasta dos dois lados de uma divisa); o "Três* Estilos" e o testador; as faixas coloridas de cada estilo e a seção
 // escura; os recursos; e, no fim, o livro do espécime e o PDF para baixar. Parte do clone da Studio Feixen Fonts
 // (guardado em C:\pessoal\clone-feixen), sem as seções que mais tinham a cara dela: os cartões das quinas de fora e
 // de dentro, a troca de palavra e as letras soltas com o botão.
-const col = (c: string, linhas = 1) => ({ gridColumn: c, gridRow: `span ${linhas}` });
-
 export default function Pagina() {
     return (
         <>
@@ -30,20 +23,8 @@ export default function Pagina() {
             <main className="fx-corpo">
                 <Alfabeto />
                 <Digitada />
-                {/* sem os cartões das quinas, a grade fecha em cinco fileiras: S ao lado do Ei!, R e H; Seixo e Ahá;
-                    b, n e A; Água embaixo do b e do n */}
-                <div className="fx-grade">
-                    <CartaoInspetor cfg={S} estilo={col('1 / span 2', 2)} />
-                    <CartaoPalavra cfg={EI} estilo={col('3 / span 2')} />
-                    <CartaoDetalhe cfg={R} estilo={col('3')} />
-                    <CartaoDetalhe cfg={H} estilo={col('4')} />
-                    <CartaoFrase cfg={SEIXO} estilo={col('1 / span 2')} />
-                    <CartaoPalavra cfg={AHA} estilo={col('3 / span 2')} />
-                    <CartaoDetalhe cfg={B} estilo={col('1')} />
-                    <CartaoLetra letra="n" estilo={col('2')} />
-                    <CartaoInspetor cfg={A} estilo={col('3 / span 2', 2)} />
-                    <CartaoFrase cfg={AGUA} estilo={col('1 / span 2')} />
-                </div>
+                {/* os blocos do desgaste: a letra dividida, nova de um lado da divisa e gasta do outro */}
+                <Blocos />
                 <TituloEstilos ancora="estilos" />
                 {/* a âncora do "Testar" do menu */}
                 <div id="testador" />

@@ -6,7 +6,7 @@
 // Uso: abrir http://localhost:3700/livro e imprimir (ou gerar com o puppeteer, page.pdf, depois
 // que a <main> ganhar data-pronto)
 import { useEffect, useState } from 'react';
-import { CAPITULOS, montarFolhas, paginasDoPdf } from '../_lib/especime/conteudo';
+import { CAPITULOS, lerCores, montarFolhas, paginasDoPdf } from '../_lib/especime/conteudo';
 import { desenharPagina, PAPEL } from '../_lib/especime/paginas';
 import { carregarFontes, familiasDe, pincelSvg } from '../_lib/especime/pincel';
 
@@ -30,7 +30,9 @@ export default function EspecimeParaImprimir() {
     useEffect(() => {
         let vivo = true;
         (async () => {
-            const fam = familiasDe(document.querySelector('[data-clone]') ?? document.body);
+            const raiz = document.querySelector('[data-clone]') ?? document.body;
+            const fam = familiasDe(raiz);
+            lerCores(raiz);
             await carregarFontes(fam);
             const lista = paginasDoPdf(montarFolhas());
             const svgs = lista.map(({ pagina, num }, i) => {

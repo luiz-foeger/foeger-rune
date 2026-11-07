@@ -25,7 +25,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="pt-BR">
+        // a paleta escolhida pelo endereço (?paleta=azul) vai no html antes de a página aparecer
+        <html lang="pt-BR" suppressHydrationWarning>
+            <head>
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: "try{var p=new URLSearchParams(location.search).get('paleta');if(p)document.documentElement.dataset.paleta=p}catch(e){}",
+                    }}
+                />
+            </head>
             <body className={`${cut.variable} ${polished.variable} ${worn.variable} ${ui.variable} ${mono.variable}`}>
                 <Rolagem>
                     <div data-clone>

@@ -81,9 +81,12 @@ export function FiltroDesgaste({
             )}
             {pontos && (
                 <>
-                    <feImage href={ladrilho(pontos.cor, pontos.passo)} x={pontos.x} y={pontos.y} width={pontos.passo} height={pontos.passo} preserveAspectRatio="none" result="ponto" />
+                    {/* o ladrilho é branco e a cor vem de um flood: assim a cor pode ser uma variável da paleta */}
+                    <feImage href={ladrilho('#fff', pontos.passo)} x={pontos.x} y={pontos.y} width={pontos.passo} height={pontos.passo} preserveAspectRatio="none" result="ponto" />
                     <feTile in="ponto" result="trama" />
-                    <feComposite in="trama" in2="pedra" operator="in" result="reticula" />
+                    <feFlood style={{ floodColor: pontos.cor }} result="corPontos" />
+                    <feComposite in="corPontos" in2="trama" operator="in" result="tramaCor" />
+                    <feComposite in="tramaCor" in2="pedra" operator="in" result="reticula" />
                 </>
             )}
             {contorno && (

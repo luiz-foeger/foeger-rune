@@ -7,7 +7,7 @@
 // quando o painel sai da tela, o toque deixa a página rolar na vertical (pan-y) e dois dedos aproximam. As páginas
 // são as do espécime da Föeger Rune, desenhadas pelo pincel de canvas.
 import { malha, olhar, perspectiva, programa, quadroDeDesenho, liberarQuadro, mult, norm, cruz, type Quadro, type Prog } from './gl';
-import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, CAPITULOS, type Pagina } from '../especime/conteudo';
+import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, lerCores, CAPITULOS, type Pagina } from '../especime/conteudo';
 import { desenharPagina, type Alvo } from '../especime/paginas';
 import { carregarFontes, familiasDe, pincelCanvas, type Familias } from '../especime/pincel';
 import { desenharMesa, MESA } from './mesa';
@@ -280,6 +280,8 @@ const suave = (a: number, b: number, v: number) => {
 
 export async function iniciarLivro(cv: HTMLCanvasElement, o: Opcoes, sinal: AbortSignal): Promise<Controle | null> {
     const fam = familiasDe(cv);
+    // as cores da paleta da página (o canvas precisa da cor de verdade)
+    lerCores(cv);
     await carregarFontes(fam);
     if (sinal.aborted) return null;
     const gl = cv.getContext('webgl2', { antialias: false, alpha: false, depth: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
