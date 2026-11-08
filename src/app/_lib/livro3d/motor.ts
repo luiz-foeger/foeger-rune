@@ -23,13 +23,195 @@ const NIVEIS = [0, 512, 1024, 2560];
 
 // ---------- shaders ----------
 
+// as três partes da folha dobrada pelo ponteiro, nas contas da folha (X da lombada para dentro, Y do meio): 0, a parte
+// deitada (antes da linha da dobra, uEixo); 1, o cone; 2, a parte virada (depois da segunda linha, onde o cone acaba,
+// a linha da dobra girada no vértice pelo ângulo que o cone ocupa na folha)
+const PARTE = `
+float parteDe(vec2 P) {
+    vec2 d = P - uEixo.xy;
+    float dN = dot(d, uCone.xy);
+    if (dN <= 0.0) return 0.0;
+    float al = 3.14159265 * uCone.z;
+    return dN * cos(al) - dot(d, uEixo.zw) * sin(al) >= 0.0 ? 2.0 : 1.0;
+}`;
+
+// a folha dobrada é desenhada em três partes (uParte): a deitada e a virada na malha comum, cada uma com a conta dela em
+// todos os vértices (as duas contas são rígidas, qualquer malha serve), e o cone numa malha própria, ao longo das
+// geratrizes; cada parte só fica com o pedaço da folha que é dela, cortado no fragmento. Numa malha só, os triângulos
+// que atravessavam a dobra ligavam um vértice deitado a um virado e, com o cone mais fino que os quadrados da malha, a
+// borda da dobra saía em serra
+const N_CONE = 160;
+const RECORTE = `
+uniform vec2 uTam;
+uniform vec4 uEixo, uCone;
+uniform float uParte;
+${PARTE}
+bool fora(vec2 uv) {
+    return uParte > -0.5 && abs(parteDe(vec2(uv.x * uTam.x, (uv.y - 0.5) * uTam.y)) - uParte) > 0.5;
+}
+// quanto do pixel é desta parte (0: nada). As bordas entre as partes ficam por dentro da folha, contínuas e da mesma
+// cor, e o corte seco não aparece; só onde o cone é mais fino que um pixel (perto do vértice) a dobra vira a borda
+// da folha contra o que está embaixo, e ali a parte deitada e a virada cobrem o pixel pela metade da conta (com o
+// alpha-to-coverage, o degrau some como numa borda de triângulo)
+float cobertura(vec2 uv) {
+    if (uParte < -0.5) return 1.0;
+    vec2 d = vec2(uv.x * uTam.x, (uv.y - 0.5) * uTam.y) - uEixo.xy;
+    float dN = dot(d, uCone.xy);
+    float al = 3.14159265 * uCone.z;
+    float rs = dN * cos(al) - dot(d, uEixo.zw) * sin(al);
+    float w1 = max(fwidth(dN), 1e-7);
+    float w2 = max(fwidth(rs), 1e-7);
+    // meio pixel de sobra para cada lado das linhas: os desenhos das partes interpolam a folha em malhas diferentes e,
+    // com o centro do pixel em cima da linha, os dois descartavam (furinhos ao longo do vinco e da crista do rolo). Na
+    // sobra, as duas partes têm o mesmo ponto e a mesma cor (as contas encostam nas linhas)
+    float seca = uParte < 0.5 ? step(dN, 0.5 * w1) : uParte > 1.5 ? step(-0.5 * w2, rs) : step(-0.5 * w1, dN) * step(rs, 0.5 * w2);
+    float fino = 1.0 - smoothstep(0.75, 1.5, length(d) * al / w2);
+    float suave = uParte < 0.5 ? clamp(0.5 - dN / w1, 0.0, 1.0) : uParte > 1.5 ? clamp(0.5 + rs / w2, 0.0, 1.0) : seca;
+    return mix(seca, suave, fino);
+}`;
+
 const DEFORMA = `#version 300 es
 precision highp float;
 layout(location = 0) in vec2 aUv;
 uniform mat4 uVP;
 uniform float uPhi, uCurl, uTwist, uGrabV, uZ, uDobra, uLarg, uInclina;
 uniform vec2 uTam;
+// a dobra livre (a folha puxada pelo ponteiro), nas contas da folha: o vértice do cone e a direção da linha da dobra,
+// do vértice para dentro da folha (uEixo); a normal da linha, para o lado que vira, o seno do meio-ângulo do cone e a
+// altura extra da parte virada (uCone); o lado em que a folha está deitada (+1 direita, −1 esquerda)
+uniform float uDobrar, uLado;
+uniform vec4 uEixo, uCone;
+// a parte da folha dobrada que este desenho leva (−1: a folha inteira, sem a dobra livre)
+uniform float uParte;
 const float PI = 3.14159265;
+${PARTE}
+// a malha do cone (a parte 1): uma coluna por geratriz, de ψ = 0 a π, de borda a borda da folha, e mais uma faixa
+// estreita de cada lado, na conta da parte deitada e da virada (o pixel da borda do cone sai inteiro). Com as colunas
+// nas geratrizes, a silhueta do rolo é reta mesmo com o cone mais fino que um quadrado da malha comum
+const float N_CONE = ${N_CONE}.0;
+const float FAIXA = 0.004;
+vec2 faixa(float o, float d, float lo, float hi) {
+    if (abs(d) < 1e-7) return o >= lo && o <= hi ? vec2(-1e6, 1e6) : vec2(1e6, -1e6);
+    float a = (lo - o) / d;
+    float b = (hi - o) / d;
+    return vec2(min(a, b), max(a, b));
+}
+// o ψ da coluna do cone deste vértice (−1 nas faixas e fora do cone): no vértice do cone todas as geratrizes se
+// encontram e o ponto da folha não diz de qual delas ele é (a normal ali é a da geratriz)
+float psiColuna = -1.0;
+vec2 uvDaMalha() {
+    if (uDobrar < 0.5 || abs(uParte - 1.0) > 0.5) return aUv;
+    vec2 A = uEixo.xy;
+    vec2 T = uEixo.zw;
+    vec2 N = uCone.xy;
+    float al = PI * uCone.z;
+    float k = floor(aUv.x * N_CONE + 0.5);
+    vec2 O = A;
+    vec2 D;
+    if (k < 0.5) {
+        D = T;
+        O = A - N * FAIXA;
+    } else if (k > N_CONE - 0.5) {
+        D = cos(al) * T + sin(al) * N;
+        O = A + (cos(al) * N - sin(al) * T) * FAIXA;
+    } else {
+        float fi = al * (k - 1.0) / (N_CONE - 2.0);
+        // um canto de fora da folha dentro do cone: a coluna mais perto dele passa exatamente por ele (as colunas
+        // ligam as pontas em linha reta, e o canto entre duas que saíam por bordas diferentes ficava de fora)
+        if (k > 1.5 && k < N_CONE - 1.5) {
+            for (int i = 0; i < 2; i++) {
+                vec2 dc = vec2(uTam.x, (float(i) - 0.5) * uTam.y) - A;
+                float fc = atan(dot(dc, N), dot(dc, T));
+                if (fc > 0.0 && fc < al && abs(floor(fc / al * (N_CONE - 2.0) + 0.5) + 1.0 - k) < 0.5) fi = fc;
+            }
+        }
+        D = cos(fi) * T + sin(fi) * N;
+        psiColuna = PI * fi / al;
+    }
+    vec2 fx = faixa(O.x, D.x, 0.0, uTam.x);
+    vec2 fy = faixa(O.y, D.y, -0.5 * uTam.y, 0.5 * uTam.y);
+    float r0 = max(fx.x, fy.x);
+    float r1 = min(fx.y, fy.y);
+    // as geratrizes saem do vértice (atrás dele não há cone)
+    if (k > 0.5 && k < N_CONE - 0.5) r0 = max(r0, 0.0);
+    vec2 P;
+    if (r1 > r0) {
+        // a ordem dos vértices na coluna deixa a frente da folha do mesmo lado que na malha comum
+        float t = T.x * N.y - T.y * N.x > 0.0 ? 1.0 - aUv.y : aUv.y;
+        P = O + D * mix(r0, r1, t);
+    } else {
+        // a coluna não passa pela folha: fica no canto mais perto dela (o pedaço do cone que chega ao canto)
+        vec2 nD = vec2(-D.y, D.x);
+        float h = 0.5 * uTam.y;
+        P = vec2(0.0, -h);
+        float m = abs(dot(P - O, nD));
+        vec2 c = vec2(uTam.x, -h);
+        float x = abs(dot(c - O, nD));
+        if (x < m) { m = x; P = c; }
+        c = vec2(0.0, h);
+        x = abs(dot(c - O, nD));
+        if (x < m) { m = x; P = c; }
+        c = vec2(uTam.x, h);
+        x = abs(dot(c - O, nD));
+        if (x < m) { m = x; P = c; }
+    }
+    return vec2(P.x / uTam.x, P.y / uTam.y + 0.5);
+}
+// a folha deitada se dobra como o papel preso na lombada: o que fica antes da linha da dobra não se mexe; depois dela,
+// o papel enrola num cone (o vértice onde o espelho da dobra cruza a linha da lombada: o rolo afina rumo à lombada e
+// some na ponta dela quando a folha é puxada até o limite) e o que passa do cone deita por cima, virado e rígido. Nada
+// estica, então o ponto pego vai exatamente para onde a conta mandar. A folha da esquerda é o espelho (uLado −1, que
+// também inverte a normal)
+vec3 dobrar(vec2 q, out vec3 n) {
+    int parte = int(uParte + 0.5);
+    vec2 P = vec2(q.x * uTam.x, (q.y - 0.5) * uTam.y);
+    vec2 A = uEixo.xy;
+    vec2 T = uEixo.zw;
+    vec2 N = uCone.xy;
+    float sb = uCone.z;
+    float e = uCone.w;
+    float cb = sqrt(max(1.0 - sb * sb, 0.0));
+    vec2 d = P - A;
+    float dT = dot(d, T);
+    float dN = dot(d, N);
+    // a malha do cone usa a conta de cada vértice (as faixas dos lados são da parte deitada e da virada); as outras duas
+    // partes, a conta delas em todos os vértices (a borda da dobra sai reta, cortada no fragmento)
+    float esta = parte == 1 ? (psiColuna >= 0.0 ? 1.0 : parteDe(P)) : float(parte);
+    vec3 X;
+    vec3 m;
+    if (esta < 0.5) {
+        X = vec3(P, 0.0);
+        m = vec3(0.0, 0.0, 1.0);
+    } else if (esta > 1.5) {
+        // a parte virada: girada no vértice, deitada no plano que encosta no alto do cone (inclinado 2β), mais a altura
+        // extra para passar por cima da outra pilha
+        float al = PI * sb;
+        float rc = dT * cos(al) + dN * sin(al);
+        float rs = dN * cos(al) - dT * sin(al);
+        float c2 = 1.0 - 2.0 * sb * sb;
+        float s2 = 2.0 * sb * cb;
+        X = vec3(A + T * (rc * c2) - N * rs, rc * s2 + e);
+        m = vec3(T * s2, -c2);
+    } else {
+        // o cone: a geratriz em volta do eixo (inclinado β sobre a linha da dobra), ψ de 0 (deitado) a π (no alto). A
+        // altura extra sobe na metade de baixo (ψ até π/2), a que olha para a mesa e fica escondida sob o rolo: perto
+        // do vértice o cone é estreito e a subida vira parede, e na metade de cima ela aparecia como uma faixa cinza
+        float rho = length(d);
+        float psi = psiColuna >= 0.0 ? psiColuna : atan(dN, dT) / sb;
+        float cp = cos(psi);
+        float sp = sin(psi);
+        float baixo = step(psi, 0.5 * PI);
+        float sobe = mix(1.0, 0.5 - 0.5 * cos(2.0 * psi), baixo);
+        vec3 g = vec3(T * (cb * cb + sb * sb * cp) + N * (sb * sp), sb * cb * (1.0 - cp));
+        X = vec3(A, 0.0) + rho * g + vec3(0.0, 0.0, e * sobe);
+        vec3 dg = vec3(T * (-sb * sb * sp) + N * (sb * cp), sb * cb * sp);
+        vec3 cr = cross(g, rho * dg + vec3(0.0, 0.0, e * baixo * sin(2.0 * psi)));
+        float mao = T.x * N.y - T.y * N.x;
+        m = dot(cr, cr) > 1e-16 ? mao * normalize(cr) : vec3(T * (sb * cb * (1.0 - cp)) - N * (cb * sp), sb * sb + cb * cb * cp);
+    }
+    n = uLado > 0.0 ? m : vec3(m.x, -m.y, -m.z);
+    return vec3(X.x * uLado, X.y, X.z + uZ);
+}
 // o ângulo da folha ao longo de u: a curva começa na dobra (na lombada, sem arrasto) e vai até uLarg depois dela;
 // a dobra pode ser inclinada (o canto puxado) e a torção adianta um canto
 float ang(float t, float v) {
@@ -38,6 +220,7 @@ float ang(float t, float v) {
 }
 // a folha em arco: a cada passo ao longo de u o ângulo muda; fora de [0, π] a folha deita na pilha
 vec3 deforma(vec2 q, out vec3 n) {
+    if (uDobrar > 0.5) return dobrar(q, n);
     float x = 0.0, z = 0.0, xv = 0.0, zv = 0.0;
     float dt = q.x / 32.0;
     for (int i = 0; i < 32; i++) {
@@ -66,14 +249,20 @@ out vec3 vN;
 out vec3 vPos;
 void main() {
     vec3 n;
-    vec3 p = deforma(aUv, n);
-    vUv = aUv;
+    vec2 q = uvDaMalha();
+    vec3 p = deforma(q, n);
+    vUv = q;
     vN = n;
     vPos = p;
     gl_Position = uVP * vec4(p, 1.0);
 }`;
 
-const FRAG_FOLHA = `#version 300 es
+// os shaders das folhas existem em dois: sem a dobra livre (opacos, sem descarte, como as GPUs de celular gostam: a
+// folha escondida na pilha não chega a ser pintada) e com ela (o recorte das três partes e a cobertura parcial)
+const DESCARTE = `
+    float cob = cobertura(vUv);
+    if (cob <= 0.0) discard;`;
+const fragFolha = (dobra: boolean) => `#version 300 es
 precision highp float;
 in vec2 vUv;
 in vec3 vN;
@@ -82,7 +271,9 @@ uniform sampler2D uFrente, uVerso;
 uniform vec3 uLuz;
 uniform float uCalha;
 out vec4 cor;
+${dobra ? RECORTE : ''}
 void main() {
+    ${dobra ? DESCARTE : 'float cob = 1.0;'}
     vec3 cf = texture(uFrente, vUv).rgb;
     vec3 cv = texture(uVerso, vec2(1.0 - vUv.x, vUv.y)).rgb;
     bool fr = gl_FrontFacing;
@@ -92,10 +283,10 @@ void main() {
     float u = vUv.x;
     float calha = 1.0 - uCalha * (0.2 * (1.0 - smoothstep(0.0, 0.05, u)) + 0.07 * (1.0 - smoothstep(0.0, 0.2, u)));
     float borda = 1.0 - 0.07 * (1.0 - smoothstep(0.0, 0.003, 1.0 - u));
-    cor = vec4(c * l * calha * borda, 1.0);
+    cor = vec4(c * l * calha * borda, cob);
 }`;
 
-const FRAG_VEGETAL = `#version 300 es
+const fragVegetal = (dobra: boolean) => `#version 300 es
 precision highp float;
 in vec2 vUv;
 in vec3 vN;
@@ -105,8 +296,10 @@ uniform vec2 uTela;
 uniform vec3 uTinta, uLuz;
 uniform float uTopoD, uTopoE, uTempo;
 out vec4 cor;
+${dobra ? RECORTE : ''}
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 void main() {
+    ${dobra ? DESCARTE : 'float cob = 1.0;'}
     vec2 st = gl_FragCoord.xy / uTela;
     float topo = vPos.x > 0.0 ? uTopoD : uTopoE;
     float h = max(vPos.z - topo, 0.0);
@@ -123,29 +316,35 @@ void main() {
     float f = fr ? 0.95 : 0.45;
     c = c * (1.0 - imp.a * f) + imp.rgb * f;
     c += (hash(gl_FragCoord.xy + uTempo) - 0.5) * 0.07;
-    cor = vec4(c, 1.0);
+    cor = vec4(c, cob);
 }`;
 
 const VERT_SOMBRA = `${DEFORMA}
 uniform float uTopoD, uTopoE;
 uniform vec3 uLuzS;
 out float vH;
+out vec2 vUv;
 void main() {
     vec3 n;
-    vec3 p = deforma(aUv, n);
+    vec2 uv = uvDaMalha();
+    vec3 p = deforma(uv, n);
     float topo = p.x > 0.0 ? uTopoD : uTopoE;
     float h = max(p.z - topo, 0.0);
     vec3 q = p - uLuzS * (h / uLuzS.z);
     vH = h;
+    vUv = uv;
     gl_Position = uVP * vec4(q.xy, topo, 1.0);
 }`;
 
 const FRAG_SOMBRA = `#version 300 es
 precision highp float;
 in float vH;
+in vec2 vUv;
 uniform float uForca;
 out vec4 cor;
+${RECORTE}
 void main() {
+    if (fora(vUv)) discard;
     float a = smoothstep(0.002, 0.03, vH) * exp(-vH * 1.3) * uForca;
     cor = vec4(a, a, a, a);
 }`;
@@ -244,7 +443,17 @@ void main() {
 // ---------- tipos ----------
 
 type Face = { pagina: Pagina; num?: number; tex: WebGLTexture | null; nivel: number; alvos: Alvo[]; transparente: boolean; escura: boolean };
-type Anim = { de: number; para: number; t0: number; dur: number; dir: number; curl0: number; twist0: number; grabV: number; saida: boolean; dobra?: { base: number; inclina0: number; larg0: number; completa: boolean } };
+// a dobra livre (nas contas da folha: X da lombada para dentro, Y do meio): o vértice do cone (a), a linha da dobra que
+// sai dele para dentro da folha (t), a normal dela para o lado que vira (n), o seno do meio-ângulo do cone (sb; 0 é a
+// dobra vincada), a altura extra da parte virada (e, para passar por cima da outra pilha) e o lado em que a folha está
+// deitada (+1 direita, −1 esquerda)
+type Vinco = { ax: number; ay: number; tx: number; ty: number; nx: number; ny: number; sb: number; e: number; lado: 1 | -1 };
+type Ponto2 = [number, number];
+// a folha solta (do arrasto, ou virada a partir do canto levantado): o ponto g da dobra segue de onde estava (de) até
+// o fim (para): o espelho dele do outro lado da lombada (a página vira) ou ele mesmo (a dobra encolhe até sumir), com
+// o rolo limitado a raio
+type Livre = { g: Ponto2; de: Ponto2; para: Ponto2; lado: 1 | -1; completa: boolean; raio: number };
+type Anim = { de: number; para: number; t0: number; dur: number; dir: number; curl0: number; twist0: number; grabV: number; saida: boolean; livre?: Livre };
 type Sheet = {
     i: number;
     frente: Face;
@@ -262,6 +471,7 @@ type Sheet = {
     inclina: number;
     zt: number;
     anim: Anim | null;
+    vinco: Vinco | null;
 };
 type Cam = { cx: number; cy: number; zoom: number };
 
@@ -293,8 +503,10 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     const defs = montarFolhas();
     const N = defs.length;
 
-    const pFolha = programa(gl, VERT_FOLHA, FRAG_FOLHA);
-    const pVegetal = programa(gl, VERT_FOLHA, FRAG_VEGETAL);
+    const pFolha = programa(gl, VERT_FOLHA, fragFolha(false));
+    const pFolhaDobrada = programa(gl, VERT_FOLHA, fragFolha(true));
+    const pVegetal = programa(gl, VERT_FOLHA, fragVegetal(false));
+    const pVegetalDobrado = programa(gl, VERT_FOLHA, fragVegetal(true));
     const pSombra = programa(gl, VERT_SOMBRA, FRAG_SOMBRA);
     const pMesa = programa(gl, VERT_PLANO, FRAG_MESA);
     const pSombraLivro = programa(gl, VERT_PLANO, FRAG_SOMBRA_LIVRO);
@@ -303,6 +515,9 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     const pEscurece = programa(gl, VERT_TELA, FRAG_ESCURECE);
     const pFinal = programa(gl, VERT_TELA, FRAG_FINAL);
     const mFolha = malha(gl, 64, 32);
+    // o cone da folha dobrada pelo ponteiro: uma coluna por geratriz (as do meio) e as duas faixas dos lados; cada coluna
+    // vai de borda a borda da folha (o shader acha as pontas), então uma linha de quadrados basta
+    const mCone = malha(gl, N_CONE, 1);
     const mPlano = malha(gl, 1, 1);
     const vazio = gl.createVertexArray();
     const aniso = gl.getExtension('EXT_texture_filter_anisotropic');
@@ -358,7 +573,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const verso = vegetal ? frente : face(d.verso, d.numVerso);
         const cap = 'cap' in d.frente ? d.frente.cap : 0;
         const tinta = (vegetal && CAPITULOS[cap].vegetal?.tinta) || [246, 245, 241];
-        return { i, frente, verso, rigida: d.tipo === 'capa' || d.tipo === 'contracapa', vegetal, tinta, lado: 0, phi: 0, curl: 0, twist: 0, grabV: 0.5, dobra: 0, larg: 1, inclina: 0, zt: 0, anim: null };
+        return { i, frente, verso, rigida: d.tipo === 'capa' || d.tipo === 'contracapa', vegetal, tinta, lado: 0, phi: 0, curl: 0, twist: 0, grabV: 0.5, dobra: 0, larg: 1, inclina: 0, zt: 0, anim: null, vinco: null };
     });
     const faces = Array.from(new Set(folhas.flatMap(f => [f.frente, f.verso])));
     const TOTAL = defs.filter(d => d.tipo === 'papel').length * 2;
@@ -387,10 +602,219 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     const contagem = () => folhas.reduce((n, f) => n + f.lado, 0);
     const emMovimento = (f: Sheet) => !!f.anim || arrasto?.i === f.i || (peel.i === f.i && peel.e > 0.004);
 
-    let arrasto: { id: number; i: number; dir: number; x0: number; y0: number; phi0: number; grabV: number; hist: { t: number; x: number }[] } | null = null;
-    const peel = { i: -1, lado: 0 as 0 | 1, e: 0, alvo: 0, grabV: 0.5, proximo: -1 as number, proximoLado: 0 as 0 | 1 };
+    // o arrasto: a folha, o lado em que ela está deitada, onde o dedo apertou (na tela e, nas contas da folha, o ponto
+    // pego g), o ponteiro agora (na tela), a altura em que o ponto pego ficou no quadro anterior (de onde a conta do
+    // ponteiro parte), o histórico do ponto pego (para a velocidade ao soltar) e, se a folha já estava levantada pelo
+    // cursor, a dobra de onde o arrasto parte (para a passagem não pular)
+    let arrasto: {
+        id: number;
+        i: number;
+        dir: number;
+        x0: number;
+        y0: number;
+        phi0: number;
+        grabV: number;
+        hist: { t: number; x: number }[];
+        g: Ponto2;
+        c: Ponto2 | null;
+        px: number;
+        py: number;
+        alt: number;
+        t0: number;
+        desde: { g: Ponto2; c: Ponto2 } | null;
+        gD: Ponto2 | null;
+        cD: Ponto2 | null;
+    } | null = null;
+    // a página que levanta com o cursor perto da borda: nas folhas de papel, o canto mais perto dobra na direção do
+    // cursor (cx, cy: o cursor nas contas da folha); nas capas, a folha toda levanta um pouco
+    const peel = { i: -1, lado: 0 as 0 | 1, e: 0, alvo: 0, grabV: 0.5, proximo: -1 as number, proximoLado: 0 as 0 | 1, cx: 0, cy: 0, pcx: 0, pcy: 0, g: [0, 0] as Ponto2, c: [0, 0] as Ponto2 };
+
+    // ---------- a dobra livre ----------
+    const RAIO = 0.065; // o raio do rolo do papel, em larguras da folha
+    const S1: Ponto2 = [0, H / 2];
+    const S2: Ponto2 = [0, -H / 2];
+    // o papel não estica: preso na lombada, o ponto pego não pode ficar mais longe das pontas da lombada do que estava.
+    // O lugar possível é o encontro de dois círculos (as duas bordas se cruzam no ponto pego e no espelho dele); fora
+    // dele, vale o ponto mais perto: num dos dois arcos ou numa das duas pontas. (Projeções alternadas não chegavam lá
+    // com o lugar estreito, perto da lombada, e a ponta da lombada acabava do lado que vira)
+    function restringir(g: Ponto2, c: Ponto2): Ponto2 {
+        const r1 = Math.hypot(g[0] - S1[0], g[1] - S1[1]);
+        const r2 = Math.hypot(g[0] - S2[0], g[1] - S2[1]);
+        const dentro = (p: Ponto2, s: Ponto2, r: number) => Math.hypot(p[0] - s[0], p[1] - s[1]) <= r + 1e-9;
+        if (dentro(c, S1, r1) && dentro(c, S2, r2)) return c;
+        const opcoes: Ponto2[] = [g, [-g[0], g[1]]];
+        for (const [s, r, so, ro] of [
+            [S1, r1, S2, r2],
+            [S2, r2, S1, r1],
+        ] as const) {
+            const d = Math.hypot(c[0] - s[0], c[1] - s[1]);
+            if (d <= r || d < 1e-9) continue;
+            const p: Ponto2 = [s[0] + ((c[0] - s[0]) * r) / d, s[1] + ((c[1] - s[1]) * r) / d];
+            if (dentro(p, so, ro)) opcoes.push(p);
+        }
+        let melhor = opcoes[0];
+        let dm = Infinity;
+        for (const p of opcoes) {
+            const d = Math.hypot(p[0] - c[0], p[1] - c[1]);
+            if (d < dm) {
+                dm = d;
+                melhor = p;
+            }
+        }
+        return melhor;
+    }
+    // a dobra que leva o ponto pego g até c (já possível). O espelho é a mediatriz entre os dois: o que passa da dobra
+    // deita por cima, girado nela, e g cai em c. O papel preso na lombada não enrola num rolo igual: enrola num cone com
+    // o vértice onde a mediatriz cruza a linha da lombada (fora da folha, ou numa ponta dela quando a folha é puxada até
+    // o limite), o rolo afinando rumo à lombada. Quase paralela à lombada, o vértice fica longe e o cone é um rolo. A
+    // linha da dobra (onde o cone começa) é a mediatriz girada no vértice, para o lado de c, pela metade do ângulo que o
+    // cone ocupa na folha; no pé do ponto pego o raio é o do rolo (menor nos puxões curtos), e o cone nunca chega à
+    // lombada (fica com no máximo 90% do ângulo entre a mediatriz e ela). raio limita o rolo (a dobra que se desfaz
+    // depois de solta guarda o rolo de quando foi solta)
+    const A_LONGE = 40;
+    function vincoEntre(g: Ponto2, c: Ponto2, lado: 1 | -1, acima: number, raio = RAIO): Vinco | null {
+        const dx = g[0] - c[0];
+        const dy = g[1] - c[1];
+        const L = Math.hypot(dx, dy);
+        if (L < 1e-4) return null;
+        const nx = dx / L;
+        const ny = dy / L;
+        // o pé de g na mediatriz (o meio entre g e c) e a direção dela
+        const qx = (g[0] + c[0]) / 2;
+        const qy = (g[1] + c[1]) / 2;
+        const ux = -ny;
+        const uy = nx;
+        const t = Math.abs(ux) * A_LONGE > Math.abs(qx) ? -qx / ux : qx * ux > 0 ? -A_LONGE : A_LONGE;
+        const ax = qx + t * ux;
+        const ay = qy + t * uy;
+        // a mediatriz saindo do vértice para dentro da folha (rumo ao pé de g)
+        const sg = t > 0 ? -1 : 1;
+        const tmx = sg * ux;
+        const tmy = sg * uy;
+        // o ângulo, no vértice, entre a mediatriz e cada ponta da lombada (do lado de c; com o vértice na ponta, a
+        // lombada sai dela rumo à outra ponta)
+        const angulo = (s: Ponto2) => {
+            let ex = s[0] - ax;
+            let ey = s[1] - ay;
+            if (Math.hypot(ex, ey) < 1e-6) {
+                ex = 0;
+                ey = -Math.sign(s[1]);
+            }
+            return Math.atan2(-(ex * nx + ey * ny), ex * tmx + ey * tmy);
+        };
+        const gama = Math.min(angulo(S1), angulo(S2));
+        const r = Math.min(raio, L / 4);
+        const sb = Math.abs(t) < 1e-3 ? 0 : lim(Math.min(r / Math.abs(t), (2 * 0.9 * gama) / PI), 0, 0.2);
+        const meio = (PI * sb) / 2;
+        const cm = Math.cos(meio);
+        const sm = Math.sin(meio);
+        return { ax, ay, tx: cm * tmx - sm * nx, ty: cm * tmy - sm * ny, nx: sm * tmx + cm * nx, ny: sm * tmy + cm * ny, sb, e: acima, lado };
+    }
+    // o ponto da folha mais longe na direção n (a que vai da ponta do puxão até o ponto pego): o último a desdobrar e o
+    // primeiro a dobrar. Com n quase de lado, a borda inteira empata e vale o ponto dela na altura de g (sem pulo de um
+    // canto ao outro). A dobra que leva esse ponto pelo mesmo puxão começa na borda e cresce a partir dela
+    function pontaAlem(g: Ponto2, nx: number, ny: number): Ponto2 {
+        const k = suave(0, 0.05, Math.abs(ny));
+        return [W, g[1] + (Math.sign(ny) * (H / 2) - g[1]) * k];
+    }
+    // a dobra que se desfaz: a mesma dobra, levada pelo ponto mais longe do lado que vira (e o espelho dele), para
+    // encolher até sumir naquele ponto, com o rolo de agora
+    function desfazer(vc: Vinco, g: Ponto2, c: Ponto2): { g: Ponto2; de: Ponto2; raio: number } {
+        const L = Math.hypot(g[0] - c[0], g[1] - c[1]);
+        const nx = (g[0] - c[0]) / L;
+        const ny = (g[1] - c[1]) / L;
+        const p = pontaAlem(g, nx, ny);
+        const qx = (g[0] + c[0]) / 2;
+        const qy = (g[1] + c[1]) / 2;
+        const s = 2 * ((p[0] - qx) * nx + (p[1] - qy) * ny);
+        const de: Ponto2 = [p[0] - nx * s, p[1] - ny * s];
+        // o raio que mantém o mesmo cone no pé novo (o meio entre p e o espelho dele, na mesma mediatriz)
+        const pe: Ponto2 = [(p[0] + de[0]) / 2, (p[1] + de[1]) / 2];
+        const raio = vc.sb * Math.hypot(pe[0] - vc.ax, pe[1] - vc.ay);
+        return { g: p, de, raio };
+    }
+    // o ponto da folha sob o ponteiro na parte virada de uma dobra (a aba do canto levantado), ou null fora dela: a conta
+    // da parte virada desfeita, na altura em que a aba está
+    function naAba(vc: Vinco, px: number, py: number, f: Sheet, lado: 1 | -1): { p: Ponto2; alt: number } | null {
+        const sb = vc.sb;
+        const al = PI * sb;
+        const c2 = 1 - 2 * sb * sb;
+        const s2 = 2 * sb * Math.sqrt(Math.max(0, 1 - sb * sb));
+        let alt = vc.e;
+        let p: Ponto2 | null = null;
+        for (let k = 0; k < 3; k++) {
+            const X = noPapel(px, py, f, lado, alt);
+            const rc = ((X[0] - vc.ax) * vc.tx + (X[1] - vc.ay) * vc.ty) / c2;
+            const rs = -((X[0] - vc.ax) * vc.nx + (X[1] - vc.ay) * vc.ny);
+            if (rs < 0) return null;
+            const dT = rc * Math.cos(al) - rs * Math.sin(al);
+            const dN = rc * Math.sin(al) + rs * Math.cos(al);
+            p = [vc.ax + dT * vc.tx + dN * vc.nx, vc.ay + dT * vc.ty + dN * vc.ny];
+            alt = rc * s2 + vc.e;
+        }
+        if (!p || p[0] < 0 || p[0] > W || Math.abs(p[1]) > H / 2) return null;
+        return { p, alt };
+    }
+    // o ponto P da folha depois da dobra: nas contas da folha, com a altura sobre ela (a mesma conta do shader)
+    function imagem(vc: Vinco, P: Ponto2): [number, number, number] {
+        const dx = P[0] - vc.ax;
+        const dy = P[1] - vc.ay;
+        const dT = dx * vc.tx + dy * vc.ty;
+        const dN = dx * vc.nx + dy * vc.ny;
+        if (dN <= 0) return [P[0], P[1], 0];
+        const sb = vc.sb;
+        const cb = Math.sqrt(Math.max(0, 1 - sb * sb));
+        const al = PI * sb;
+        const rc = dT * Math.cos(al) + dN * Math.sin(al);
+        const rs = dN * Math.cos(al) - dT * Math.sin(al);
+        if (rs >= 0) {
+            const c2 = 1 - 2 * sb * sb;
+            return [vc.ax + vc.tx * rc * c2 - vc.nx * rs, vc.ay + vc.ty * rc * c2 - vc.ny * rs, rc * 2 * sb * cb + vc.e];
+        }
+        const rho = Math.hypot(dT, dN);
+        const psi = Math.atan2(dN, dT) / sb;
+        const cp = Math.cos(psi);
+        const gT = cb * cb + sb * sb * cp;
+        const gN = sb * Math.sin(psi);
+        const sobe = psi <= PI / 2 ? 0.5 - 0.5 * Math.cos(2 * psi) : 1;
+        return [vc.ax + rho * (gT * vc.tx + gN * vc.nx), vc.ay + rho * (gT * vc.ty + gN * vc.ny), rho * sb * cb * (1 - cp) + vc.e * sobe];
+    }
+    // a altura extra da parte virada: acima da outra pilha (a folha pode estar mais baixa que ela) e, mesmo com o cone
+    // sumindo (a dobra junto da lombada), uma folga mínima sobre a parte deitada da própria folha, para as duas não
+    // brigarem pelo mesmo pixel. No fim da virada (fim de 0 a 1) a folga some: a folha pousa na outra pilha sem degrau
+    const FOLGA_VIRADA = 4 * ESP;
+    function acimaDe(f: Sheet, lado: 1 | -1, tp: { d: number; e: number }, fim = 0) {
+        const outra = lado > 0 ? tp.e : tp.d;
+        return Math.max(FOLGA_VIRADA * (1 - fim), outra + ESP - (zBase(f) + ESP * 0.5));
+    }
+    // o ponteiro nas contas da folha, no plano em que o ponto pego está (a parte virada fica acima da folha deitada)
+    function noPapel(px: number, py: number, f: Sheet, lado: 1 | -1, altura: number): Ponto2 {
+        const [x, y] = noPlano(px, py, zBase(f) + ESP * 0.5 + altura);
+        return [lado * x, y];
+    }
 
     function lancar(f: Sheet, para: 0 | 1, rapido: boolean, sai = false) {
+        // a folha de papel com o canto levantado pelo cursor vira a partir dele: a dobra do canto segue até o espelho
+        // do canto do outro lado (sem voltar plana antes de virar)
+        if (!f.rigida && f.vinco && peel.i === f.i && para !== f.lado) {
+            const lado: 1 | -1 = f.lado ? -1 : 1;
+            const alvo: Ponto2 = [-peel.g[0], peel.g[1]];
+            const dist = Math.hypot(alvo[0] - peel.c[0], alvo[1] - peel.c[1]);
+            f.anim = {
+                de: 0,
+                para: 0,
+                t0: agora,
+                dur: (rapido ? 0.7 : 1) * (0.3 + 0.3 * Math.min(1, dist / 1.4)),
+                dir: lado,
+                curl0: 0,
+                twist0: 0,
+                grabV: f.grabV,
+                saida: true,
+                livre: { g: peel.g, de: peel.c, para: alvo, lado, completa: true, raio: RAIO },
+            };
+            f.lado = para;
+            return;
+        }
         const alvoPhi = para ? PI : 0;
         const dist = Math.abs(alvoPhi - f.phi) / PI;
         const canto = (f.i % 2 === 0) !== (para === 0);
@@ -413,7 +837,8 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const c = contagem();
         const falta = Math.abs(alvoContagem - c);
         const rapido = falta > 1;
-        if (falta && !arrasto && agora - ultimoLanc >= (rapido ? 0.085 : 0.12)) {
+        // (espera a folha solta do arrasto pousar: outra virada por cima dela a faria pular)
+        if (falta && !arrasto && !folhas.some(f => f.anim?.livre) && agora - ultimoLanc >= (rapido ? 0.085 : 0.12)) {
             if (alvoContagem > c && c < N) lancar(folhas[c], 1, rapido);
             else if (alvoContagem < c && c > 0) lancar(folhas[c - 1], 0, rapido);
             ultimoLanc = agora;
@@ -431,41 +856,22 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             if (peel.e < 0.004 || peel.i < 0) {
                 peel.i = peel.proximo;
                 peel.lado = peel.proximoLado;
+                peel.cx = peel.pcx;
+                peel.cy = peel.pcy;
                 peel.e = 0;
             }
         } else peel.e += (peel.alvo - peel.e) * k;
 
         for (const f of folhas) {
-            if (f.anim?.dobra) {
-                // a dobra solta: corre até a lombada (vira) ou até a borda (volta), e o lado de cima assenta
-                const a = f.anim;
-                const d = a.dobra!;
-                const p = lim((agora - a.t0) / a.dur, 0, 1);
-                const e = saida(p);
-                f.phi = d.base;
-                f.dobra = a.de + (a.para - a.de) * e;
-                f.inclina = d.inclina0 * (1 - e);
+            f.dobra = 0;
+            f.larg = 1;
+            f.inclina = 0;
+            if (f.anim?.livre) {
+                // a folha solta depois do arrasto: deitada no lado de onde saiu, com a dobra (em dobras)
+                f.phi = f.anim.livre.lado > 0 ? 0 : PI;
+                f.curl = 0;
                 f.twist = 0;
-                if (d.completa) {
-                    f.curl = a.curl0 + (a.dir * PI - a.curl0) * e;
-                    f.larg = d.larg0 + (0.02 - d.larg0) * e;
-                    f.zt = d.base ? 1 - e : e;
-                }
-                if (p >= 1) {
-                    f.anim = null;
-                    f.phi = f.lado ? PI : 0;
-                    f.curl = 0;
-                    f.dobra = 0;
-                    f.larg = 1;
-                    f.inclina = 0;
-                    f.zt = f.lado;
-                }
                 continue;
-            }
-            if (!(arrasto?.i === f.i && !f.rigida)) {
-                f.dobra = 0;
-                f.larg = 1;
-                f.inclina = 0;
             }
             if (f.anim) {
                 const a = f.anim;
@@ -489,20 +895,20 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
                     f.twist = 0;
                 }
             } else if (arrasto?.i === f.i) {
-                // a pose vem do ponteiro (em mover)
+                // a capa: a pose vem do ponteiro (em mover); o papel: deitado, com a dobra (em dobras)
+                if (!f.rigida) {
+                    f.phi = arrasto.phi0;
+                    f.curl = 0;
+                    f.twist = 0;
+                }
             } else if (peel.i === f.i && peel.e > 0.0005) {
-                const s = f.lado ? -1 : 1;
                 const e = peel.e;
                 f.grabV = peel.grabV;
                 if (f.rigida) {
                     f.phi = f.lado ? PI - 0.12 * e : 0.12 * e;
-                    f.curl = 0;
-                    f.twist = 0;
-                } else {
-                    f.phi = f.lado ? PI + 0.32 * e : -0.32 * e;
-                    f.curl = s * 0.68 * e;
-                    f.twist = s * 0.5 * e * (2 * peel.grabV - 1);
-                }
+                } else f.phi = f.lado ? PI : 0;
+                f.curl = 0;
+                f.twist = 0;
             } else {
                 f.phi = f.lado ? PI : 0;
                 f.curl = 0;
@@ -511,10 +917,99 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         }
     }
 
+    // a dobra livre de cada folha de papel, depois da câmera do quadro (o ponto pego cai sob o ponteiro com a vista que
+    // vai ser desenhada): a puxada pelo ponteiro, a que foi solta (até virar ou desdobrar) e o canto que levanta com o
+    // cursor perto da borda. As outras ficam sem dobra
+    function dobras() {
+        const tp = topos();
+        for (const f of folhas) {
+            const solta = f.anim?.livre;
+            if (solta) {
+                const a = f.anim!;
+                const p = lim((agora - a.t0) / a.dur, 0, 1);
+                const e = saida(p);
+                const c: Ponto2 = [solta.de[0] + (solta.para[0] - solta.de[0]) * e, solta.de[1] + (solta.para[1] - solta.de[1]) * e];
+                // virando, no fim a folha passa para a altura da pilha do outro lado
+                if (solta.completa) f.zt = solta.lado > 0 ? suave(0.45, 1, p) : 1 - suave(0.45, 1, p);
+                f.vinco = vincoEntre(solta.g, c, solta.lado, acimaDe(f, solta.lado, tp, solta.completa ? suave(0.8, 1, p) : 0), solta.raio);
+                if (p >= 1) {
+                    f.anim = null;
+                    f.vinco = null;
+                    f.phi = f.lado ? PI : 0;
+                    f.zt = f.lado;
+                }
+                continue;
+            }
+            if (arrasto?.i === f.i && !f.rigida) {
+                const lado: 1 | -1 = arrasto.dir > 0 ? 1 : -1;
+                const acima = acimaDe(f, lado, tp);
+                // o ponto pego cai sob o ponteiro: o alvo da dobra (c) é corrigido até a imagem do ponto pego ficar no
+                // raio do ponteiro, na altura em que ela está (a parte virada sobe com o cone e se inclina com ele, e a
+                // altura depende da dobra). A conta parte da altura do quadro anterior, e poucas voltas bastam. Longe
+                // demais, o papel estica até o limite e para
+                let c = restringir(arrasto.g, noPapel(arrasto.px, arrasto.py, f, lado, arrasto.alt));
+                for (let k = 0; k < 4; k++) {
+                    const vk = vincoEntre(arrasto.g, c, lado, acima);
+                    if (!vk) break;
+                    const [ix, iy, iz] = imagem(vk, arrasto.g);
+                    const [rx, ry] = noPapel(arrasto.px, arrasto.py, f, lado, iz);
+                    c = restringir(arrasto.g, [c[0] + rx - ix, c[1] + ry - iy]);
+                    arrasto.alt = iz;
+                }
+                arrasto.c = c;
+                arrasto.hist.push({ t: agora, x: c[0] });
+                while (arrasto.hist.length > 2 && agora - arrasto.hist[0].t > 0.1) arrasto.hist.shift();
+                let g = arrasto.g;
+                // a dobra nasce na borda: num puxão curto, o que dobra é o ponto da folha mais longe na direção oposta
+                // ao ponteiro, levado pelo mesmo puxão (uma ponta pequena), e ele vem até o ponto pego conforme o puxão
+                // cresce. Levando o próprio ponto pego desde o primeiro pixel, virava de uma vez tudo o que fica além
+                // dele (meia página, pegando no miolo). Pegando na borda, os dois são o mesmo ponto
+                const dx = g[0] - c[0];
+                const dy = g[1] - c[1];
+                const puxado = Math.hypot(dx, dy);
+                const w = suave(0, 0.12, puxado);
+                if (puxado > 1e-6 && w < 1) {
+                    const b = pontaAlem(g, dx / puxado, dy / puxado);
+                    g = [b[0] + (g[0] - b[0]) * w, b[1] + (g[1] - b[1]) * w];
+                    c = restringir(g, [g[0] - dx, g[1] - dy]);
+                }
+                // saindo do canto levantado pelo cursor, a dobra dele passa para a do arrasto aos poucos (sem pulo)
+                if (arrasto.desde) {
+                    const e = saida(lim((agora - arrasto.t0) / 0.14, 0, 1));
+                    const d = arrasto.desde;
+                    g = [d.g[0] + (g[0] - d.g[0]) * e, d.g[1] + (g[1] - d.g[1]) * e];
+                    // a mistura de duas dobras possíveis pode passar do limite do papel (o limite muda com g)
+                    c = restringir(g, [d.c[0] + (c[0] - d.c[0]) * e, d.c[1] + (c[1] - d.c[1]) * e]);
+                    if (e >= 1) arrasto.desde = null;
+                }
+                // a dobra desenhada (a soltura parte dela)
+                arrasto.gD = g;
+                arrasto.cD = c;
+                f.vinco = vincoEntre(g, c, lado, acima);
+                continue;
+            }
+            if (peel.i === f.i && peel.e > 0.0005 && !f.rigida && !f.anim) {
+                // o canto mais perto do cursor dobra na diagonal, para dentro da folha (a dobra corta as duas bordas do
+                // canto); quanto mais perto o cursor, mais ele levanta, e longe do canto nada
+                const lado: 1 | -1 = f.lado ? -1 : 1;
+                f.zt = f.lado;
+                const g: Ponto2 = [W, peel.cy >= 0 ? H / 2 : -H / 2];
+                const d = Math.hypot(peel.cx - g[0], peel.cy - g[1]);
+                const passo = 0.13 * peel.e * (1 - suave(0.15, 0.55, d));
+                const c = restringir(g, [g[0] - 0.7071 * passo, g[1] - Math.sign(g[1]) * 0.7071 * passo]);
+                peel.g = g;
+                peel.c = c;
+                f.vinco = vincoEntre(g, c, lado, acimaDe(f, lado, tp));
+                continue;
+            }
+            f.vinco = null;
+        }
+    }
+
     const zDireita = (i: number) => (N - 1 - i) * ESP;
     const zEsquerda = (i: number) => i * ESP;
     const zBase = (f: Sheet) => {
-        const t = f.anim?.dobra || (arrasto?.i === f.i && !f.rigida) ? f.zt : lim(f.phi / PI, 0, 1);
+        const t = f.anim?.livre || f.vinco || (arrasto?.i === f.i && !f.rigida) ? f.zt : lim(f.phi / PI, 0, 1);
         return zDireita(f.i) + (zEsquerda(f.i) - zDireita(f.i)) * t;
     };
     function topos() {
@@ -649,7 +1144,8 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             const dy = ly - toque.y;
             if (!toque.movido && Math.hypot(dx, dy) > 6) {
                 toque.movido = true;
-                comecarArrasto(e);
+                // no toque, de longe, o gesto na vertical é a rolagem da página (pan-y), não a folha
+                if (!(toque.dedo && camAlvo.zoom <= 1.1 && Math.abs(dy) > Math.abs(dx))) comecarArrasto(e);
             }
             if (arrasto) moverArrasto(lx, ly);
             else if (toque.pan) {
@@ -673,6 +1169,13 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             quer = s.lado === 0 ? c : c - 1;
             quer2 = s.lado;
             peel.grabV = lim(s.y / H + 0.5, 0, 1);
+            // o cursor nas contas da folha que vai levantar; a que ainda está baixando guarda o canto dela
+            peel.pcx = s.lado === 0 ? s.x : -s.x;
+            peel.pcy = s.y;
+            if (quer === peel.i) {
+                peel.cx = peel.pcx;
+                peel.cy = peel.pcy;
+            }
         }
         peel.proximo = quer;
         peel.proximoLado = quer2;
@@ -690,8 +1193,33 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             const f = s.lado === 0 ? folhas[c] : folhas[c - 1];
             if (f) {
                 const [x, y] = noPlano(toque.x, toque.y, 0.02);
-                arrasto = { id: e.pointerId, i: f.i, dir: s.lado === 0 ? 1 : -1, x0: x, y0: y, phi0: f.lado ? PI : 0, grabV: lim(s.y / H + 0.5, 0.02, 0.98), hist: [] };
+                const lado: 1 | -1 = s.lado === 0 ? 1 : -1;
                 f.zt = f.lado;
+                const [px, py] = local(e);
+                // com o canto levantado pelo cursor, apertando sobre a aba o ponto pego é o da aba (e não o da folha
+                // deitada embaixo dela)
+                const aba = !f.rigida && peel.i === f.i && f.vinco ? naAba(f.vinco, toque.x, toque.y, f, lado) : null;
+                arrasto = {
+                    id: e.pointerId,
+                    i: f.i,
+                    dir: lado,
+                    x0: x,
+                    y0: y,
+                    phi0: f.lado ? PI : 0,
+                    grabV: lim(s.y / H + 0.5, 0.02, 0.98),
+                    hist: [],
+                    // o ponto pego: onde o dedo apertou, no plano da própria folha (ou na aba levantada)
+                    g: aba ? aba.p : noPapel(toque.x, toque.y, f, lado, 0),
+                    c: null,
+                    px,
+                    py,
+                    alt: aba ? aba.alt : 0,
+                    t0: agora,
+                    // a folha já tinha o canto levantado pelo cursor: o arrasto parte dessa dobra
+                    desde: !f.rigida && peel.i === f.i && f.vinco ? { g: peel.g, c: peel.c } : null,
+                    gD: null,
+                    cD: null,
+                };
                 if (peel.i === f.i) peel.e = 0;
                 peel.proximo = -1;
                 alvoContagem = c;
@@ -709,36 +1237,20 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     function moverArrasto(lx: number, ly: number) {
         if (!arrasto) return;
         const f = folhas[arrasto.i];
-        const [x, y] = noPlano(lx, ly, 0.02);
-        arrasto.hist.push({ t: agora, x });
-        while (arrasto.hist.length > 2 && agora - arrasto.hist[0].t > 0.1) arrasto.hist.shift();
+        // o papel: a dobra segue o ponteiro, calculada a cada quadro (em dobras), com a vista do quadro
+        arrasto.px = lx;
+        arrasto.py = ly;
         f.grabV = arrasto.grabV;
         if (f.rigida) {
             // a capa é dura: gira inteira em volta da lombada
+            const [x] = noPlano(lx, ly, 0.02);
+            arrasto.hist.push({ t: agora, x });
+            while (arrasto.hist.length > 2 && agora - arrasto.hist[0].t > 0.1) arrasto.hist.shift();
             const cosv = lim(Math.cos(arrasto.phi0) + (x - arrasto.x0) / W, -1, 1);
             f.phi = Math.acos(cosv);
             f.curl = 0;
             f.twist = 0;
-            return;
         }
-        // o papel dobra: o ponto pego vai para o cursor e a dobra fica no meio do caminho (a mediatriz entre os dois),
-        // com o pedaço de lá virado por cima; puxado pelo canto, a dobra inclina
-        const lado = arrasto.dir;
-        const ug = (lado * arrasto.x0) / W;
-        const up = (lado * x) / W;
-        const vg = arrasto.y0 / H + 0.5;
-        const vp = y / H + 0.5;
-        const du = up - ug;
-        const puxado = Math.max(0, -du);
-        const k = du < -0.02 ? lim((H * (vp - vg)) / (W * du), -0.7, 0.7) : 0;
-        const mu = (ug + up) / 2;
-        const mv = (vg + vp) / 2;
-        f.phi = arrasto.phi0;
-        f.curl = lado * (PI - 0.18) * suave(0, 0.12, puxado);
-        f.dobra = du < 0 ? Math.max(0, mu + k * (mv - 0.5)) : 1.2;
-        f.inclina = -k;
-        f.larg = 0.14;
-        f.twist = 0;
     }
 
     function soltarArrasto() {
@@ -750,21 +1262,35 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             const frente = arrasto.dir > 0 ? (f.phi > PI / 2 || vx < -1.1) && vx < 1.1 : !((f.phi < PI / 2 || vx > 1.1) && vx > -1.1);
             lancar(f, frente ? 1 : 0, false, true);
         } else {
-            // a dobra solta: passou da metade (ou foi jogada) vira; senão volta
-            const rumo = -arrasto.dir * vx;
-            const vira = (f.dobra < 0.55 || rumo > 1.1) && rumo > -1.1;
-            const para = vira ? 0 : 1 + f.larg;
+            // o papel solto: o ponto pego passou da lombada (ou foi jogado para lá) e a página vira, indo até o espelho
+            // dele do outro lado; jogado para fora, ou sem passar, a dobra se desfaz e ele volta para onde foi pego.
+            // vx é a velocidade do ponto pego nas contas da folha (negativa: rumo à lombada)
+            const lado: 1 | -1 = arrasto.dir > 0 ? 1 : -1;
+            const c = arrasto.c ?? arrasto.g;
+            const vira = (c[0] < 0 || vx < -1.1) && vx < 1.1;
+            // a soltura parte da dobra que estava na tela. Virando, o ponto dela vai até o espelho; desfazendo, a mesma
+            // dobra é levada pelo ponto mais longe do lado que vira e encolhe até sumir nele (levar o ponto pego de
+            // volta deixava a parte além dele dobrada até o último quadro, e ela sumia de uma vez)
+            const g0 = arrasto.gD ?? arrasto.g;
+            const c0 = arrasto.cD ?? c;
+            let livre: Livre = { g: g0, de: c0, para: g0, lado, completa: false, raio: RAIO };
+            if (vira) livre = { g: g0, de: c0, para: [-g0[0], g0[1]], lado, completa: true, raio: RAIO };
+            else if (f.vinco) {
+                const d = desfazer(f.vinco, g0, c0);
+                livre = { g: d.g, de: d.de, para: d.g, lado, completa: false, raio: d.raio };
+            }
+            const dist = Math.hypot(livre.para[0] - livre.de[0], livre.para[1] - livre.de[1]);
             f.anim = {
-                de: f.dobra,
-                para,
+                de: 0,
+                para: 0,
                 t0: agora,
-                dur: 0.28 + 0.5 * Math.abs(para - f.dobra),
+                dur: 0.22 + 0.3 * Math.min(1, dist / 1.4),
                 dir: arrasto.dir,
-                curl0: f.curl,
+                curl0: 0,
                 twist0: 0,
                 grabV: f.grabV,
                 saida: true,
-                dobra: { base: arrasto.phi0, inclina0: f.inclina, larg0: f.larg, completa: vira },
+                livre,
             };
             if (vira) f.lado = arrasto.dir > 0 ? 1 : 0;
         }
@@ -975,17 +1501,47 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         gl.uniform1f(u.uInclina, f.inclina);
         gl.uniform1f(u.uZ, zBase(f) + (emMovimento(f) ? ESP * 0.5 : 0));
         gl.uniform2f(u.uTam, f.rigida ? W * 1.012 : W, f.rigida ? H * 1.018 : H);
+        const vc = f.vinco;
+        gl.uniform1f(u.uDobrar, vc ? 1 : 0);
+        if (vc) {
+            gl.uniform4f(u.uEixo, vc.ax, vc.ay, vc.tx, vc.ty);
+            gl.uniform4f(u.uCone, vc.nx, vc.ny, vc.sb, vc.e);
+            gl.uniform1f(u.uLado, vc.lado);
+        }
     }
+    // a folha: inteira na malha comum ou, com a dobra livre, em três partes: a deitada e a virada na malha comum e o
+    // cone na malha dele (cada parte o shader corta no que é dela; sem cone, a dobra vincada, ele não entra)
+    function desenharMalha(u: Prog['u'], f: Sheet) {
+        const vc = f.vinco;
+        gl.bindVertexArray(mFolha.vao);
+        if (!vc) {
+            gl.uniform1f(u.uParte, -1);
+            gl.drawElements(gl.TRIANGLES, mFolha.n, gl.UNSIGNED_SHORT, 0);
+            return;
+        }
+        gl.uniform1f(u.uParte, 0);
+        gl.drawElements(gl.TRIANGLES, mFolha.n, gl.UNSIGNED_SHORT, 0);
+        gl.uniform1f(u.uParte, 2);
+        gl.drawElements(gl.TRIANGLES, mFolha.n, gl.UNSIGNED_SHORT, 0);
+        if (vc.sb > 0) {
+            gl.uniform1f(u.uParte, 1);
+            gl.bindVertexArray(mCone.vao);
+            gl.drawElements(gl.TRIANGLES, mCone.n, gl.UNSIGNED_SHORT, 0);
+        }
+    }
+    // a folha com a dobra livre usa o shader do recorte, e o alfa dela é quanto do pixel ela cobre (na dobra mais fina
+    // que um pixel, a cobertura parcial suaviza a borda); as outras, o opaco
     function desenharFolha(f: Sheet) {
-        const u = usar(pFolha);
+        const u = usar(f.vinco ? pFolhaDobrada : pFolha);
         gl.uniformMatrix4fv(u.uVP, false, v.vp);
         gl.uniform3fv(u.uLuz, LUZ);
         gl.uniform1f(u.uCalha, f.rigida ? 0.3 : 1);
         poseUniforms(u, f);
         tex(0, texDe(f.frente), u.uFrente);
         tex(1, texDe(f.verso), u.uVerso);
-        gl.bindVertexArray(mFolha.vao);
-        gl.drawElements(gl.TRIANGLES, mFolha.n, gl.UNSIGNED_SHORT, 0);
+        if (f.vinco) gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+        desenharMalha(u, f);
+        if (f.vinco) gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
     }
     function tela(q: Quadro | null) {
         if (q) {
@@ -1057,8 +1613,8 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         gl.disable(gl.BLEND);
         gl.enable(gl.DEPTH_TEST);
 
-        // as folhas paradas (opacas)
-        const paradas = folhas.filter(f => !f.vegetal && !emMovimento(f));
+        // as folhas paradas (opacas), da de cima para a de baixo: a profundidade descarta cedo as escondidas na pilha
+        const paradas = folhas.filter(f => !f.vegetal && !emMovimento(f)).sort((a, b) => zBase(b) - zBase(a));
         const moventes = folhas.filter(f => emMovimento(f));
         for (const f of paradas) desenharFolha(f);
 
@@ -1078,8 +1634,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             for (const f of moventes) {
                 gl.uniform1f(us.uForca, f.vegetal ? 0.2 : 0.62);
                 poseUniforms(us, f);
-                gl.bindVertexArray(mFolha.vao);
-                gl.drawElements(gl.TRIANGLES, mFolha.n, gl.UNSIGNED_SHORT, 0);
+                desenharMalha(us, f);
             }
             gl.blendEquation(gl.FUNC_ADD);
             gl.disable(gl.BLEND);
@@ -1113,22 +1668,24 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             gl.bindFramebuffer(gl.FRAMEBUFFER, msaa!.fb);
             gl.viewport(0, 0, largPx, altPx);
             gl.enable(gl.DEPTH_TEST);
-            const uv = usar(pVegetal);
-            gl.uniformMatrix4fv(uv.uVP, false, v.vp);
-            gl.uniform3fv(uv.uLuz, LUZ);
-            gl.uniform2f(uv.uTela, largPx, altPx);
-            gl.uniform1f(uv.uTopoD, tp.d);
-            gl.uniform1f(uv.uTopoE, tp.e);
-            gl.uniform1f(uv.uTempo, (agora * 60) % 97);
-            tex(0, qM1!.cor, uv.uBorra1);
-            tex(1, qQ1!.cor, uv.uBorra2);
-            tex(3, qA!.cor, uv.uCena);
             for (const f of vegetais) {
+                // o vegetal com a dobra livre usa o shader do recorte (e a cobertura parcial na dobra fina)
+                const uv = usar(f.vinco ? pVegetalDobrado : pVegetal);
+                gl.uniformMatrix4fv(uv.uVP, false, v.vp);
+                gl.uniform3fv(uv.uLuz, LUZ);
+                gl.uniform2f(uv.uTela, largPx, altPx);
+                gl.uniform1f(uv.uTopoD, tp.d);
+                gl.uniform1f(uv.uTopoE, tp.e);
+                gl.uniform1f(uv.uTempo, (agora * 60) % 97);
+                tex(0, qM1!.cor, uv.uBorra1);
+                tex(1, qQ1!.cor, uv.uBorra2);
+                tex(3, qA!.cor, uv.uCena);
                 tex(2, texDe(f.frente), uv.uImp);
                 gl.uniform3f(uv.uTinta, f.tinta[0] / 255, f.tinta[1] / 255, f.tinta[2] / 255);
                 poseUniforms(uv, f);
-                gl.bindVertexArray(mFolha.vao);
-                gl.drawElements(gl.TRIANGLES, mFolha.n, gl.UNSIGNED_SHORT, 0);
+                if (f.vinco) gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+                desenharMalha(uv, f);
+                if (f.vinco) gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
             }
             resolver(qC!);
             final = qC!;
@@ -1275,6 +1832,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         mouse.sx += ((mouse.dentro ? mouse.x : 0) - mouse.sx) * km;
         mouse.sy += ((mouse.dentro ? mouse.y : 0) - mouse.sy) * km;
         v = vista(cam);
+        dobras();
         carregarTexturas();
         desenhar();
         avisar();
