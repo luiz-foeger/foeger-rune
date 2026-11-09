@@ -12,21 +12,13 @@ export const ESTILOS: { id: Estilo; nome: string; familia: string }[] = [
 export const FRASE = 'Pedra que se gasta';
 
 // o "Seven* Styles": a palavra digitada com a letra pendurada; o asterisco entra no fim, depois da primeira palavra
-export const TITULO_ESTILOS = { texto: 'Três Estilos', asteriscoDepois: 4, nota: '* Mais as letras alternativas' };
+// sem asterisco nem nota (o asterisco vinha do 'Seven* Styles' da Feixen)
+export const TITULO_ESTILOS = { texto: 'Três Estilos', asteriscoDepois: null as number | null, nota: null as string | null };
 
 // o testador: a cor de cada estilo (a da faixa dele, mais adiante na página), o parágrafo (o "Hi, my name is George…")
 // e o humor de cada um, de 0 a 100
 export const CORES_ESTILO: Record<Estilo, string> = { cut: 'var(--p-cut)', polished: 'var(--p-polished)', worn: 'var(--p-worn)' };
 export const PARAGRAFO = ['Oi, meu nome é Rune.', 'Sou feita de pedra e', 'o uso me arredonda.'];
-export const HUMOR = {
-    titulo: 'Humor',
-    nomes: ['Tradicional', 'Moderna', 'Séria', 'Divertida', 'Retrô', 'Digital', 'Simpática'],
-    valores: {
-        cut: [60, 60, 80, 40, 60, 40, 40],
-        polished: [40, 80, 40, 80, 40, 60, 80],
-        worn: [80, 40, 20, 100, 80, 20, 100],
-    } as Record<Estilo, number[]>,
-};
 
 // as faixas coloridas, uma por estilo (as da Ease são sete): a cor do fundo, a manchete que corre com a rolagem e os
 // textos dos quatro painéis de texto (a história da fonte, em tamanhos crescentes)

@@ -144,10 +144,10 @@ export default function CartaoDetalhe({ cfg, estilo }: { cfg: Detalhe; estilo?: 
                             );
                         })}
                     </Lupa>
-                    <text className="fx-guia-rotulo fx-guia-pequena" x="12" y="22" fill="#111">
+                    <text className="fx-guia-rotulo" x="12" y="20" fill="#111">
                         {cfg.tipo === 'fora' ? 'QUINAS DE FORA' : 'QUINAS DE DENTRO'}
                     </text>
-                    <text className="fx-guia-rotulo fx-guia-pequena" x="12" y="35" fill="#111" opacity="0.6">
+                    <text className="fx-guia-rotulo" x="12" y="37" fill="#111" opacity="0.6">
                         {cfg.tipo === 'fora' ? 'QUANTO RECUAM' : 'QUANTO ENCHEM'}
                     </text>
                 </svg>

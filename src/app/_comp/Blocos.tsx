@@ -18,7 +18,7 @@ const M = 413;
 const G = 59;
 const tam = (n: number) => n * M + (n - 1) * G;
 const PAL: Record<string, Palavra> = { ...PALAVRAS, ...PALAVRAS_EXTRA };
-const ROTULO = { fontFamily: 'var(--ff-ui)', fontSize: 15, letterSpacing: '0.04em' } as CSSProperties;
+const ROTULO = { fontFamily: 'var(--ff-ui)', fontSize: 14, letterSpacing: '0.04em' } as CSSProperties; // o rótulo (14 u)
 const SEM_TROCAS = { fontFeatureSettings: '"calt" 0, "kern" 0' } as CSSProperties;
 
 // as fontes Polished e Worn foram geradas com espaçamento próprio (desgastes.js da fonte: a letra anda para a esquerda

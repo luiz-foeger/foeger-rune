@@ -26,7 +26,7 @@ export default function Pagina() {
                 <Digitada />
                 {/* a seção do desgaste: os cartões de perto, todos movidos pelo mesmo σ */}
                 <SecaoDesgaste />
-                <TituloEstilos ancora="estilos" />
+                <TituloEstilos ancora="estilos" livre />
                 {/* a âncora do "Testar" do menu */}
                 <div id="testador" />
                 <Testador />

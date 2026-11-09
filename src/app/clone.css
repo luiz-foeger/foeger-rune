@@ -29,6 +29,13 @@
     --p-botao-hover: #ecc574;
     --faixa: #bfc3c5;
     --linha-fina: max(1px, calc(1.5 * var(--u)));
+    /* os três tamanhos dos textos secundários (fora os títulos, as réguas das molduras e os números grandes):
+       subtítulo (o nome do estilo no testador, o título do gráfico, as páginas do livro), secundário (as legendas, os
+       nomes dos estilos, os botões, os números e nomes das barras, as notas) e rótulo (os textos técnicos dentro dos
+       cartões, as escalas, a dica do livro). Dentro dos SVGs dos cartões (1 unidade = 1 u), os mesmos números em px */
+    --t-sub: max(12px, calc(26 * var(--u)));
+    --t-sec: max(11px, calc(20 * var(--u)));
+    --t-rot: max(9px, calc(14 * var(--u)));
     /* a trama pontilhada dos painéis (nas faixas coloridas, a mesma em tom mais escuro) */
     --trama: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 29.5 29.5' preserveAspectRatio='none'%3E%3Cg stroke='%23c4c4c4' stroke-width='1' stroke-dasharray='2 2.9167' fill='none'%3E%3Cpath d='M0 0.5H29.5'/%3E%3Cpath d='M0.5 0V29.5'/%3E%3C/g%3E%3C/svg%3E");
     background: var(--fundo);
@@ -79,6 +86,32 @@
     background-size: calc(29.5 * var(--u)) calc(29.5 * var(--u));
     background-position: calc(-0.5 * var(--u)) calc(-0.5 * var(--u));
     overflow: hidden;
+}
+
+/* o painel aberto (as seções sem régua: a frase, os recursos): sem moldura, réguas nem letras dos lados;
+   a trama é um pedaço que passa um pouco da área e some nas bordas, de cantos redondos, como o chão do livro. As linhas
+   continuam nos mesmos lugares da trama dos outros painéis */
+.fx-painel[data-aberto] .fx-tela {
+    border-color: transparent;
+    background: none;
+    overflow: visible;
+}
+.fx-painel[data-aberto] .fx-tela::before {
+    content: '';
+    position: absolute;
+    inset: calc(-60 * var(--u));
+    background-image: var(--trama);
+    background-size: calc(29.5 * var(--u)) calc(29.5 * var(--u));
+    background-position: calc(59.5 * var(--u)) calc(59.5 * var(--u));
+    -webkit-mask-image:
+        linear-gradient(to right, transparent, #000 18%, #000 82%, transparent),
+        linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image:
+        linear-gradient(to right, transparent, #000 18%, #000 82%, transparent),
+        linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    mask-composite: intersect;
+    pointer-events: none;
 }
 
 .fx-regua {
@@ -206,7 +239,7 @@
 }
 .fx-estilo-nome {
     font-family: var(--ff-ui), sans-serif;
-    font-size: max(10px, calc(19 * var(--u)));
+    font-size: var(--t-sec);
     font-weight: 600;
     line-height: 1;
     text-box: trim-both cap alphabetic;
@@ -323,7 +356,7 @@
     margin-top: calc(5 * var(--u));
     padding: calc(4 * var(--u)) calc(4 * var(--u)) calc(9 * var(--u));
     border: 1px solid #9a9a9a;
-    font-size: max(7px, calc(9.5 * var(--u)));
+    font-size: var(--t-rot);
     font-weight: 600;
     letter-spacing: 0.02em;
     line-height: 1;
@@ -400,12 +433,47 @@
     font-size: 0.55em;
     transform: translateY(-0.62em);
 }
+/* o título livre (fora do painel): na fonte de texto, centrado (com nota, ela vai embaixo) */
+.fx-cabeca {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: calc(24 * var(--u));
+    width: calc(1829 * var(--u));
+    padding: calc(70 * var(--u)) 0 calc(20 * var(--u));
+}
+.fx-cabeca-titulo {
+    margin: 0;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: calc(120 * var(--u));
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1;
+}
+.fx-cabeca-nota {
+    margin: 0;
+    font-size: var(--t-sec);
+    font-weight: 600;
+    line-height: 1;
+    opacity: 0.6;
+}
+@media (max-width: 899px) {
+    .fx-cabeca {
+        gap: calc(24 * var(--u));
+        width: calc(885 * var(--u));
+    }
+    .fx-cabeca-titulo {
+        font-size: calc(110 * var(--u));
+    }
+}
 .fx-nota {
     position: absolute;
     right: calc(37 * var(--u));
     bottom: calc(22 * var(--u));
     margin: 0;
-    font-size: max(9px, calc(17 * var(--u)));
+    font-size: var(--t-sec);
     font-weight: 600;
     line-height: 1;
 }
@@ -420,7 +488,7 @@
     left: 50%;
     margin: 0;
     transform: translate(-50%, -50%);
-    font-size: max(11px, calc(30 * var(--u)));
+    font-size: var(--t-sub);
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
@@ -440,9 +508,9 @@
 
 .fx-seletor {
     position: absolute;
-    left: calc(1491 * var(--u));
+    left: calc(1584 * var(--u));
     top: calc(20 * var(--u));
-    width: calc(292 * var(--u));
+    width: calc(200 * var(--u));
     padding: 0 calc(4 * var(--u)) calc(5 * var(--u));
     border: var(--linha-fina) solid var(--tinta);
     border-radius: calc(3 * var(--u));
@@ -468,7 +536,30 @@
     gap: calc(6 * var(--u));
     padding-top: calc(3 * var(--u));
 }
+/* uma linha por estilo: a caixinha com a pedra e o botão com o nome */
+.fx-seletor-linha {
+    display: flex;
+    gap: calc(6 * var(--u));
+}
+.fx-seletor-pedra {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: calc(39 * var(--u));
+    height: calc(39 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: #fff;
+}
+/* a pedra com medida fixa, no meio da caixinha (com só a porcentagem, a altura não valia e ela vazava embaixo) */
+.fx-seletor-pedra img {
+    display: block;
+    width: calc(31 * var(--u));
+    height: calc(31 * var(--u));
+    object-fit: contain;
+}
 .fx-seletor-item {
+    flex: 1;
     height: calc(39 * var(--u));
     padding: 0 calc(12 * var(--u));
     border: var(--linha-fina) solid var(--tinta);
@@ -476,7 +567,7 @@
     background: #fff;
     color: var(--tinta);
     font-family: var(--ff-ui), sans-serif;
-    font-size: max(9px, calc(21 * var(--u)));
+    font-size: var(--t-sec);
     font-weight: 500;
     text-align: left;
     cursor: pointer;
@@ -495,7 +586,7 @@
     left: 50%;
     margin: 0;
     transform: translate(-50%, -50%);
-    font-size: max(11px, calc(32 * var(--u)));
+    font-size: var(--t-sub);
     font-weight: 600;
     line-height: 1;
 }
@@ -510,7 +601,7 @@
     align-items: flex-start;
 }
 .fx-humor-coluna {
-    width: calc(236 * var(--u));
+    width: calc(280 * var(--u));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -533,7 +624,7 @@
 .fx-humor-valor,
 .fx-humor-nome {
     margin: 0;
-    font-size: max(10px, calc(30 * var(--u)));
+    font-size: var(--t-sec);
     font-weight: 600;
     line-height: 1;
 }
@@ -548,7 +639,7 @@
     top: 0;
     height: calc(148 * var(--u));
     width: calc(60 * var(--u));
-    font-size: max(7px, calc(15 * var(--u)));
+    font-size: var(--t-rot);
     font-weight: 500;
 }
 .fx-humor-regua[data-lado='esq'] {
@@ -666,7 +757,7 @@
 }
 .fx-texto-tamanho {
     margin: 0 0 calc(10 * var(--u));
-    font-size: max(9px, calc(19 * var(--u)));
+    font-size: var(--t-sec);
     font-weight: 500;
     line-height: 1.2;
 }
@@ -1000,7 +1091,7 @@
     grid-template-columns: calc(101 * var(--u)) calc(122 * var(--u)) auto;
     align-items: center;
     padding-left: calc(39 * var(--u));
-    font-size: max(9px, calc(21 * var(--u)));
+    font-size: var(--t-sec);
     line-height: 1;
     white-space: nowrap;
 }
@@ -1053,7 +1144,7 @@ html:has([data-clone]) {
     top: calc(653 * var(--u));
     margin: 0;
     color: #b9b9b9;
-    font-size: max(9px, calc(17 * var(--u)));
+    font-size: var(--t-sec);
     font-weight: 500;
     line-height: 1.24;
     text-align: center;
@@ -1278,7 +1369,7 @@ html:has([data-clone]) {
     margin: 0;
     color: color-mix(in srgb, var(--tinta, #111) 55%, transparent);
     font-family: var(--ff-mono), monospace;
-    font-size: max(10px, calc(15 * var(--u)));
+    font-size: var(--t-rot);
     letter-spacing: 0.07em;
     text-transform: uppercase;
     pointer-events: none;
@@ -1345,7 +1436,7 @@ html:has([data-clone]) {
 .fx-livro-paginas {
     min-width: calc(340 * var(--u));
     text-align: center;
-    font-size: max(12px, calc(26 * var(--u)));
+    font-size: var(--t-sub);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -1836,29 +1927,26 @@ html[data-paleta='azul'] [data-clone] {
 }
 .fx-coordenada {
     font-family: var(--ff-ui), sans-serif;
-    font-size: 13.5px;
+    font-size: 14px;
     font-weight: 600;
     fill: #111;
 }
 .fx-raio {
     font-family: var(--ff-ui), sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
 }
 .fx-leitura {
     font-family: var(--ff-ui), sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.03em;
 }
 .fx-guia-rotulo {
     font-family: var(--ff-ui), sans-serif;
-    font-size: 12.5px;
+    font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.03em;
-}
-.fx-guia-pequena {
-    font-size: 11px;
 }
 .fx-regua-sigma {
     cursor: ew-resize;

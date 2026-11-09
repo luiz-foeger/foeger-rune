@@ -34,3 +34,18 @@ export function emSigma(lista: number[], sigma: number) {
     const j = Math.min(lista.length - 1, i + 1);
     return lista[i] + (lista[j] - lista[i]) * (f - i);
 }
+
+// as medidas de cada estilo no alfabeto inteiro (A–Z, a–z), na ordem Cut, Polished, Worn, nas unidades delas: o σ do
+// desfoque; quanto as quinas de fora recuam, na média (da conta); e, das fontes de verdade, quantos espaços de dentro
+// sobram (na Polished grande, o s fecha as bocas e vira um 8: são dois a mais; na Worn fecham os do A, do a e do e),
+// quantos pontos o desenho tem por letra (a Cut é feita de retas; as gastas, de curvas), a largura média e o espaço
+// entre as letras, em unidades da fonte
+export type MedidaEstilo = { nome: string; unidade: string; antes?: boolean; valores: [number, number, number] };
+export const ESTILO_MEDIDAS: MedidaEstilo[] = [
+    {"nome":"Desfoque","unidade":"σ","antes":true,"valores":[0,26,50]},
+    {"nome":"Recuo das quinas","unidade":"u","valores":[0,18,33]},
+    {"nome":"Espaços de dentro","unidade":"","valores":[16,18,13]},
+    {"nome":"Pontos por letra","unidade":"","valores":[13,113,110]},
+    {"nome":"Largura média","unidade":"u","valores":[673,638,612]},
+    {"nome":"Entre letras","unidade":"u","valores":[43,24,14]},
+];

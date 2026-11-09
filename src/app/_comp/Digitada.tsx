@@ -10,6 +10,7 @@ import { useVisivel } from '../_lib/movimento';
 // pela linha, não pelo painel: com o painel parado pela metade na tela, a frase já aparece (antes, com 60% do painel,
 // ele ficava em branco).
 // O calt fica ligado: as letras repetidas saem com as variações da fonte.
+// É uma seção sem régua: o painel aberto, direto no fundo, com a trama sumindo nas bordas.
 function intervalos(n: number) {
     // sorteio fixo (o mesmo ritmo a cada visita)
     let s = 7;
@@ -35,7 +36,7 @@ export default function Digitada() {
         return () => window.clearTimeout(id);
     }, [visivel]);
     return (
-        <Painel colunas={4} linhas={1} rotulo={FRASE}>
+        <Painel colunas={4} linhas={1} rotulo={FRASE} aberto>
             <div className="fx-digitada">
                 <div ref={ref} className="fx-digitada-texto" data-digitando={n > 0 && n < FRASE.length}>
                     {FRASE.slice(0, n)}
