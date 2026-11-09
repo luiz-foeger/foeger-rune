@@ -1255,15 +1255,31 @@ html:has([data-clone]) {
     }
 }
 
-/* 10. o livro: o espécime da Rune na mesa escura (o motor do clone-tantan) dentro de um painel, com as setas, as
-   páginas abertas e o botão do PDF embaixo, como na página antiga da fonte */
+/* 10. o livro: o espécime da Rune (o motor do clone-tantan) solto direto no fundo da página, sem painel nem réguas, numa
+   área do tamanho de um painel de 4 × 2 (2 × 2 no celular), com as setas, as páginas abertas e o botão do PDF embaixo,
+   como na página antiga da fonte. A trama em volta do livro é o chão da cena, desenhado pelo motor (o tamanho da
+   célula sai do background-size da seção, o mesmo da trama dos painéis). O canvas passa 100 para cima e para baixo da
+   área, pelo vão entre as seções: é lá que a trama e a sombra somem, com o livro do tamanho de quando estava no painel
+   (as setas embaixo ficam por cima dele) */
+.fx-livro {
+    position: relative;
+    width: calc(1829 * var(--u));
+    height: calc(885 * var(--u));
+    background-size: calc(29.5 * var(--u)) calc(29.5 * var(--u));
+}
+@media (max-width: 899px) {
+    .fx-livro {
+        width: calc(885 * var(--u));
+    }
+}
 .fx-livro-tela {
     position: absolute;
-    inset: 0;
+    top: calc(-100 * var(--u));
+    left: 0;
     display: block;
     width: 100%;
-    height: 100%;
-    background: #141312;
+    height: calc(100% + 200 * var(--u));
+    background: transparent;
     outline: none;
     touch-action: pan-y;
 }
@@ -1288,7 +1304,7 @@ html:has([data-clone]) {
 .fx-livro-dica {
     position: absolute;
     margin: 0;
-    color: rgba(239, 238, 234, 0.62);
+    color: color-mix(in srgb, var(--tinta, #111) 55%, transparent);
     font-family: var(--ff-mono), monospace;
     font-size: max(10px, calc(15 * var(--u)));
     letter-spacing: 0.07em;
@@ -1316,6 +1332,8 @@ html:has([data-clone]) {
     opacity: 0;
 }
 .fx-livro-controles {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;

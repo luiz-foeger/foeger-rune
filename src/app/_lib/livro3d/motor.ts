@@ -1,22 +1,23 @@
 // o motor do livro em WebGL2, trazido do clone-tantan (os shaders e a física das folhas são os mesmos): cada folha é
 // uma malha que se curva em arco a partir da lombada, as folhas paradas formam as duas pilhas, as que estão virando
 // projetam sombra nelas e o papel vegetal é desenhado por último, lendo a cena já pronta.
-// O que muda para morar dentro da página: o canvas é o de um painel (as coordenadas do ponteiro são as dele), a roda
+// O que muda para morar dentro da página: o canvas é o da seção do livro (as coordenadas do ponteiro são as dele), a roda
 // do mouse rola a página (folheia só a roda de lado, a do trackpad; Ctrl + roda aproxima; de perto, a roda passeia
 // pela página até a borda e depois devolve a rolagem), as setas do teclado só valem com o livro à vista, o laço para
-// quando o painel sai da tela, o toque deixa a página rolar na vertical (pan-y) e dois dedos aproximam. As páginas
+// quando a seção sai da tela, o toque deixa a página rolar na vertical (pan-y) e dois dedos aproximam. As páginas
 // são as do espécime da Föeger Rune, desenhadas pelo pincel de canvas.
 import { malha, olhar, perspectiva, programa, quadroDeDesenho, liberarQuadro, mult, norm, cruz, type Quadro, type Prog } from './gl';
 import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, lerCores, CAPITULOS, type Pagina } from '../especime/conteudo';
 import { desenharPagina, type Alvo } from '../especime/paginas';
 import { carregarFontes, familiasDe, pincelCanvas, type Familias } from '../especime/pincel';
-import { desenharMesa, MESA } from './mesa';
 
 const W = 1;
 const H = 1.5;
 const ESP = 0.0016;
 const PI = Math.PI;
 const FOV = (28 * PI) / 180;
+// o chão da cena: o plano da sombra do livro e da trama
+const CHAO = -0.004;
 const LUZ = norm([-0.3, 0.45, 1]);
 const LUZ_SOMBRA = norm([-0.38, 0.5, 1]);
 const NIVEIS = [0, 512, 1024, 2560];
@@ -293,10 +294,11 @@ in vec3 vN;
 in vec3 vPos;
 uniform sampler2D uCena, uBorra1, uBorra2, uImp;
 uniform vec2 uTela;
-uniform vec3 uTinta, uLuz;
+uniform vec3 uTinta, uLuz, uFundo;
 uniform float uTopoD, uTopoE, uTempo;
 out vec4 cor;
 ${dobra ? RECORTE : ''}
+vec3 sobreFundo(vec4 c) { return c.rgb + uFundo * (1.0 - c.a); }
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 void main() {
     ${dobra ? DESCARTE : 'float cob = 1.0;'}
@@ -305,8 +307,8 @@ void main() {
     float h = max(vPos.z - topo, 0.0);
     // deitado, o que está embaixo aparece borrado mas legível; levantado, vira só manchas
     float k = smoothstep(0.004, 0.14, h);
-    vec3 b1 = texture(uBorra1, st).rgb;
-    vec3 sob = mix(mix(texture(uCena, st).rgb, b1, 0.7), texture(uBorra2, st).rgb, k);
+    vec3 b1 = sobreFundo(texture(uBorra1, st));
+    vec3 sob = mix(mix(sobreFundo(texture(uCena, st)), b1, 0.7), sobreFundo(texture(uBorra2, st)), k);
     bool fr = gl_FrontFacing;
     vec3 n = fr ? vN : -vN;
     float dif = max(dot(n, uLuz), 0.0);
@@ -349,7 +351,7 @@ void main() {
     cor = vec4(a, a, a, a);
 }`;
 
-// um retângulo no plano da mesa (a mesa e a sombra do livro)
+// um retângulo no plano de baixo do livro (a sombra dele)
 const VERT_PLANO = `#version 300 es
 precision highp float;
 layout(location = 0) in vec2 aUv;
@@ -364,16 +366,6 @@ void main() {
     gl_Position = uVP * vec4(vXy, uZp, 1.0);
 }`;
 
-const FRAG_MESA = `#version 300 es
-precision highp float;
-in vec2 vUv;
-uniform sampler2D uNitida, uBorrada;
-uniform float uDesfoque;
-out vec4 cor;
-void main() {
-    cor = vec4(mix(texture(uNitida, vUv).rgb, texture(uBorrada, vUv).rgb, uDesfoque), 1.0);
-}`;
-
 const FRAG_SOMBRA_LIVRO = `#version 300 es
 precision highp float;
 in vec2 vXy;
@@ -385,8 +377,46 @@ void main() {
     vec2 b = (uLivro.zw - uLivro.xy) * 0.5;
     float d = caixa(vXy - c - vec2(0.035, -0.05), b);
     float perto = caixa(vXy - c - vec2(0.008, -0.012), b);
-    float a = 0.42 * (1.0 - smoothstep(-0.05, 0.32, d)) + 0.45 * (1.0 - smoothstep(-0.006, 0.03, perto));
+    // no fundo claro da página: uma sombra curta e leve em volta e a de contato, junto da borda
+    float a = 0.16 * (1.0 - smoothstep(-0.04, 0.2, d)) + 0.34 * (1.0 - smoothstep(-0.006, 0.03, perto));
     cor = vec4(0.0, 0.0, 0.0, a);
+}`;
+
+// o chão da cena (o plano z = uChao, o da sombra do livro): um pedaço da trama pontilhada dos painéis em volta do livro,
+// que some antes da borda. O raio do pixel bate no chão e, lá, vale o desenho da trama do CSS nas unidades do SVG dela
+// (células de 29,5, linhas de 1, traços de 2 com vãos de 2,9167; uPasso é uma unidade no chão, do tamanho da trama dos
+// painéis com a câmera parada). Como está no chão, a trama se move em perspectiva junto com o livro quando a câmera
+// mexe. O pedaço: o retângulo do livro encolhido (uMancha: meio e meia medida), de cantos bem redondos, que some a
+// uManchaR dele
+const FRAG_TRAMA = `#version 300 es
+precision highp float;
+uniform vec3 uOlho, uEixoX, uEixoY, uEixoZ;
+uniform vec2 uLente, uTelaPx;
+uniform float uChao, uPasso;
+uniform vec4 uTrama, uMancha;
+uniform vec2 uManchaR;
+out vec4 cor;
+// a cobertura de uma linha de largura 1 a d do centro, num pixel de largura f (filtro de caixa)
+float linhaT(float d, float f) { return clamp((min(d + f * 0.5, 0.5) - max(d - f * 0.5, -0.5)) / f, 0.0, 1.0); }
+// os traços, centrados em 0,5 + k·P; de longe (o pixel maior que o traço), a média deles
+float tracosT(float x, float f) {
+    const float P = 29.5 / 6.0;
+    float t = mod(x - 0.5 + P * 0.5, P) - P * 0.5;
+    float c = clamp((1.0 - abs(t)) / f + 0.5, 0.0, 1.0);
+    return mix(c, 2.0 / P, clamp(f * 0.5 - 0.5, 0.0, 1.0));
+}
+void main() {
+    vec2 ndc = gl_FragCoord.xy / uTelaPx * 2.0 - 1.0;
+    vec3 d = uEixoX * (ndc.x * uLente.x) + uEixoY * (ndc.y * uLente.y) - uEixoZ;
+    vec3 p = uOlho + d * ((uChao - uOlho.z) / d.z);
+    vec2 s = vec2(p.x, -p.y) / uPasso;
+    vec2 f = max(fwidth(s), vec2(1e-4));
+    float dy = abs(mod(s.y + 14.75, 29.5) - 14.75);
+    float dx = abs(mod(s.x + 14.75, 29.5) - 14.75);
+    float a = max(linhaT(dy, f.y) * tracosT(s.x, f.x), linhaT(dx, f.x) * tracosT(s.y, f.y)) * uTrama.a;
+    float m = length(max(abs(p.xy - uMancha.xy) - uMancha.zw, 0.0) / uManchaR);
+    a *= 1.0 - smoothstep(0.35, 1.0, m);
+    cor = vec4(uTrama.rgb * a, a);
 }`;
 
 const VERT_TELA = `#version 300 es
@@ -428,15 +458,13 @@ const FRAG_FINAL = `#version 300 es
 precision highp float;
 in vec2 vSt;
 uniform sampler2D uTex;
-uniform float uTempo, uFade;
+uniform float uTempo;
 out vec4 cor;
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 void main() {
-    vec3 c = texture(uTex, vSt).rgb;
-    c += (hash(gl_FragCoord.xy + fract(uTempo * 7.13) * 91.7) - 0.5) * 0.05;
-    float v = length((vSt - 0.5) * vec2(1.0, 0.92));
-    c *= 1.0 - 0.3 * smoothstep(0.42, 0.95, v);
-    cor = vec4(c * uFade, 1.0);
+    vec4 t = texture(uTex, vSt);
+    vec3 c = t.rgb + (hash(gl_FragCoord.xy + fract(uTempo * 7.13) * 91.7) - 0.5) * 0.05 * t.a;
+    cor = vec4(max(c, 0.0), t.a);
 }`;
 
 
@@ -494,7 +522,7 @@ export async function iniciarLivro(cv: HTMLCanvasElement, o: Opcoes, sinal: Abor
     lerCores(cv);
     await carregarFontes(fam);
     if (sinal.aborted) return null;
-    const gl = cv.getContext('webgl2', { antialias: false, alpha: false, depth: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
+    const gl = cv.getContext('webgl2', { antialias: false, alpha: true, depth: false, premultipliedAlpha: true, powerPreference: 'high-performance' });
     if (!gl) throw new Error('sem WebGL2');
     return montar(gl, cv, fam, o);
 }
@@ -508,8 +536,8 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     const pVegetal = programa(gl, VERT_FOLHA, fragVegetal(false));
     const pVegetalDobrado = programa(gl, VERT_FOLHA, fragVegetal(true));
     const pSombra = programa(gl, VERT_SOMBRA, FRAG_SOMBRA);
-    const pMesa = programa(gl, VERT_PLANO, FRAG_MESA);
     const pSombraLivro = programa(gl, VERT_PLANO, FRAG_SOMBRA_LIVRO);
+    const pTrama = programa(gl, VERT_TELA, FRAG_TRAMA);
     const pCopia = programa(gl, VERT_TELA, FRAG_COPIA);
     const pBorra = programa(gl, VERT_TELA, FRAG_BORRA);
     const pEscurece = programa(gl, VERT_TELA, FRAG_ESCURECE);
@@ -553,9 +581,23 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         return t;
     }
 
-    const mesa = desenharMesa(fam);
-    const texMesa = enviar(null, mesa.nitida, false, true);
-    const texMesaBorrada = enviar(null, mesa.borrada, false, false);
+    // o fundo da página, para o papel vegetal que passa por cima do vazio
+    const fundo = (() => {
+        const el = document.createElement('i');
+        el.style.color = 'var(--fundo)';
+        (cv.parentElement ?? document.body).appendChild(el);
+        const m = getComputedStyle(el).color.match(/[\d.]+/g)?.map(Number) ?? [248, 248, 248];
+        el.remove();
+        return [m[0] / 255, m[1] / 255, m[2] / 255];
+    })();
+    // a cor das linhas da trama dos painéis (o traço do SVG em --trama: cinza, ou preto com opacidade nas faixas)
+    const corTrama = (() => {
+        const t = getComputedStyle(cv).getPropertyValue('--trama');
+        const hex = /stroke='%23([0-9a-f]{3,6})'/i.exec(t)?.[1] ?? 'c4c4c4';
+        const h = hex.length === 3 ? [...hex].map(c => c + c).join('') : hex;
+        const op = Number(/stroke-opacity='([\d.]+)'/.exec(t)?.[1] ?? 1);
+        return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255).concat(op);
+    })();
 
     // ---------- as folhas ----------
     const face = (p: Pagina, num?: number): Face => ({
@@ -1024,32 +1066,35 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     }
 
     // ---------- câmera ----------
-    const cam: Cam = { cx: 0.5, cy: 0, zoom: 0.74 };
+    // o livro já está no lugar quando a seção chega (sem entrada: nem de longe, nem acendendo)
+    const cam: Cam = { cx: 0.5, cy: 0, zoom: 1 };
     const camAlvo: Cam = { cx: 0.5, cy: 0, zoom: 1 };
     const mouse = { x: 0, y: 0, sx: 0, sy: 0, dentro: false };
     let largCss = 1;
     let altCss = 1;
-    let intro = 0;
 
     const distanciaBase = () => {
         const asp = largCss / altCss;
         const t = Math.tan(FOV / 2);
-        return Math.max(H / 0.86 / 2 / t, (2 * W) / 0.9 / 2 / (t * asp));
+        // o livro tem o tamanho de quando morava no painel (86% da altura da área, 885), num canvas que passa 100 para
+        // cima e para baixo dela (1085): a trama e a sombra somem nesse vão. Aberto, no máximo 84% da largura (no
+        // celular), para sobrar chão dos lados
+        return Math.max(H / ((0.86 * 885) / 1085) / 2 / t, (2 * W) / 0.84 / 2 / (t * asp));
     };
     const centroDoLivro = () => 0.5 * (1 - lim(folhas[0].phi / PI, 0, 1)) - 0.5 * lim(folhas[N - 1].phi / PI, 0, 1);
 
     type Vista = { olho: number[]; eixoX: number[]; eixoY: number[]; eixoZ: number[]; vp: Float32Array; dist: number };
-    function vista(c: Cam): Vista {
+    function vista(c: Cam, m: { sx: number; sy: number } = mouse): Vista {
         const dist = distanciaBase() / c.zoom;
         const perto = suave(1.1, 2.2, c.zoom);
         const t = Math.tan(FOV / 2);
         const meiaA = dist * t;
         const meiaL = meiaA * (largCss / altCss);
         // de perto, a câmera segue o cursor; de longe, o cursor só inclina um pouco a vista
-        const ox = mouse.sx * 0.3 * meiaL * perto;
-        const oy = mouse.sy * 0.3 * meiaA * perto;
-        const px = mouse.sx * 0.07 * (1 - perto);
-        const py = mouse.sy * 0.05 * (1 - perto);
+        const ox = m.sx * 0.3 * meiaL * perto;
+        const oy = m.sy * 0.3 * meiaA * perto;
+        const px = m.sx * 0.07 * (1 - perto);
+        const py = m.sy * 0.05 * (1 - perto);
         const alvo = [c.cx + ox, c.cy + oy, 0.01];
         const olho = [alvo[0] + px, alvo[1] + py - dist * 0.04, dist];
         const v = olhar(olho, alvo, [0, 1, 0]);
@@ -1060,6 +1105,16 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         return { olho, eixoX, eixoY, eixoZ, vp: mult(p, v), dist };
     }
     let v = vista(cam);
+    // a trama do chão: uma unidade do SVG dela no chão, para a célula ter na tela, com a câmera parada no livro aberto, o
+    // tamanho da trama dos painéis (o background-size da seção)
+    let passoTrama = 0.002;
+    function medirTrama() {
+        const celula = parseFloat(getComputedStyle(cv.parentElement ?? cv).backgroundSize) || 29.5;
+        const parada = vista({ cx: 0, cy: 0, zoom: 1 }, { sx: 0, sy: 0 });
+        const a = noPlano(largCss / 2, altCss / 2, CHAO, parada);
+        const b = noPlano(largCss / 2 + celula, altCss / 2, CHAO, parada);
+        passoTrama = Math.abs(b[0] - a[0]) / 29.5;
+    }
 
     function noPlano(px: number, py: number, z: number, vv = v) {
         const nx = (px / largCss) * 2 - 1;
@@ -1114,7 +1169,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     }
 
     // ---------- entrada ----------
-    // as coordenadas do ponteiro no canvas (o painel está em algum lugar da página)
+    // as coordenadas do ponteiro no canvas (a seção está em algum lugar da página)
     const local = (e: { clientX: number; clientY: number }) => {
         const r = cv.getBoundingClientRect();
         return [e.clientX - r.left, e.clientY - r.top] as const;
@@ -1449,6 +1504,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         if (l === largPx && a === altPx) return;
         largPx = l;
         altPx = a;
+        medirTrama();
         cv.width = l;
         cv.height = a;
         if (msaa) {
@@ -1578,13 +1634,20 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         gl.uniform1f(u.uZp, z);
         return u;
     }
+    // de onde a onde vai o livro no chão: as duas pilhas, cada uma enquanto tem folha deitada
+    function extensao() {
+        const x0 = -W * (folhas.some(f => f.phi > 0.02) ? lim(Math.max(...folhas.map(f => f.phi)) / PI, 0, 1) : 0);
+        const x1 = W * lim(1 - Math.min(...folhas.map(f => f.phi)) / PI, 0, 1);
+        return [x0, x1];
+    }
 
     function desenhar() {
         const tp = topos();
         tela(null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, msaa!.fb);
         gl.viewport(0, 0, largPx, altPx);
-        gl.clearColor(0.08, 0.075, 0.07, 1);
+        // transparente: o livro fica direto sobre o fundo da página
+        gl.clearColor(0, 0, 0, 0);
         gl.clearDepth(1);
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
@@ -1592,21 +1655,37 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         gl.disable(gl.BLEND);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // a mesa (fora de foco quando a câmera chega perto)
-        let u = plano(pMesa, [-MESA.l / 2, -MESA.a / 2, MESA.l / 2, MESA.a / 2], -0.006);
-        tex(0, texMesa, u.uNitida);
-        tex(1, texMesaBorrada, u.uBorrada);
-        gl.uniform1f(u.uDesfoque, suave(1.15, 2.4, cam.zoom));
-        gl.bindVertexArray(mPlano.vao);
-        gl.drawElements(gl.TRIANGLES, mPlano.n, gl.UNSIGNED_SHORT, 0);
-
-        // a sombra do livro na mesa
-        const x0 = -W * (folhas.some(f => f.phi > 0.02) ? lim(Math.max(...folhas.map(f => f.phi)) / PI, 0, 1) : 0);
-        const x1 = W * lim(1 - Math.min(...folhas.map(f => f.phi)) / PI, 0, 1);
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        // o chão: o pedaço de trama em volta do livro (o retângulo do livro encolhido 0,3, que some até 1 para os lados e
+        // até 0,65 para cima e para baixo), sempre acabando antes da borda da área parada (no celular, quase quadrada,
+        // sobra menos para os lados)
+        const [x0, x1] = extensao();
         gl.disable(gl.DEPTH_TEST);
-        u = plano(pSombraLivro, [x0 - 0.7, -H / 2 - 0.7, x1 + 0.7, H / 2 + 0.7], -0.004);
+        const ut = usar(pTrama);
+        const t = Math.tan(FOV / 2);
+        const meiaA = distanciaBase() * t * 0.9;
+        const meiaL = distanciaBase() * t * (largCss / altCss) * 0.95;
+        const mx = Math.max(0, Math.min((x1 - x0) / 2 - 0.3, meiaL - 0.25));
+        const my = H / 2 - 0.3;
+        gl.uniform3fv(ut.uOlho, v.olho);
+        gl.uniform3fv(ut.uEixoX, v.eixoX);
+        gl.uniform3fv(ut.uEixoY, v.eixoY);
+        gl.uniform3fv(ut.uEixoZ, v.eixoZ);
+        gl.uniform2f(ut.uLente, t * (largCss / altCss), t);
+        gl.uniform2f(ut.uTelaPx, largPx, altPx);
+        gl.uniform1f(ut.uChao, CHAO);
+        gl.uniform1f(ut.uPasso, passoTrama);
+        gl.uniform4f(ut.uTrama, corTrama[0], corTrama[1], corTrama[2], corTrama[3]);
+        gl.uniform4f(ut.uMancha, (x0 + x1) / 2, 0, mx, my);
+        gl.uniform2f(ut.uManchaR, lim(meiaL - mx, 0.15, 1), lim(meiaA - my, 0.15, 0.65));
+        gl.bindVertexArray(vazio);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        gl.enable(gl.DEPTH_TEST);
+
+        // a sombra do livro no chão (o alfa se soma, para a sombra aparecer sobre o canvas transparente)
+        gl.enable(gl.BLEND);
+        gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        gl.disable(gl.DEPTH_TEST);
+        const u = plano(pSombraLivro, [x0 - 0.7, -H / 2 - 0.7, x1 + 0.7, H / 2 + 0.7], CHAO);
         gl.uniform4f(u.uLivro, x0, (-H / 2) * 1.018, x1, (H / 2) * 1.018);
         gl.bindVertexArray(mPlano.vao);
         gl.drawElements(gl.TRIANGLES, mPlano.n, gl.UNSIGNED_SHORT, 0);
@@ -1643,7 +1722,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             gl.bindFramebuffer(gl.FRAMEBUFFER, msaa!.fb);
             gl.viewport(0, 0, largPx, altPx);
             gl.enable(gl.BLEND);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             const ue = usar(pEscurece);
             tex(0, qS1!.cor, ue.uTex);
             gl.bindVertexArray(vazio);
@@ -1674,6 +1753,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
                 gl.uniformMatrix4fv(uv.uVP, false, v.vp);
                 gl.uniform3fv(uv.uLuz, LUZ);
                 gl.uniform2f(uv.uTela, largPx, altPx);
+                gl.uniform3f(uv.uFundo, fundo[0], fundo[1], fundo[2]);
                 gl.uniform1f(uv.uTopoD, tp.d);
                 gl.uniform1f(uv.uTopoE, tp.e);
                 gl.uniform1f(uv.uTempo, (agora * 60) % 97);
@@ -1694,7 +1774,6 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         gl.disable(gl.DEPTH_TEST);
         passe(pFinal, null, final.cor, uf => {
             gl.uniform1f(uf.uTempo, agora);
-            gl.uniform1f(uf.uFade, suave(0, 1, intro));
         });
     }
 
@@ -1817,14 +1896,13 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const dt = Math.min(0.05, Math.max(0, (t - antes) / 1000));
         antes = t;
         agora = (t - inicio - pausado) / 1000;
-        intro = Math.min(1, intro + dt / 1.4);
         dimensionar();
         poses(dt);
         if (camAlvo.zoom <= 1.02) {
             camAlvo.cx = centroDoLivro();
             camAlvo.cy = 0;
         }
-        const k = 1 - Math.exp(-dt * (intro < 1 ? 2.6 : 7));
+        const k = 1 - Math.exp(-dt * 7);
         cam.cx += (camAlvo.cx - cam.cx) * k;
         cam.cy += (camAlvo.cy - cam.cy) * k;
         cam.zoom += (camAlvo.zoom - cam.zoom) * k;
@@ -1837,7 +1915,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         desenhar();
         avisar();
     };
-    // o laço só roda com o painel na tela; o tempo parado não conta (as viradas continuam de onde estavam)
+    // o laço só roda com a seção na tela; o tempo parado não conta (as viradas continuam de onde estavam)
     function ativar(sim: boolean) {
         if (sim === rodando) return;
         rodando = sim;
@@ -1884,8 +1962,6 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             cv.removeEventListener('wheel', aoRolar);
             window.removeEventListener('keydown', aoTeclar);
             for (const fc of faces) if (fc.tex) gl.deleteTexture(fc.tex);
-            gl.deleteTexture(texMesa);
-            gl.deleteTexture(texMesaBorrada);
             delete (window as unknown as { __livroRune?: unknown }).__livroRune;
         },
     };

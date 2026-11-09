@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Painel from './Painel';
 import { iniciarLivro, type Controle, type Estado } from '../_lib/livro3d/motor';
 
 // o livro do espécime, como na página antiga da fonte (a /nova/foeger-sans do portfolio-simulacao): o título digitado
 // vem antes (na página), aqui ficam o livro e, embaixo, as setas, as páginas abertas e o botão de baixar o PDF. O livro
-// é o realista do clone-tantan, na mesa escura, dentro de um painel de 4 × 2 (2 × 2 no celular). O motor só começa
-// quando o painel chega perto da tela e só desenha enquanto ele está nela.
+// é o realista do clone-tantan, solto direto no fundo da página (sem painel, réguas nem moldura), sobre um pedaço de
+// trama que o motor desenha no chão e que some em volta dele, numa área do tamanho de um painel de 4 × 2 (2 × 2 no
+// celular). O motor só começa quando a seção chega perto da tela e só desenha enquanto ela está nela.
 export const PDF = '/foeger-rune-especime.pdf';
 
 export default function SecaoLivro() {
@@ -66,7 +66,7 @@ export default function SecaoLivro() {
 
     return (
         <>
-            <Painel colunas={4} linhas={2} rotulo="O livro" celular={{ colunas: 2, linhas: 2 }}>
+            <section className="fx-livro" aria-label="O livro">
                 <canvas ref={tela} className="fx-livro-tela" tabIndex={0} aria-label="O espécime da Föeger Rune: clique na página ou arraste o canto para folhear" />
                 <div className="fx-livro-carregando" data-pronto={pronto}>
                     {erro || 'Föeger Rune · espécime'}
@@ -74,7 +74,7 @@ export default function SecaoLivro() {
                 <p className="fx-livro-dica" data-oculta={!pronto || mexeu}>
                     Clique na página ou arraste o canto · Ctrl + roda aproxima
                 </p>
-            </Painel>
+            </section>
             <div className="fx-livro-controles">
                 <button type="button" className="fx-livro-seta" onClick={() => controle.current?.virar(-1)} disabled={!pronto || estado.inicio} aria-label="Página anterior">
                     ←
