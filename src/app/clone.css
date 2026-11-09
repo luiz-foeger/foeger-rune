@@ -385,7 +385,8 @@
     display: block;
 }
 
-/* 5. o "Três* Estilos" (a letra pendurada) e o testador com o seletor e o humor */
+/* 5. os títulos das partes ("Três* Estilos", parado, com o asterisco pequeno e alto) e o testador com o seletor e o
+   humor */
 .fx-titulo-estilos {
     font-family: var(--ff-cut), sans-serif;
     font-size: calc(152 * var(--u));
@@ -394,28 +395,10 @@
     white-space: pre;
     min-height: calc(115 * var(--u));
 }
-.fx-letra,
 .fx-asterisco {
     display: inline-block;
-    transition:
-        transform 0.09s ease-out,
-        color 0.12s ease-out;
-}
-.fx-letra[data-oculta],
-.fx-asterisco[data-oculta] {
-    visibility: hidden;
-}
-.fx-letra[data-pendente] {
-    color: #8c8c8c;
-    transform: translateY(0.42em);
-}
-.fx-asterisco {
     font-size: 0.55em;
     transform: translateY(-0.62em);
-}
-.fx-asterisco[data-pendente] {
-    color: #8c8c8c;
-    transform: translateY(0.2em);
 }
 .fx-nota {
     position: absolute;
@@ -993,17 +976,6 @@
     background: var(--cor-botao, #111);
     color: #fff;
 }
-.fx-icone-quadrado,
-.fx-icone-circulo {
-    display: block;
-    width: calc(17 * var(--u));
-    height: calc(17 * var(--u));
-    background: currentColor;
-}
-.fx-icone-circulo {
-    border-radius: 50%;
-}
-
 .fx-recursos-dupla {
     position: absolute;
     inset: 0;
@@ -1847,4 +1819,58 @@ html[data-paleta='azul'] [data-clone] {
     overflow: visible;
     transform-origin: 0 0;
     will-change: transform;
+}
+
+/* 13. a seção do desgaste: os cartões de perto (o A com a lente de transferidor, as lupas do R, do H e do b, o g com as
+   linhas da fonte, o "Opa!" e a régua do σ que move todos) */
+.fx-cartao-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.fx-palavra {
+    position: absolute;
+    overflow: visible;
+}
+.fx-coordenada {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    fill: #111;
+}
+.fx-raio {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+}
+.fx-leitura {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+.fx-guia-rotulo {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+.fx-guia-pequena {
+    font-size: 11px;
+}
+.fx-regua-sigma {
+    cursor: ew-resize;
+    touch-action: none;
+}
+.fx-sigma-valor {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 44px;
+    font-weight: 600;
+    fill: #111;
+    font-variant-numeric: tabular-nums;
+}
+.fx-sigma-amostra {
+    font-size: 190px;
 }

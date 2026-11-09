@@ -1,9 +1,9 @@
 import Alfabeto from './_comp/Alfabeto';
-import Blocos from './_comp/Blocos';
 import Digitada from './_comp/Digitada';
 import { CartazPolido, GradePalavras, Onomatopeias, Simbolos } from './_comp/Composicoes';
 import { Faixa, Manchete, Textos } from './_comp/Faixa';
 import { Escura, LetrasRune, Recursos, TextoVariacoes } from './_comp/Livro';
+import SecaoDesgaste from './_comp/SecaoDesgaste';
 import SecaoLivro from './_comp/SecaoLivro';
 import Testador from './_comp/Testador';
 import { Cabecalho } from './_comp/Topo';
@@ -12,7 +12,7 @@ import TituloEstilos from './_comp/TituloEstilos';
 import { TITULO_LIVRO, TITULO_RECURSOS } from './_lib/conteudo';
 
 // a página da Föeger Rune: o cabeçalho preso no alto e o hero da palavra Rune; o alfabeto com os três desgastes e a
-// frase digitada; os blocos do desgaste (a letra nova e gasta dos dois lados de uma divisa); o "Três* Estilos" e o testador; as faixas coloridas de cada estilo e a seção
+// frase digitada; a seção do desgaste (os cartões de perto, movidos pelo mesmo σ); o "Três* Estilos" e o testador; as faixas coloridas de cada estilo e a seção
 // escura; os recursos; e, no fim, o livro do espécime e o PDF para baixar. Parte do clone da Studio Feixen Fonts
 // (guardado em C:\pessoal\clone-feixen), sem as seções que mais tinham a cara dela: os cartões das quinas de fora e
 // de dentro, a troca de palavra e as letras soltas com o botão.
@@ -24,8 +24,8 @@ export default function Pagina() {
             <main className="fx-corpo">
                 <Alfabeto />
                 <Digitada />
-                {/* os blocos do desgaste: a letra dividida, nova de um lado da divisa e gasta do outro */}
-                <Blocos />
+                {/* a seção do desgaste: os cartões de perto, todos movidos pelo mesmo σ */}
+                <SecaoDesgaste />
                 <TituloEstilos ancora="estilos" />
                 {/* a âncora do "Testar" do menu */}
                 <div id="testador" />

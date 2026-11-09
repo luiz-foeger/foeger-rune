@@ -8,8 +8,7 @@ import { RUNE, VARIACOES } from '../_lib/conteudo';
 import { useVisivel } from '../_lib/movimento';
 
 // a seção escura (as quatro letras grandes e o texto que troca de caixa) e os recursos da fonte com os botões de
-// ligar e desligar: as variações das letras repetidas, o L do meio e o f do começo (calt), os acentos como pedras à
-// parte e as frações prontas.
+// ligar e desligar: as variações das letras repetidas, o L do meio e o f do começo (calt) e as frações prontas.
 const u = (n: number) => `calc(${n} * var(--u))`;
 
 // um sorteio fixo, para as cores e as posições serem as mesmas a cada visita
@@ -193,40 +192,6 @@ function PainelRecursos({ cartas, atraso, estilo }: { cartas: Recurso[]; atraso:
     );
 }
 
-const ACENTOS = 'Ôh, é só açaí!';
-const DESTACADOS = new Set('Ôéóçí!,'.split(''));
-function PainelAcentos() {
-    const ref = useRef<HTMLDivElement>(null);
-    const gasta = useAlterna(ref, 2600, 600);
-    return (
-        <Painel colunas={4} linhas={1} rotulo="Acentos: pedras à parte">
-            <div ref={ref} className="fx-recurso" data-largo>
-                <div className="fx-recurso-cabeca" data-largo>
-                    <span>Acentos</span>
-                    <span>Pedras à parte</span>
-                    <span>{gasta ? 'Worn' : 'Cut'}</span>
-                </div>
-                <div className="fx-recurso-letras" data-largo style={{ fontFamily: gasta ? 'var(--ff-worn)' : 'var(--ff-cut)' }}>
-                    <span>
-                        {ACENTOS.split('').map((ch, i) => (
-                            <span key={i} style={{ color: DESTACADOS.has(ch) ? 'var(--tinta)' : '#bdbdbd' }}>
-                                {ch}
-                            </span>
-                        ))}
-                    </span>
-                </div>
-                <Botoes
-                    ligado={gasta}
-                    cor="var(--tinta)"
-                    estilo={{ right: u(300), top: u(40) }}
-                    desligado={<i className="fx-icone-quadrado" />}
-                    ligadoRotulo={<i className="fx-icone-circulo" />}
-                />
-            </div>
-        </Painel>
-    );
-}
-
 function PainelFracoes() {
     const ref = useRef<HTMLDivElement>(null);
     const prontas = useAlterna(ref, 2400, 300);
@@ -267,7 +232,6 @@ export function Recursos() {
                 <PainelRecursos cartas={CARTAS[0]} atraso={400} estilo={{ gridColumn: '1 / span 2' }} />
                 <PainelRecursos cartas={CARTAS[1]} atraso={1000} estilo={{ gridColumn: '3 / span 2' }} />
             </div>
-            <PainelAcentos />
             <PainelFracoes />
         </>
     );

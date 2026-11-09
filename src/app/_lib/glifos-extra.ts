@@ -1,23 +1,11 @@
-// letras que os cartões usam e que ainda não estão em glifos.ts: tiradas da prévia FoegerRune-Cut-previa.otf do site
-// no mesmo formato (pedras com o contorno de fora e os furos, em unidades da fonte, y para baixo, base em 0). O mesmo
-// jeito de tirar dá o A idêntico ao de glifos.ts.
+// gerado por medidas-do-site.js (C:\pessoal\foeger-rune\ferramentas) a partir da prévia FoegerRune-Cut-previa.otf
+// do site: as letras que a seção do desgaste usa e que não estão em glifos.ts, no mesmo formato (pedras com o contorno
+// de fora e os furos, em unidades da fonte, y para baixo, base em 0, uma letra depois da outra pelo avanço). Não editar
+// à mão.
 import type { Palavra } from './glifos';
 
 export const PALAVRAS_EXTRA: Record<string, Palavra> = {
-    Y: {
-        largura: 807,
-        glifos: [
-            {
-                ch: 'Y',
-                x: 0,
-                avanco: 807,
-                pedras: [
-                    {
-                        d: 'M508 -331L785 -644L544 -787L395 -510L297 -785L22 -671L284 -332L235 -27L534 26Z',
-                        vertices: [[[508, -331], [785, -644], [544, -787], [395, -510], [297, -785], [22, -671], [284, -332], [235, -27], [534, 26]]],
-                    },
-                ],
-            },
-        ],
-    },
+    "Y": {"largura":807,"glifos":[{"ch":"Y","x":0,"avanco":807,"pedras":[{"d":"M508 -331L785 -644L544 -787L395 -510L297 -785L22 -671L284 -332L235 -27L534 26Z","vertices":[[[508,-331],[785,-644],[544,-787],[395,-510],[297,-785],[22,-671],[284,-332],[235,-27],[534,26]]]}]}]},
+    "Opa!": {"largura":2354,"glifos":[{"ch":"O","x":0,"avanco":848,"pedras":[{"d":"M725 -107L826 -533L590 -761L247 -760L24 -561L20 -170L352 25ZM236 -297L284 -557L542 -531L557 -295L390 -194Z","vertices":[[[725,-107],[826,-533],[590,-761],[247,-760],[24,-561],[20,-170],[352,25]],[[236,-297],[284,-557],[542,-531],[557,-295],[390,-194]]]}]},{"ch":"p","x":848,"avanco":638,"pedras":[{"d":"M1138 -27L1228 24L1461 -113L1465 -446L1230 -574L1112 -493L1107 -573L870 -520L892 -358L927 -342L906 201L1157 210ZM1115 -352L1258 -359L1258 -212L1136 -179Z","vertices":[[[1138,-27],[1228,24],[1461,-113],[1465,-446],[1230,-574],[1112,-493],[1107,-573],[870,-520],[892,-358],[927,-342],[906,201],[1157,210]],[[1115,-352],[1258,-359],[1258,-212],[1136,-179]]]}]},{"ch":"a","x":1486,"avanco":573,"pedras":[{"d":"M2037 -17L1950 -479L1567 -569L1541 -369L1810 -359L1533 -296L1508 -97L1648 23L1845 -56L1859 22ZM1706 -166L1706 -214L1814 -244L1824 -163Z","vertices":[[[2037,-17],[1950,-479],[1567,-569],[1541,-369],[1810,-359],[1533,-296],[1508,-97],[1648,23],[1845,-56],[1859,22]],[[1706,-166],[1706,-214],[1814,-244],[1824,-163]]]}]},{"ch":"!","x":2059,"avanco":295,"pedras":[{"d":"M2332 -779L2081 -761L2125 -268L2292 -256Z","vertices":[[[2332,-779],[2081,-761],[2125,-268],[2292,-256]]]},{"d":"M2315 -203L2097 -193L2096 -11L2314 -3Z","vertices":[[[2315,-203],[2097,-193],[2096,-11],[2314,-3]]]}]}]},
+    "g": {"largura":586,"glifos":[{"ch":"g","x":0,"avanco":586,"pedras":[{"d":"M535 69L496 -357L538 -377L564 -521L338 -572L335 -506L277 -550L57 -480L22 -157L199 -45L330 -71L312 12L70 -21L41 167L406 216ZM200 -237L214 -370L323 -348L318 -197Z","vertices":[[[535,69],[496,-357],[538,-377],[564,-521],[338,-572],[335,-506],[277,-550],[57,-480],[22,-157],[199,-45],[330,-71],[312,12],[70,-21],[41,167],[406,216]],[[200,-237],[214,-370],[323,-348],[318,-197]]]}]}]},
 };
