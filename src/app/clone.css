@@ -517,6 +517,27 @@
     background: #fff;
     z-index: 2;
 }
+/* a janela do seletor inteira se arrasta: a mão aberta no resto da janela, a mão apontando nos nomes (que também se
+   clicam) e a mão fechada em tudo com o botão do mouse apertado */
+.fx-seletor,
+.fx-seletor * {
+    cursor: grab;
+}
+.fx-seletor .fx-seletor-item {
+    cursor: pointer;
+}
+.fx-seletor {
+    touch-action: none;
+    user-select: none;
+}
+.fx-seletor[data-segurando],
+.fx-seletor[data-segurando] * {
+    cursor: grabbing;
+}
+.fx-seletor img {
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
 .fx-seletor > .fx-janela-barra {
     margin: 0 calc(-4 * var(--u));
     padding: 0 calc(4 * var(--u));
