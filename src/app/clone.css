@@ -3418,15 +3418,6 @@ html[data-paleta='azul'] [data-clone] {
 .fx-caixinha p {
     margin: 0;
 }
-.fx-caixinha .fx-caixinha-tamanho {
-    position: absolute;
-    left: calc(24 * var(--u));
-    top: calc(20 * var(--u));
-    font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-sec);
-    font-weight: 500;
-    line-height: 1.2;
-}
 .fx-mini-miudo {
     font-size: calc(11 * var(--u));
     letter-spacing: 0.06em;
@@ -3646,12 +3637,7 @@ html[data-paleta='azul'] [data-clone] {
     .fx-caixinha {
         --u: calc(100cqw / 945 * 885 / 413);
     }
-    .fx-caixinha .fx-caixinha-tamanho {
-        left: calc(100cqw / 945 * 40);
-        top: calc(100cqw / 945 * 34);
-        font-size: max(11px, calc(100cqw / 945 * 24));
     }
-}
 
 /* Polished, 1: uma página do livro (o papel com a sombra da dobra do lado da lombada) */
 .fx-mini-pagina {
@@ -4337,4 +4323,212 @@ html[data-paleta='azul'] [data-clone] {
         width: calc(250 * var(--u));
         height: calc(170 * var(--u));
     }
+}
+
+/* 19. o acabamento da Cut (e as peças comuns do acabamento): a mesma luz do livro 3D em tudo, os materiais de verdade
+   e as fontes de apoio nos miúdos */
+.fx-mono {
+    font-family: var(--ff-mono), monospace;
+    font-size: calc(11 * var(--u));
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+}
+/* a sombra das peças recortadas (o ingresso com os furos, o cartaz rasgado): a mesma luz, em filtro, que acompanha o
+   recorte */
+.fx-sombra {
+    filter: drop-shadow(calc(1 * var(--u)) calc(2 * var(--u)) calc(1.5 * var(--u)) rgb(0 0 0 / 0.3))
+        drop-shadow(calc(8 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u)) rgb(0 0 0 / 0.18));
+}
+
+/* o cartaz: a sombra da luz do livro, a linha da gráfica no pé e o brilho irregular da cola ainda úmida */
+.fx-cartaz-folha {
+    filter: drop-shadow(calc(1 * var(--u)) calc(2 * var(--u)) calc(1.5 * var(--u)) rgb(0 0 0 / 0.28))
+        drop-shadow(calc(8 * var(--u)) calc(14 * var(--u)) calc(16 * var(--u)) rgb(0 0 0 / 0.16));
+}
+.fx-cartaz-papel::after {
+    background:
+        radial-gradient(ellipse 30% 18% at 70% 22%, rgb(255 255 255 / 0.14), transparent 70%),
+        radial-gradient(ellipse 26% 14% at 28% 74%, rgb(255 255 255 / 0.1), transparent 70%),
+        linear-gradient(104deg, transparent 0 30%, rgb(0 0 0 / 0.07) 30.6%, rgb(255 255 255 / 0.12) 31.4%, transparent 33%),
+        linear-gradient(96deg, transparent 0 62%, rgb(255 255 255 / 0.14) 62.6%, rgb(0 0 0 / 0.07) 63.6%, transparent 65.5%),
+        linear-gradient(7deg, transparent 0 70%, rgb(0 0 0 / 0.06) 70.6%, transparent 72.5%),
+        linear-gradient(176deg, transparent 0 18%, rgb(0 0 0 / 0.05) 18.5%, transparent 20.5%),
+        linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(0 0 0 / 0.07));
+}
+.fx-lambe-credito {
+    margin: 0;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: calc(9 * var(--u));
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+    opacity: 0.75;
+}
+/* o pedaço do cartaz velho, rasgado, por baixo das cópias: papel desbotado, as letras cortadas e as bordas picotadas */
+.fx-lambe-velho {
+    position: absolute;
+    left: calc(560 * var(--u));
+    top: calc(520 * var(--u));
+    width: calc(420 * var(--u));
+    height: calc(230 * var(--u));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 calc(30 * var(--u));
+    overflow: hidden;
+    background:
+        var(--grao-papel),
+        linear-gradient(180deg, rgb(255 255 255 / 0.25), rgb(255 255 255 / 0.1)),
+        var(--p-polished);
+    color: rgb(17 17 17 / 0.75);
+    line-height: 0.9;
+    white-space: nowrap;
+    clip-path: polygon(0 12%, 6% 4%, 14% 9%, 22% 0, 33% 7%, 41% 2%, 52% 10%, 63% 3%, 71% 8%, 82% 1%, 90% 9%, 100% 4%, 97% 22%, 100% 37%, 95% 51%, 99% 66%, 94% 80%, 98% 95%, 86% 91%, 77% 100%, 66% 93%, 55% 99%, 44% 92%, 33% 100%, 22% 94%, 12% 99%, 3% 92%, 6% 76%, 0 61%, 4% 46%, 0 31%);
+    transform: rotate(-3deg);
+}
+.fx-lambe-velho span:first-child {
+    font-size: calc(96 * var(--u));
+}
+.fx-lambe-velho span + span {
+    font-size: calc(56 * var(--u));
+}
+@media (max-width: 899px) {
+    .fx-lambe-velho {
+        display: none;
+    }
+}
+
+/* o ingresso: o cartão preto com o grão da impressão por cima */
+.fx-mini-ingresso::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--grao-papel);
+    background-size: calc(90 * var(--u)) calc(90 * var(--u));
+    mix-blend-mode: screen;
+    opacity: 0.25;
+    pointer-events: none;
+}
+.fx-mini-ingresso-titulo {
+    margin-top: calc(2 * var(--u)) !important;
+}
+
+/* a pulseira: o Tyvek (as fibras compridas do material), o leve arredondado da fita e a sombra da luz do livro */
+.fx-pulseira {
+    background:
+        var(--fibra-cartao),
+        linear-gradient(180deg, rgb(255 255 255 / 0.22), transparent 35%, rgb(0 0 0 / 0.14)),
+        #c9573d;
+    background-size: calc(120 * var(--u)) calc(120 * var(--u)), auto, auto;
+    box-shadow: var(--sombra-real);
+}
+.fx-pulseira-ponta {
+    font-size: calc(10 * var(--u));
+}
+
+/* o crachá: o cordão de tecido (a trama e o texto impresso), a presilha de metal e o cartão de PVC com o brilho */
+.fx-cracha-cordao {
+    width: calc(40 * var(--u));
+    height: calc(96 * var(--u));
+    background:
+        repeating-linear-gradient(90deg, rgb(255 255 255 / 0.08) 0 calc(1 * var(--u)), transparent calc(1 * var(--u)) calc(3 * var(--u))),
+        linear-gradient(90deg, rgb(0 0 0 / 0.25), transparent 30%, transparent 70%, rgb(0 0 0 / 0.25)),
+        #27407f;
+}
+.fx-cracha-cordao span {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: calc(11 * var(--u));
+    font-weight: 700;
+}
+.fx-cracha-presilha {
+    width: calc(26 * var(--u));
+    height: calc(30 * var(--u));
+    margin: calc(-2 * var(--u)) 0 calc(-8 * var(--u));
+    border-radius: calc(6 * var(--u)) calc(6 * var(--u)) calc(3 * var(--u)) calc(3 * var(--u));
+    background: linear-gradient(90deg, #8d9097, #e6e8ec 40%, #9a9da4 60%, #6d7077);
+    box-shadow: calc(1 * var(--u)) calc(2 * var(--u)) calc(3 * var(--u)) rgb(0 0 0 / 0.35);
+    z-index: 1;
+}
+.fx-cracha-cartao {
+    background:
+        linear-gradient(118deg, transparent 30%, rgb(255 255 255 / 0.45) 38%, rgb(255 255 255 / 0.1) 46%, transparent 54%),
+        #f6f3ec;
+    box-shadow:
+        inset 0 0 0 max(1px, calc(1 * var(--u))) rgb(0 0 0 / 0.08),
+        var(--sombra-real);
+}
+.fx-cracha-nome {
+    margin-top: calc(10 * var(--u)) !important;
+    font-size: calc(19 * var(--u));
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+.fx-cracha-funcao {
+    font-size: calc(12 * var(--u));
+    opacity: 0.75;
+}
+.fx-cracha-barras {
+    display: block;
+    width: calc(130 * var(--u));
+    height: calc(24 * var(--u));
+    margin: calc(4 * var(--u)) auto 0;
+}
+
+/* a setlist: o papel com grão e a dobra, a fita de tecido (a trama, o brilho e as pontas rasgadas) e a mancha do palco */
+.fx-setlist {
+    background:
+        linear-gradient(180deg, transparent 49.5%, rgb(0 0 0 / 0.06) 50%, rgb(255 255 255 / 0.4) 50.5%, transparent 52%),
+        var(--grao-papel),
+        #f8f6f0;
+    box-shadow: var(--sombra-real);
+}
+.fx-setlist-fita {
+    background:
+        repeating-linear-gradient(90deg, rgb(255 255 255 / 0.06) 0 calc(1 * var(--u)), transparent calc(1 * var(--u)) calc(2.5 * var(--u))),
+        linear-gradient(180deg, rgb(255 255 255 / 0.16), transparent 50%),
+        #1d1d1f;
+    clip-path: polygon(0 8%, 4% 0, 96% 0, 100% 14%, 97% 30%, 100% 48%, 96% 64%, 100% 82%, 97% 100%, 3% 100%, 0 86%, 3% 68%, 0 50%, 4% 32%);
+    box-shadow: none;
+    opacity: 0.94;
+}
+.fx-setlist-mancha {
+    position: absolute;
+    right: calc(18 * var(--u));
+    bottom: calc(26 * var(--u));
+    width: calc(90 * var(--u));
+    height: calc(60 * var(--u));
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 40% 40%, rgb(90 70 50 / 0.16), rgb(90 70 50 / 0.06) 60%, transparent 72%);
+    pointer-events: none;
+}
+
+/* o inspetor das faixas: a etiqueta da fonte e do tamanho junto do ponteiro e o contorno do texto (fora do data-clone,
+   então em px) */
+.fx-inspetor {
+    position: fixed;
+    z-index: 60;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #111;
+    color: #f8f8f8;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
+}
+.fx-inspetor b {
+    margin-left: 4px;
+    font-weight: 700;
+    color: #e3b55a;
+}
+.fx-inspetor-caixa {
+    position: fixed;
+    z-index: 59;
+    border: 1px dashed rgb(17 17 17 / 0.7);
+    border-radius: 3px;
+    pointer-events: none;
 }

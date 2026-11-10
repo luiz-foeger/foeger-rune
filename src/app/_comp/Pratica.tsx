@@ -6,7 +6,7 @@ import { familiaDe } from './Faixa';
 import type { Estilo } from '../_lib/conteudo';
 
 // as faixas no padrão novo: depois da frase que corre, cada estilo aparece onde ele seria usado de verdade, numa peça
-// grande e numa peça de texto pequeno (com os tamanhos medidos na tela de quem lê), soltas na cor da faixa, sem régua
+// grande e em quatro caixinhas de texto pequeno (a fonte e o tamanho de cada texto aparecem passando o mouse), sem régua
 // nem trama: a régua fica com a frase que corre, a letra medida; embaixo, a mesma letra em uso. No Cut, o cartaz
 // lambe-lambe de um festival colado na parede (cada linha na largura inteira, em corpos diferentes, como o tipo de
 // madeira da gráfica de cartaz de rua) e, embaixo, quatro caixinhas do mesmo festival em texto pequeno (o ingresso,
@@ -54,7 +54,9 @@ export function LinhaCheia({ texto, largura }: { texto: string; largura: number 
 // ——— Cut: o cartaz do festival, colado na parede ———
 // o cartaz em pé (2:3), em três cópias lado a lado, como o lambe-lambe é colado na rua: cada cópia num papel, um pouco
 // torta, com a textura e os vincos da cola, e a última com o canto rasgado. A tinta passa por um filtro que deixa a
-// borda áspera e umas falhas onde ela não pegou, como na impressão de cartaz de rua. No celular fica uma cópia só
+// borda áspera e umas falhas onde ela não pegou, como na impressão de cartaz de rua. No pé, a linha da gráfica em letra
+// de texto, como nos lambe-lambes de verdade; atrás, um pedaço rasgado de um cartaz mais velho. No celular fica uma
+// cópia só
 type Bloco = { linhas: string[]; faixa?: boolean };
 const CARTAZ: Bloco[] = [
     { linhas: ['21 MAR ★ 20H', 'GALPÃO DA PEDREIRA'] },
@@ -95,6 +97,7 @@ function Lambe({ filtro }: { filtro: string }) {
                     ))}
                 </div>
             ))}
+            <p className="fx-lambe-credito">Gráfica Pedreira ★ impressão em tipo de madeira</p>
         </div>
     );
 }
@@ -105,6 +108,11 @@ export function CartazCut() {
     return (
         <Painel colunas={4} linhas={2} rotulo={`Cartaz colado na parede: ${texto}`} celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-muro" style={{ fontFamily: familiaDe('cut') }}>
+                {/* o pedaço do cartaz velho, rasgado, que ficou na parede por baixo dos novos */}
+                <div className="fx-lambe-velho" aria-hidden>
+                    <span>RODA DE SAMBA</span>
+                    <span>SÁB ★ 14H</span>
+                </div>
                 {COPIAS.map((c, i) => (
                     <div
                         key={i}
@@ -157,30 +165,13 @@ export function usePx(caixa: RefObject<HTMLElement | null>, alvos: [RefObject<HT
 }
 
 // ——— as caixinhas de texto pequeno (as quatro, lado a lado, como os painéis de texto de antes) ———
-// cada caixinha é um painel 1 × 1 com um objeto pequeno do mesmo mundo da peça grande, e no alto o tamanho de verdade
-// do texto dele na tela (o do elemento marcado com data-medida, medido e refeito quando a tela muda). No celular, cada
-// caixinha ocupa a largura toda e o objeto cresce junto (o CSS aumenta o u dentro dela), para o texto continuar legível
+// cada caixinha é um painel 1 × 1 com um objeto pequeno do mesmo mundo da peça grande. A fonte e o tamanho de cada
+// texto aparecem passando o mouse (o Inspetor, na página). No celular, cada caixinha ocupa a largura toda e o objeto
+// cresce junto (o CSS aumenta o u dentro dela), para o texto continuar legível
 function Caixinha({ rotulo, children }: { rotulo: string; children: ReactNode }) {
-    const caixa = useRef<HTMLDivElement>(null);
-    const [px, setPx] = useState<number | null>(null);
-    useEffect(() => {
-        const el = caixa.current;
-        if (!el) return;
-        const medir = () => {
-            const alvo = el.querySelector('[data-medida]');
-            if (alvo) setPx(Math.round(parseFloat(getComputedStyle(alvo).fontSize)));
-        };
-        medir();
-        const obs = new ResizeObserver(medir);
-        obs.observe(el);
-        return () => obs.disconnect();
-    }, []);
     return (
         <Painel colunas={1} linhas={1} rotulo={rotulo} celular={{ colunas: 2, linhas: 2 }}>
-            <div ref={caixa} className="fx-caixinha">
-                <p className="fx-caixinha-tamanho">{px ?? '…'} px</p>
-                {children}
-            </div>
+            <div className="fx-caixinha">{children}</div>
         </Painel>
     );
 }
@@ -193,27 +184,29 @@ export function CaixinhasCut() {
     return (
         <div className="fx-grade" style={fonte}>
             <Caixinha rotulo="O ingresso do festival, em pé">
-                <div className="fx-mini-ingresso">
-                    <div className="fx-mini-ingresso-corpo">
-                        <p className="fx-mini-miudo">INGRESSO ★ PISTA</p>
-                        <p className="fx-mini-ingresso-titulo">Quebra Pedra</p>
-                        <p className="fx-mini-ingresso-data">21 de março ★ 20h</p>
-                        <p data-medida className="fx-mini-ingresso-texto">
-                            Vale uma entrada, uma vez só. Guarde o canhoto até o fim da noite.
-                        </p>
-                    </div>
-                    <div className="fx-mini-ingresso-canhoto">
-                        <p className="fx-mini-miudo">Nº 000311</p>
-                        <Barras numero="000311" classe="fx-mini-barras" />
+                <div className="fx-sombra">
+                    <div className="fx-mini-ingresso">
+                        <div className="fx-mini-ingresso-corpo">
+                            <p className="fx-apoio fx-apoio-caixa">Ingresso ★ pista</p>
+                            <p className="fx-mini-ingresso-titulo">Quebra Pedra</p>
+                            <p className="fx-apoio">21 de março ★ 20h ★ Galpão da Pedreira</p>
+                            <p className="fx-mini-ingresso-texto">
+                                Vale uma entrada, uma vez só. Guarde o canhoto até o fim da noite.
+                            </p>
+                        </div>
+                        <div className="fx-mini-ingresso-canhoto">
+                            <p className="fx-mono">Nº 000311 ★ R$ 20,00</p>
+                            <Barras numero="000311" classe="fx-mini-barras" />
+                        </div>
                     </div>
                 </div>
             </Caixinha>
             <Caixinha rotulo="A pulseira de acesso do festival">
                 <div className="fx-pulseira">
-                    <p data-medida className="fx-pulseira-texto">
+                    <p className="fx-pulseira-texto">
                         QUEBRA PEDRA ★ 21.03 ★ PISTA ★ QUEBRA PEDRA ★
                     </p>
-                    <p className="fx-pulseira-ponta">000311</p>
+                    <p className="fx-pulseira-ponta fx-mono">Nº 000311</p>
                 </div>
             </Caixinha>
             <Caixinha rotulo="O crachá da equipe do festival">
@@ -221,15 +214,17 @@ export function CaixinhasCut() {
                     <span className="fx-cracha-cordao">
                         <span>QUEBRA PEDRA ★ QUEBRA PEDRA ★ QUEBRA PEDRA</span>
                     </span>
+                    <i className="fx-cracha-presilha" />
                     <div className="fx-cracha-cartao">
                         <i className="fx-cracha-furo" />
                         <p className="fx-cracha-faixa">STAFF</p>
-                        <p className="fx-cracha-nome">Joana Lasca</p>
-                        <p className="fx-cracha-funcao">técnica de palco</p>
-                        <p data-medida className="fx-cracha-acesso">
+                        <p className="fx-apoio fx-cracha-nome">Joana Lasca</p>
+                        <p className="fx-apoio fx-cracha-funcao">técnica de palco</p>
+                        <p className="fx-cracha-acesso">
                             acesso ao palco, ao camarim e à área técnica
                         </p>
-                        <p className="fx-mini-miudo">21 MAR ★ QUEBRA PEDRA</p>
+                        <Barras numero="000042" classe="fx-cracha-barras" />
+                        <p className="fx-mono">Nº 0042 ★ 21 MAR</p>
                     </div>
                 </div>
             </Caixinha>
@@ -237,11 +232,12 @@ export function CaixinhasCut() {
                 <div className="fx-setlist">
                     <i className="fx-setlist-fita" data-lado="esq" />
                     <i className="fx-setlist-fita" data-lado="dir" />
+                    <i className="fx-setlist-mancha" />
                     <p className="fx-setlist-banda">OS LASCADOS</p>
-                    <p className="fx-mini-miudo">21.03 ★ QUEBRA PEDRA</p>
+                    <p className="fx-apoio">21.03 ★ Quebra Pedra ★ 45 min</p>
                     <ol>
                         {SETLIST.map((m, i) => (
-                            <li key={m} data-medida={i === 0 || undefined}>
+                            <li key={m}>
                                 {m}
                             </li>
                         ))}
@@ -337,7 +333,7 @@ export function CaixinhasPolished() {
             <Caixinha rotulo="Uma página do livro A pedrinha que rolou">
                 <div className="fx-mini-pagina">
                     <p className="fx-apoio fx-apoio-caixa">A pedrinha que rolou</p>
-                    <p data-medida className="fx-mini-pagina-texto">
+                    <p className="fx-mini-pagina-texto">
                         Era uma vez uma pedra cheia de quinas. Ela morava no alto do morro e espetava tudo o que chegava perto: o vento, a chuva e até as
                         formigas.
                     </p>
@@ -350,7 +346,7 @@ export function CaixinhasPolished() {
                     <span className="fx-marcador-cordao" />
                     <i className="fx-marcador-furo" />
                     <p className="fx-marcador-titulo">leia devagar</p>
-                    <p data-medida className="fx-marcador-texto">
+                    <p className="fx-marcador-texto">
                         a pedra também levou tempo para ficar lisa
                     </p>
                     <Pedrinha classe="fx-marcador-pedrinha" />
@@ -372,7 +368,7 @@ export function CaixinhasPolished() {
                                 <p className="fx-ficha-carimbo" style={{ filter: `url(#${id})`, rotate: `${[-4, 3, -2, 5, -3][i]}deg` }}>
                                     {data}
                                 </p>
-                                <p data-medida={i === 0 || undefined} className="fx-ficha-nome">
+                                <p className="fx-ficha-nome">
                                     {nome}
                                 </p>
                             </Fragment>
@@ -386,7 +382,7 @@ export function CaixinhasPolished() {
                     <Pedrinha classe="fx-exlibris-pedrinha" />
                     <p className="fx-apoio fx-apoio-caixa">Este livro pertence a</p>
                     <p className="fx-exlibris-nome">Lia</p>
-                    <p data-medida className="fx-exlibris-texto">
+                    <p className="fx-exlibris-texto">
                         se encontrar, devolva: ele sempre rola de volta para casa
                     </p>
                 </div>
@@ -470,7 +466,7 @@ export function CaixinhasWorn() {
                         {[ladoA, ladoB].map((faixas, i) => (
                             <ol key={i}>
                                 {faixas.map(([nome], k) => (
-                                    <li key={nome} data-medida={(i === 0 && k === 0) || undefined}>
+                                    <li key={nome}>
                                         {nome}
                                     </li>
                                 ))}
@@ -491,7 +487,7 @@ export function CaixinhasWorn() {
                         <i className="fx-selo-b-furo" />
                         <ol>
                             {ladoB.map(([nome, tempo], k) => (
-                                <li key={nome} data-medida={k === 0 || undefined}>
+                                <li key={nome}>
                                     {nome} <span>{tempo}</span>
                                 </li>
                             ))}
@@ -506,7 +502,7 @@ export function CaixinhasWorn() {
                     <div className="fx-sebo-etiqueta">
                         <p className="fx-mini-miudo">SEBO BEIRA-RIO</p>
                         <p className="fx-sebo-preco">R$ 35</p>
-                        <p data-medida className="fx-sebo-texto">
+                        <p className="fx-sebo-texto">
                             LP usado, capa com marcas. Chia um pouco no lado B, faixa 2.
                         </p>
                     </div>
@@ -519,7 +515,7 @@ export function CaixinhasWorn() {
                         {FICHA.map(([papel, nome], i) => (
                             <Fragment key={papel}>
                                 <dt>{papel}</dt>
-                                <dd data-medida={i === 0 || undefined}>{nome}</dd>
+                                <dd>{nome}</dd>
                             </Fragment>
                         ))}
                     </dl>

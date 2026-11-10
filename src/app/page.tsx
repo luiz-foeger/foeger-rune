@@ -9,6 +9,7 @@ import Testador from './_comp/Testador';
 import { Cabecalho } from './_comp/Topo';
 import { HeroPedras } from './_comp/HeroPedras';
 import TituloEstilos from './_comp/TituloEstilos';
+import Inspetor from './_comp/Inspetor';
 import { TITULO_LIVRO, TITULO_RECURSOS } from './_lib/conteudo';
 
 // a página da Föeger Rune: o cabeçalho preso no alto e o hero da palavra Rune; o alfabeto com os três desgastes e a
@@ -53,6 +54,8 @@ export default function Pagina() {
                         <TextoVariacoes />
                     </Escura>
                 </div>
+                {/* passando o mouse num texto das faixas: a fonte e o tamanho dele */}
+                <Inspetor escopo=".fx-faixas" />
                 <TituloEstilos texto={TITULO_RECURSOS} asteriscoDepois={null} nota={null} ancora="recursos" />
                 <Recursos />
                 {/* o livro: o espécime para folhear (o livro realista do clone-tantan) e o PDF para baixar */}
