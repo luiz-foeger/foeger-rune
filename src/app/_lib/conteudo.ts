@@ -56,6 +56,7 @@ export const CABECALHO = {
         { texto: 'Alfabeto', alvo: 'alfabeto' },
         { texto: 'Estilos', alvo: 'estilos' },
         { texto: 'Testar', alvo: 'testador' },
+        { texto: 'Escrever', alvo: 'escreva' },
         { texto: 'Caracteres', alvo: 'caracteres' },
         { texto: 'Recursos', alvo: 'recursos' },
         { texto: 'O Livro', alvo: 'livro' },

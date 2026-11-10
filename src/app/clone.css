@@ -5278,3 +5278,124 @@ html[data-paleta='azul'] [data-clone] {
         font-size: calc(48 * var(--u));
     }
 }
+
+/* 22. o "escreva aqui": a faixa na cor do estilo escolhido, o campo do texto escrito na própria fonte, as escolhas da
+   peça e do estilo (os botões redondos, o escolhido cheio) e a peça com o texto. As linhas que cabem na capa ficam uma
+   embaixo da outra */
+.fx-escreva {
+    align-self: stretch;
+    transition: background-color 0.4s;
+}
+.fx-escreva-controles {
+    position: absolute;
+    inset: 0;
+}
+.fx-escreva-campo {
+    position: absolute;
+    left: calc(59 * var(--u));
+    right: calc(59 * var(--u));
+    top: calc(132 * var(--u));
+    height: calc(150 * var(--u));
+    padding: 0;
+    border: 0;
+    border-bottom: max(1px, calc(3 * var(--u))) solid var(--tinta);
+    border-radius: 0;
+    background: none;
+    color: var(--tinta);
+    font-size: calc(112 * var(--u));
+    line-height: 1;
+    outline: none;
+    font-feature-settings: 'calt' 1;
+}
+.fx-escreva-campo::placeholder {
+    color: rgb(0 0 0 / 0.35);
+}
+.fx-escreva-campo:focus-visible {
+    border-bottom-style: dashed;
+}
+.fx-escreva-opcoes {
+    position: absolute;
+    left: calc(59 * var(--u));
+    right: calc(59 * var(--u));
+    bottom: calc(44 * var(--u));
+    display: flex;
+    justify-content: space-between;
+    gap: calc(30 * var(--u));
+}
+.fx-escreva-grupo {
+    display: flex;
+    align-items: center;
+    gap: calc(14 * var(--u));
+}
+.fx-escreva-grupo-nome {
+    margin-right: calc(6 * var(--u));
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sec);
+    font-weight: 600;
+    opacity: 0.6;
+}
+.fx-escreva-botao {
+    padding: calc(12 * var(--u)) calc(22 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: 999px;
+    background: none;
+    color: var(--tinta);
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sub);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        background-color 0.2s,
+        color 0.2s;
+}
+.fx-escreva-botao:hover {
+    background: rgb(0 0 0 / 0.08);
+}
+.fx-escreva-botao[data-ativo='true'] {
+    background: var(--tinta);
+    color: var(--cor-faixa);
+}
+.fx-escreva-muro .fx-cartaz-folha {
+    width: calc(520 * var(--u));
+}
+.fx-encaixe {
+    display: block;
+}
+.fx-v-livro-titulo .fx-encaixe + .fx-encaixe {
+    margin-top: 0.14em;
+}
+.fx-capa-titulo .fx-encaixe + .fx-encaixe {
+    margin-top: 0.08em;
+}
+/* o espaçamento do título da capa vem em em e chega no filho já em px (o do corpo de 400 u): a linha declara o dela, para
+   ele crescer junto com o corpo e a conta da largura bater */
+.fx-capa-titulo .fx-linha-cheia {
+    letter-spacing: -0.02em;
+}
+.fx-disco-selo-titulo[data-livre] {
+    width: calc(170 * var(--u));
+}
+@media (max-width: 899px) {
+    /* no celular, o campo maior no meio do painel e as escolhas embaixo, uma fileira para cada */
+    .fx-escreva-campo {
+        top: calc(230 * var(--u));
+        height: calc(230 * var(--u));
+        font-size: calc(160 * var(--u));
+    }
+    .fx-escreva-opcoes {
+        flex-direction: column;
+        gap: calc(30 * var(--u));
+        bottom: calc(90 * var(--u));
+    }
+    .fx-escreva-grupo-nome {
+        width: calc(150 * var(--u));
+    }
+    .fx-escreva-botao {
+        padding: calc(16 * var(--u)) calc(26 * var(--u));
+        font-size: max(13px, calc(30 * var(--u)));
+    }
+    .fx-escreva-muro .fx-cartaz-folha {
+        width: calc(800 * var(--u));
+    }
+}
