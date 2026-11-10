@@ -93,7 +93,7 @@ export const CARTAZES: Bloco[][] = [
     [
         { linhas: ['PROCURA-SE'] },
         { linhas: ['BAIXISTA'], faixa: true },
-        { linhas: ['toca alto?', 'chega cedo?'] },
+        { linhas: ['que toque alto', 'e chegue cedo'] },
         { linhas: ['ensaio às terças, 19h ★ Os Lascados'] },
         { abas: '99 1234-5678' },
     ],
