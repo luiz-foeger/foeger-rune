@@ -5009,15 +5009,20 @@ html[data-paleta='azul'] [data-clone] {
 .fx-lambe-grade-linha {
     grid-template-columns: var(--rotulo, calc(118 * var(--u))) 1fr;
 }
+/* a tarja presa na linha que ela cobre: centrada nela, um pouco mais larga e quase reta, para não tampar as vizinhas */
+.fx-lambe-com-tarja {
+    position: relative;
+}
 .fx-lambe-tarja {
     position: absolute;
-    left: -10%;
-    right: -10%;
-    top: 46%;
-    padding: calc(14 * var(--u)) 18%;
+    left: -7%;
+    right: -7%;
+    top: 50%;
+    /* a espessura acompanha a largura do cartaz (as linhas crescem com ela), para cobrir a linha inteira em qualquer tamanho */
+    padding: 3.4% 20%;
     background: var(--p-quente);
     color: #111;
-    transform: rotate(-12deg);
+    transform: translateY(-48%) rotate(-1.5deg);
     box-shadow: 0 calc(3 * var(--u)) calc(6 * var(--u)) rgb(0 0 0 / 0.35);
 }
 .fx-lambe-abas {
@@ -5058,10 +5063,6 @@ html[data-paleta='azul'] [data-clone] {
 /* as abinhas arrancadas medidas a partir do pé (a aba tem 150 u e sobra um toco de uns 12 u), em qualquer tamanho */
 .fx-cartaz-folha[data-abas] .fx-cartaz-papel {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 85.7% 100%, 85.7% calc(100% - 136 * var(--u)), 80% calc(100% - 139 * var(--u)), 75% calc(100% - 134 * var(--u)), 71.4% calc(100% - 137 * var(--u)), 71.4% 100%, 42.9% 100%, 42.9% calc(100% - 137 * var(--u)), 38% calc(100% - 133 * var(--u)), 33% calc(100% - 139 * var(--u)), 28.6% calc(100% - 135 * var(--u)), 28.6% 100%, 0 100%);
-}
-/* a tarja de esgotado no cartaz do festival: menos inclinada, atravessando o preço */
-.fx-lambe-tarja {
-    transform: rotate(-8deg);
 }
 @media (max-width: 899px) {
     .fx-cartaz-folha {
