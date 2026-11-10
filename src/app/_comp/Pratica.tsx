@@ -54,27 +54,28 @@ export function LinhaCheia({ texto, largura }: { texto: string; largura: number 
 
 // ——— Cut: os cartazes do festival, colados na parede ———
 // quatro cartazes em pé (2:3) do mesmo fim de semana, lado a lado e encostados, como o lambe-lambe é colado na rua: cada
-// um num papel, um pouco torto, com a textura e os vincos da cola. O do festival empilha as linhas na largura inteira e
-// ganhou a tira de "esgotado" colada torta por cima; o do ônibus tem a tabela de ida e volta e o preço enorme; o
-// procura-se tem as abinhas de destacar o telefone no pé (duas já arrancadas); o da feira de discos, a lista com as
+// um num papel, um pouco torto, com a textura e os vincos da cola. O do festival empilha as linhas na largura inteira; o do
+// ônibus tem a tabela de ida e volta e o preço enorme; o procura-se tem as abinhas de destacar o telefone no pé (duas
+// já arrancadas) e a tira de "já achamos!" colada torta por cima, de quando a vaga foi preenchida; o da feira de discos, a lista com as
 // estrelas e o canto rasgado. A tinta passa por um filtro que deixa a borda áspera e umas falhas onde ela não pegou,
 // como na impressão de cartaz de rua. No pé, a linha da gráfica em letra de texto, como nos lambe-lambes de verdade. Os
 // papéis são claro, vermelho, azul e preto (no preto, a tinta é creme). No celular fica só o do festival
 // os blocos de um cartaz: as linhas na largura inteira (com a faixa invertida e o recuo, a margem dos dois lados em u,
 // para a linha não ocupar a largura toda), a tabela (o rótulo num corpo fixo e o texto na largura que sobra, com os fios)
-// (rotulo: a largura da coluna do rótulo, em u) e as abinhas de destacar no pé, com o contato escrito em pé (duas já
-// foram arrancadas). A tarja é uma tira de outro papel colada torta por cima de uma das linhas (linha: qual delas)
-type Linhas = { linhas: string[]; faixa?: boolean; recuo?: number; tarja?: { linha: number; texto: string } };
+// (rotulo: a largura da coluna do rótulo, em u), a tarja, uma tira de outro papel colada torta atravessando o cartaz
+// de borda a borda, e as abinhas de destacar no pé, com o contato escrito em pé (duas já foram arrancadas)
+type Linhas = { linhas: string[]; faixa?: boolean; recuo?: number };
 type Grade = { grade: [string, string][]; rotulo?: number };
+type Tarja = { tarja: string };
 type Abas = { abas: string };
-export type Bloco = Linhas | Grade | Abas;
+export type Bloco = Linhas | Grade | Tarja | Abas;
 export const CARTAZES: Bloco[][] = [
     [
         { linhas: ['21 MAR ★ 20H', 'GALPÃO DA PEDREIRA'] },
         { linhas: ['QUEBRA', 'PEDRA'] },
         { linhas: ['OS LASCADOS', 'CINZEL ★ BRITA 3'], faixa: true },
         { linhas: ['festival de', 'rock bruto'] },
-        { linhas: ['pista a R$ 20', 'traga seu capacete'], tarja: { linha: 0, texto: 'ESGOTADO' } },
+        { linhas: ['pista a R$ 20', 'traga seu capacete'] },
     ],
     [
         { linhas: ['SAI DA PRAÇA DA BRITA'] },
@@ -92,8 +93,9 @@ export const CARTAZES: Bloco[][] = [
     [
         { linhas: ['PROCURA-SE'] },
         { linhas: ['BAIXISTA'], faixa: true },
-        { linhas: ['que toque alto', 'e chegue cedo'] },
-        { linhas: ['ensaio às terças ★ Os Lascados'] },
+        { linhas: ['toca alto?', 'chega cedo?'] },
+        { tarja: 'JÁ ACHAMOS!' },
+        { linhas: ['ensaio às terças, 19h ★ Os Lascados'] },
         { abas: '99 1234-5678' },
     ],
     [
@@ -118,7 +120,7 @@ const COPIAS: { papel: string; tinta: string; giro: number; desce: number; rasgo
     { papel: '#161616', tinta: '#efe7d6', giro: 1.2, desce: -4, rasgo: true },
 ];
 const textoDo = (cartaz: Bloco[]) =>
-    cartaz.flatMap(b => ('linhas' in b ? [...b.linhas, ...(b.tarja ? [b.tarja.texto] : [])] : 'grade' in b ? b.grade.map(l => l.join(' ')) : [b.abas])).join('. ');
+    cartaz.flatMap(b => ('linhas' in b ? b.linhas : 'grade' in b ? b.grade.map(l => l.join(' ')) : ['tarja' in b ? b.tarja : b.abas])).join('. ');
 
 // a tinta do cartaz: a borda tremida (o ruído empurra a borda uns 2 px) e as falhas, onde um segundo ruído passa do
 // limite e a tinta some. Cada cópia tem a sua semente: duas cópias impressas nunca saem iguais
@@ -152,6 +154,10 @@ function Lambe({ filtro, cartaz }: { filtro: string; cartaz: Bloco[] }) {
                             ))}
                         </div>
                     </Fragment>
+                ) : 'tarja' in b ? (
+                    <div key={k} className="fx-lambe-tarja">
+                        <LinhaCheia texto={b.tarja} largura={300} />
+                    </div>
                 ) : 'grade' in b ? (
                     // a tabela da programação: o horário num corpo fixo e a banda na largura que sobra, com o fio
                     // de metal em cima de cada linha
@@ -172,18 +178,9 @@ function Lambe({ filtro, cartaz }: { filtro: string; cartaz: Bloco[] }) {
                         data-faixa={b.faixa || undefined}
                         style={b.recuo ? { paddingInline: `calc(${b.recuo} * var(--u))` } : undefined}
                     >
-                        {b.linhas.map((l, i) =>
-                            b.tarja?.linha === i ? (
-                                <div key={l} className="fx-lambe-com-tarja">
-                                    <LinhaCheia texto={l} largura={472} />
-                                    <div className="fx-lambe-tarja">
-                                        <LinhaCheia texto={b.tarja.texto} largura={300} />
-                                    </div>
-                                </div>
-                            ) : (
-                                <LinhaCheia key={l} texto={l} largura={472} />
-                            ),
-                        )}
+                        {b.linhas.map(l => (
+                            <LinhaCheia key={l} texto={l} largura={472} />
+                        ))}
                     </div>
                 ),
             )}

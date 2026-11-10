@@ -5009,21 +5009,18 @@ html[data-paleta='azul'] [data-clone] {
 .fx-lambe-grade-linha {
     grid-template-columns: var(--rotulo, calc(118 * var(--u))) 1fr;
 }
-/* a tarja presa na linha que ela cobre: centrada nela, um pouco mais larga e quase reta, para não tampar as vizinhas */
-.fx-lambe-com-tarja {
-    position: relative;
-}
+/* a tarja: a tira de papel vermelho colada depois, torta, atravessando o cartaz de borda a borda (sai pelas bordas e
+   o papel do cartaz corta), com a sombra de papel colado. Ela ocupa o lugar dela entre os blocos; só a inclinação
+   passa um pouco para os vãos */
 .fx-lambe-tarja {
-    position: absolute;
-    left: -7%;
-    right: -7%;
-    top: 50%;
-    /* a espessura acompanha a largura do cartaz (as linhas crescem com ela), para cobrir a linha inteira em qualquer tamanho */
-    padding: 3.4% 20%;
+    margin: 0 -14%;
+    padding: 2.6% 22%;
     background: var(--p-quente);
     color: #111;
-    transform: translateY(-48%) rotate(-1.5deg);
-    box-shadow: 0 calc(3 * var(--u)) calc(6 * var(--u)) rgb(0 0 0 / 0.35);
+    transform: rotate(-6deg);
+    box-shadow:
+        calc(1 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) rgb(0 0 0 / 0.3),
+        calc(4 * var(--u)) calc(8 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.2);
 }
 .fx-lambe-abas {
     display: flex;
