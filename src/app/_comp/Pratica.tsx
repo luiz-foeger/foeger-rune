@@ -251,7 +251,7 @@ export function CaixinhasCut() {
 // do verniz, o grão da impressão, o miolo nas bordas e as sombras da mesma luz do livro 3D). A Rune fica com o principal
 // (os títulos e a placa); os detalhes vão em letra de texto, como num livro de verdade: a autoria, a coleção, o selo e a
 // editora na Inter Tight, as coordenadas na DM Mono. O infantil é a pedrinha que rolou, a personagem com olhos e
-// sorriso em cima das ondas; o guia de bolso é a Serra do Seixo, com a faixa da coleção em cima e a paisagem embaixo:
+// sorriso caindo no rio depois de rolar morro abaixo, com o sol, as nuvens, o peixinho e o barquinho de papel; o guia de bolso é a Serra do Seixo, com a faixa da coleção em cima e a paisagem embaixo:
 // a serra, o rio descendo e a placa do parque na margem, com as direções (as letras, os números e as setas da fonte)
 const INFANTIL = { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3 };
 // as ondas do rio, impressas na capa: três linhas onduladas, em SVG
@@ -273,6 +273,129 @@ function Pedrinha({ classe }: { classe: string }) {
             <i />
             <b />
         </span>
+    );
+}
+// a ilustração do livro infantil, desenhada nas medidas da capa (590 × 760, como as peças em CSS): atrás da pedrinha,
+// o sol espiando no canto, as nuvens fofas, os passarinhos, o morro com a árvore de onde ela veio rolando (os pulinhos
+// descendo a encosta e a poeirinha de cada pulo) e as taboas na beira do rio
+// o recorte acima da primeira onda, na mesma curva das ondas (o SVG delas vai de 550 a 680 u, a primeira linha em 576)
+const ACIMA_DA_AGUA =
+    'M0 0 H590 V576' + Array.from({ length: 8 }, (_, k) => ` q-36.875 ${(7 - k) % 2 ? 12.13 : -12.13} -73.75 0`).join('') + 'Z';
+function CenaInfantil() {
+    const nuvem = (x: number, y: number, s: number) => (
+        <path
+            key={`${x}-${y}`}
+            d={`M${x - 46 * s} ${y} q-2 ${-20 * s} ${20 * s} ${-20 * s} q${6 * s} ${-22 * s} ${30 * s} ${-16 * s} q${16 * s} ${-14 * s} ${32 * s} ${4 * s} q${20 * s} ${-2 * s} ${18 * s} ${32 * s}Z`}
+            fill="#fff6e4"
+        />
+    );
+    return (
+        <svg className="fx-v-livro-cena" viewBox="0 0 590 760" preserveAspectRatio="none" aria-hidden>
+            <defs>
+                <clipPath id="infantil-agua">
+                    <path d={ACIMA_DA_AGUA} />
+                </clipPath>
+            </defs>
+            <g fill="#f3c24a">
+                {Array.from({ length: 7 }, (_, i) => {
+                    const a = Math.PI * (0.5 + (i / 6) * 0.5);
+                    const p = (r: number) => `${(566 + Math.cos(a) * r).toFixed(1)} ${(26 + Math.sin(a) * r).toFixed(1)}`;
+                    return <path key={i} d={`M${p(64)} L${p(84)}`} stroke="#f3c24a" strokeWidth="7" strokeLinecap="round" />;
+                })}
+                <circle cx="566" cy="26" r="52" />
+            </g>
+            <circle cx="548" cy="12" r="22" fill="#fff" opacity="0.22" />
+            {nuvem(150, 392, 1)}
+            {nuvem(318, 336, 0.62)}
+            <g fill="none" stroke="#fff6e4" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M196 334 q7 -8 14 0 q7 -8 14 0" />
+                <path d="M228 318 q5 -6 10 0 q5 -6 10 0" />
+            </g>
+            {/* o morro de onde a pedrinha veio, com o brilho no alto da encosta e a árvore */}
+            <g clipPath="url(#infantil-agua)">
+            <path d="M150 590 Q290 404 446 360 Q540 338 610 384 V600 H150Z" fill="#5f9e7c" />
+            <path d="M318 452 Q380 392 446 372 Q506 356 560 370" fill="none" stroke="#8cc49a" strokeWidth="10" strokeLinecap="round" opacity="0.7" />
+            <rect x="485" y="318" width="10" height="44" rx="4" fill="#8a5a3a" />
+            <circle cx="490" cy="306" r="34" fill="#3f8f64" />
+            <circle cx="478" cy="294" r="13" fill="#7cc49a" opacity="0.8" />
+            {[
+                [462, 318],
+                [512, 300],
+                [496, 330],
+            ].map(([x, y]) => (
+                <circle key={`${x}-${y}`} cx={x} cy={y} r="4" fill="#ef8a5e" />
+            ))}
+            {/* os pulinhos da pedrinha rolando morro abaixo, com a poeirinha de cada pulo */}
+            <path d="M452 362 Q433 330 414 371 Q396 340 378 386 Q360 356 342 404 Q324 376 306 426 Q290 400 274 452" fill="none" stroke="#fff6e4" strokeWidth="3.4" strokeLinecap="round" opacity="0.6" />
+            <g fill="#fff6e4" opacity="0.75">
+                {[
+                    [414, 371],
+                    [378, 386],
+                    [342, 404],
+                    [306, 426],
+                ].map(([x, y]) => (
+                    <g key={`${x}-${y}`}>
+                        <circle cx={x - 6} cy={y + 2} r="4" />
+                        <circle cx={x + 5} cy={y + 1} r="3" />
+                    </g>
+                ))}
+            </g>
+            {/* as taboas na beira do rio */}
+            {[
+                [92, 592, 92, -4],
+                [112, 594, 110, 3],
+                [132, 596, 84, 7],
+            ].map(([x, base, h, inc]) => (
+                <g key={x}>
+                    <path d={`M${x} ${base} q${inc} ${-h / 2} ${inc * 1.6} ${-h}`} fill="none" stroke="#4f8a5e" strokeWidth="4" strokeLinecap="round" />
+                    <rect x={x + inc * 1.6 - 5} y={base - h + 4} width="10" height="26" rx="5" fill="#8a5a3a" />
+                </g>
+            ))}
+            <path d="M80 596 q-14 -40 -6 -76 M146 598 q16 -34 12 -66" fill="none" stroke="#6fae7c" strokeWidth="4" strokeLinecap="round" />
+            </g>
+        </svg>
+    );
+}
+// na frente das ondas: os risquinhos de quem acabou de rolar, os respingos em volta da pedrinha, o peixinho pulando com
+// o arco do pulo, as bolhas e o barquinho de papel navegando na última onda
+function FrenteInfantil() {
+    return (
+        <svg className="fx-v-livro-cena" viewBox="0 0 590 760" preserveAspectRatio="none" aria-hidden>
+            <g fill="none" stroke="#fff6e4" strokeWidth="4" strokeLinecap="round">
+                <path d="M402 480 q14 -4 26 2" />
+                <path d="M408 500 q16 -2 30 6" />
+                <path d="M404 520 q12 0 22 8" />
+            </g>
+            <g fill="#fff6e4">
+                <circle cx="178" cy="566" r="6" />
+                <circle cx="164" cy="548" r="4" />
+                <circle cx="190" cy="540" r="3" />
+                <circle cx="404" cy="560" r="5" />
+                <circle cx="420" cy="546" r="3.5" />
+            </g>
+            {/* o peixinho pulando entre as ondas */}
+            <path d="M30 654 q10 -34 36 -48" fill="none" stroke="#fff6e4" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
+            <g transform="rotate(-28 92 596)">
+                <ellipse cx="92" cy="596" rx="24" ry="13" fill="#ef8a5e" />
+                <path d="M68 596 l-16 -12 v24Z" fill="#ef8a5e" />
+                <path d="M88 584 q8 -10 16 -2" fill="#f3c24a" />
+                <circle cx="104" cy="593" r="3.6" fill="#1f2a44" />
+                <circle cx="105.2" cy="591.8" r="1.2" fill="#fff" />
+            </g>
+            <g fill="none" stroke="#fff6e4" strokeWidth="2.4" opacity="0.8">
+                <circle cx="250" cy="640" r="6" />
+                <circle cx="266" cy="628" r="4" />
+                <circle cx="258" cy="616" r="2.6" />
+            </g>
+            {/* o barquinho de papel, com as dobras */}
+            <g transform="translate(-74 0)">
+                <path d="M426 650 H514 L498 670 H442Z" fill="#fff6e4" />
+                <path d="M470 604 V650 H432Z" fill="#fff6e4" />
+                <path d="M470 610 L506 650 H470Z" fill="#e6d8bd" />
+                <path d="M442 670 L470 650 L498 670" fill="none" stroke="#d5c4a4" strokeWidth="2" />
+                <path d="M432 672 q38 8 80 0" fill="none" stroke="#1f2a44" strokeWidth="3" opacity="0.18" strokeLinecap="round" />
+            </g>
+        </svg>
     );
 }
 // a placa do parque, na paisagem do guia: os dois postes de madeira fincados na margem, a placa de boas-vindas e as
@@ -402,6 +525,7 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
                     className="fx-v-livro"
                     style={{ '--capa': l.capa, '--tinta': l.tinta, '--onda': l.onda, '--selo': l.selo, '--giro': `${l.giro}deg` } as CSSProperties}
                 >
+                    <i className="fx-v-livro-junta" />
                     <p className="fx-v-livro-colecao">
                         coleção <b>Correnteza</b>
                     </p>
@@ -411,13 +535,21 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
                         {l.titulo[1]}
                     </p>
                     <p className="fx-v-livro-autoria">texto e ilustrações de {l.autoria}</p>
+                    <CenaInfantil />
                     <Pedrinha classe="fx-v-livro-pedrinha" />
                     <Ondas />
+                    <FrenteInfantil />
                     <p className="fx-v-livro-idade">
                         a partir de
                         <b>4 anos</b>
                     </p>
-                    <p className="fx-v-livro-editora">Edições Correnteza</p>
+                    <p className="fx-v-livro-editora">
+                        <svg className="fx-v-livro-logo" viewBox="0 0 20 20" aria-hidden>
+                            <circle cx="10" cy="10" r="10" fill="currentColor" />
+                            <path d="M3 11 q3.5 -4 7 0 t7 0" fill="none" stroke="var(--capa)" strokeWidth="2.2" strokeLinecap="round" />
+                        </svg>
+                        Edições Correnteza
+                    </p>
                 </div>
                 <GuiaViagem />
             </div>
