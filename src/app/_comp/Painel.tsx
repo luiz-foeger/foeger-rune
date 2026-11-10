@@ -66,6 +66,7 @@ export default function Painel({
     estilo,
     solto = false,
     aberto = false,
+    nu = false,
     celular,
     ancora,
     entrada = true,
@@ -77,6 +78,7 @@ export default function Painel({
     estilo?: CSSProperties; // o lugar na grade dos cartões
     solto?: boolean; // sem moldura, sem trama e sem letras dos lados, só a régua de baixo (as palavras soltas das faixas)
     aberto?: boolean; // as seções sem régua: sem moldura, réguas nem letras, e a trama um pedaço que some nas bordas (como a do livro)
+    nu?: boolean; // um objeto solto na página (o cartaz colado, o ingresso): sem moldura, réguas, letras nem trama
     celular?: { colunas: number; linhas: number }; // o tamanho no celular, quando não é o padrão
     ancora?: string; // o id, para o menu do cabeçalho levar até o painel
     entrada?: boolean; // sobe e acende ao chegar na tela; sem ela, o painel já está pronto (o alfabeto, que a página traz por cima do hero)
@@ -88,7 +90,7 @@ export default function Painel({
     const linC = celular?.linhas ?? linhas;
     const muda = colC !== colunas || linC !== linhas;
     const largo = muda ? 'fx-so-largo' : undefined;
-    const reguas = !aberto;
+    const reguas = !aberto && !nu;
     return (
         <section
             id={ancora}
@@ -98,6 +100,7 @@ export default function Painel({
             data-visivel={visivel}
             data-solto={solto || undefined}
             data-aberto={aberto || undefined}
+            data-nu={nu || undefined}
             style={{ '--col': colunas, '--lin': linhas, '--col-c': colC, '--lin-c': linC, ...estilo } as CSSProperties}
         >
             {reguas && !solto && <Regua colunas={colunas} lado="topo" classe={largo} />}

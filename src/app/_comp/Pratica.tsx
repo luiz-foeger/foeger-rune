@@ -5,9 +5,10 @@ import Painel from './Painel';
 import { familiaDe } from './Faixa';
 
 // as faixas no padrão novo: depois da frase que corre, cada estilo aparece onde ele seria usado de verdade, numa peça
-// grande e numa peça de texto pequeno (com os tamanhos medidos na tela de quem lê). No Cut, o cartaz lambe-lambe de
-// um festival colado na parede (cada linha na largura inteira, em corpos diferentes, como o tipo de madeira da gráfica
-// de cartaz de rua) e o ingresso do mesmo festival, com as regras em letra miúda.
+// grande e numa peça de texto pequeno (com os tamanhos medidos na tela de quem lê), soltas na cor da faixa, sem régua
+// nem trama: a régua fica com a frase que corre, a letra medida; embaixo, a mesma letra em uso. No Cut, o cartaz
+// lambe-lambe de um festival colado na parede (cada linha na largura inteira, em corpos diferentes, como o tipo de
+// madeira da gráfica de cartaz de rua) e o ingresso do mesmo festival, com as regras em letra miúda.
 
 // uma linha que ocupa a largura inteira da caixa: mede a frase a 100 px e escala o corpo até a largura bater. Só refaz
 // a conta quando a largura da caixa muda (a altura muda junto com o corpo e não pode disparar outra conta)
@@ -98,7 +99,7 @@ export function CartazCut() {
     const filtro = `${useId().replace(/:/g, '')}-tinta`;
     const texto = CARTAZ.flatMap(b => b.linhas).join('. ');
     return (
-        <Painel colunas={4} linhas={2} rotulo={`Cartaz colado na parede: ${texto}`} celular={{ colunas: 2, linhas: 3 }}>
+        <Painel colunas={4} linhas={2} rotulo={`Cartaz colado na parede: ${texto}`} celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-muro" style={{ fontFamily: familiaDe('cut') }}>
                 {COPIAS.map((c, i) => (
                     <div
@@ -150,7 +151,7 @@ export function IngressoCut() {
         return () => obs.disconnect();
     }, []);
     return (
-        <Painel colunas={4} linhas={1} rotulo="Ingresso do festival, em texto pequeno" celular={{ colunas: 2, linhas: 2 }}>
+        <Painel colunas={4} linhas={1} rotulo="Ingresso do festival, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
             <div ref={caixa} className="fx-ingresso-painel">
                 <div className="fx-ingresso" style={{ fontFamily: familiaDe('cut') }}>
                     <div className="fx-ingresso-corpo">

@@ -97,6 +97,12 @@
     background: none;
     overflow: visible;
 }
+/* o objeto solto na página (o cartaz colado, o ingresso): nem moldura nem trama, só a cor da faixa por trás */
+.fx-painel[data-nu] .fx-tela {
+    border-color: transparent;
+    background: none;
+    overflow: visible;
+}
 .fx-painel[data-aberto] .fx-tela::before {
     content: '';
     position: absolute;
