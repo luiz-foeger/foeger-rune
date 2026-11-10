@@ -11,7 +11,8 @@ import type { Estilo } from '../_lib/conteudo';
 // lambe-lambe de um festival colado na parede (cada linha na largura inteira, em corpos diferentes, como o tipo de
 // madeira da gráfica de cartaz de rua) e, embaixo, quatro caixinhas do mesmo festival em texto pequeno (o ingresso,
 // a pulseira, o crachá e a setlist). No Polished, o
-// livro infantil (as capas e, nas caixinhas, a página, o marcador, a ficha da biblioteca e o ex-libris); no Worn, o
+// livro infantil e o guia de viagem (as capas e, nas caixinhas, a página, o marcador, a ficha da biblioteca e o
+// ex-libris); no Worn, o
 // disco gasto (a capa e o disco e, nas caixinhas, a contracapa, o selo do lado B, a etiqueta do sebo e a ficha técnica).
 
 // uma linha que ocupa a largura inteira da caixa: mede a frase a 100 px e escala o corpo até a largura bater. Só refaz
@@ -245,17 +246,14 @@ export function CaixinhasCut() {
     );
 }
 
-// ——— Polished: o livro infantil ———
-// a pedra que rolou no rio vira a história infantil: as capas de dois livros da mesma coleção, de capa dura
-// plastificada (o brilho do verniz, o grão da impressão, a lombada, o miolo nas bordas e as sombras da mesma luz do
-// livro 3D). A Rune fica com o principal (o título); os detalhes vão em letra de texto, como num livro de verdade: a
-// autoria, a coleção, o selo da idade e a editora na Inter Tight. A ilustração é impressa: as ondas e, no primeiro, a
-// pedrinha personagem, com olhos e sorriso; no segundo, o passeio dela no parque: a placa com as direções, e o título,
-// a autoria e a idade acompanham o desenho
-const LIVROS = [
-    { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', idade: 4, capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3, cena: 'pedrinha' },
-    { titulo: ['Pra onde,', 'pedrinha?'], autoria: 'Bia Caminha', idade: 5, capa: '#ee8a5e', tinta: '#1f3a6e', onda: '#ffd9c4', selo: '#7cc49a', giro: 2.5, cena: 'placas' },
-];
+// ——— Polished: o livro infantil e o guia de viagem ———
+// a Polished em dois livros de nichos diferentes, lado a lado, com o mesmo acabamento (a capa plastificada com o brilho
+// do verniz, o grão da impressão, o miolo nas bordas e as sombras da mesma luz do livro 3D). A Rune fica com o principal
+// (os títulos e a placa); os detalhes vão em letra de texto, como num livro de verdade: a autoria, a coleção, o selo e a
+// editora na Inter Tight, as coordenadas na DM Mono. O infantil é a pedrinha que rolou, a personagem com olhos e
+// sorriso em cima das ondas; o guia de bolso é a Serra do Seixo, com a faixa da coleção em cima e a paisagem embaixo:
+// a serra, o rio descendo e a placa do parque na margem, com as direções (as letras, os números e as setas da fonte)
+const INFANTIL = { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3 };
 // as ondas do rio, impressas na capa: três linhas onduladas, em SVG
 function Ondas() {
     const onda = (y: number) => `M0 ${y}` + Array.from({ length: 8 }, (_, i) => ` q 25 ${i % 2 ? 14 : -14} 50 0`).join('');
@@ -268,9 +266,17 @@ function Ondas() {
     );
 }
 // a pedrinha personagem: o seixo com os dois olhos (com o brilho) e o sorriso
-// a placa do parque, desenhada para a capa do segundo livro: os dois postes de madeira, a placa de boas-vindas e as três
-// direções com a seta, o lugar e a distância (as letras, os números e as setas da fonte na mesma ilustração), com a
-// pedrinha espiando no pé, entre as ondas
+function Pedrinha({ classe }: { classe: string }) {
+    return (
+        <span className={`fx-pedrinha ${classe}`} aria-hidden>
+            <i />
+            <i />
+            <b />
+        </span>
+    );
+}
+// a placa do parque, na paisagem do guia: os dois postes de madeira fincados na margem, a placa de boas-vindas e as
+// três direções com a seta, o lugar e a distância
 const DESTINOS: [string, string, string][] = [
     ['→', 'Prainha do rio', '300 m'],
     ['←', 'Trilha das lajes', '1,2 km'],
@@ -292,49 +298,128 @@ function Placas() {
                     <span className="fx-placa-mini-distancia">{distancia}</span>
                 </span>
             ))}
-            <Pedrinha classe="fx-placa-pedrinha" />
         </span>
     );
 }
-function Pedrinha({ classe }: { classe: string }) {
+// os pinheiros da serra, na beira do campo: [x, altura]
+const PINHEIROS: [number, number][] = [
+    [18, 34], [40, 46], [62, 30], [128, 26], [146, 38], [372, 30], [392, 44], [414, 28], [512, 36], [534, 48], [560, 32], [582, 40],
+];
+// as pedras roladas na beira do rio: [x, y, largura, altura]
+const PEDRAS: [number, number, number, number][] = [
+    [76, 352, 34, 18], [102, 372, 22, 12], [42, 400, 46, 24], [252, 300, 20, 10], [270, 318, 28, 14], [292, 412, 30, 14],
+];
+// a paisagem impressa do guia, em camadas como um cartaz de viagem: o céu do fim de tarde com o sol, a serra ao longe
+// na névoa, os morros, o campo com os pinheiros e o rio descendo até a frente, com o brilho na água e as pedras na margem
+function Paisagem() {
     return (
-        <span className={`fx-pedrinha ${classe}`} aria-hidden>
-            <i />
-            <i />
-            <b />
-        </span>
+        <svg className="fx-guia-paisagem" viewBox="0 0 600 440" preserveAspectRatio="xMidYMax slice" aria-hidden>
+            <defs>
+                <linearGradient id="guia-ceu" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#86bfdc" />
+                    <stop offset="0.6" stopColor="#cfe5e1" />
+                    <stop offset="1" stopColor="#f6dfae" />
+                </linearGradient>
+                <radialGradient id="guia-sol">
+                    <stop offset="0" stopColor="#fff6dc" stopOpacity="0.95" />
+                    <stop offset="1" stopColor="#fff6dc" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="guia-campo" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#86ab62" />
+                    <stop offset="1" stopColor="#4c7a3c" />
+                </linearGradient>
+                <linearGradient id="guia-rio" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#b9dde6" />
+                    <stop offset="0.5" stopColor="#6ea9c6" />
+                    <stop offset="1" stopColor="#3f7ea4" />
+                </linearGradient>
+            </defs>
+            <rect width="600" height="250" fill="url(#guia-ceu)" />
+            <circle cx="470" cy="92" r="120" fill="url(#guia-sol)" />
+            <circle cx="470" cy="92" r="30" fill="#fff4d2" />
+            <ellipse cx="150" cy="70" rx="70" ry="12" fill="#fff" opacity="0.55" />
+            <ellipse cx="200" cy="58" rx="40" ry="10" fill="#fff" opacity="0.5" />
+            <path d="M0 176 Q40 140 80 158 Q120 118 170 150 Q210 126 250 146 Q300 102 350 140 Q400 118 440 146 Q500 112 540 140 Q570 128 600 146 V250 H0Z" fill="#a8c4c2" />
+            <path d="M0 206 Q60 168 130 196 Q190 160 260 194 Q330 172 380 190 Q450 158 520 186 Q560 176 600 190 V250 H0Z" fill="#78a08d" />
+            <rect y="224" width="600" height="216" fill="url(#guia-campo)" />
+            {PINHEIROS.map(([x, h]) => (
+                <path key={x} d={`M${x} ${230 - h} L${x + h * 0.32} 232 H${x - h * 0.32}Z`} fill="#355f3c" />
+            ))}
+            <path d="M236 226 Q218 258 178 282 Q110 318 86 380 Q74 412 70 440 H280 Q250 388 274 336 Q294 290 266 252 Q256 238 250 226Z" fill="url(#guia-rio)" />
+            <g fill="none" stroke="#fff" strokeLinecap="round" opacity="0.5">
+                <path d="M240 246 q8 -3 16 0" strokeWidth="2" />
+                <path d="M202 284 q12 -4 24 0" strokeWidth="2.5" />
+                <path d="M146 326 q16 -5 32 0" strokeWidth="3" />
+                <path d="M190 352 q18 -5 36 0" strokeWidth="3" />
+                <path d="M120 404 q22 -6 44 0" strokeWidth="3.5" />
+            </g>
+            {PEDRAS.map(([x, y, w, h]) => (
+                <g key={`${x}-${y}`}>
+                    <ellipse cx={x + 3} cy={y + h * 0.45} rx={w / 2} ry={h / 2} fill="#000" opacity="0.18" />
+                    <ellipse cx={x} cy={y} rx={w / 2} ry={h / 2} fill="#b4ada0" />
+                    <ellipse cx={x - w * 0.12} cy={y - h * 0.18} rx={w * 0.26} ry={h * 0.2} fill="#ddd7cb" opacity="0.8" />
+                </g>
+            ))}
+        </svg>
+    );
+}
+// o guia de bolso: a faixa da coleção com o título e as coordenadas, a faixa amarela da série, a paisagem com a placa,
+// a etiqueta da edição, o vinco da capa mole perto da lombada (com o verniz por cima de tudo) e o selo do mapa colado
+function GuiaViagem() {
+    return (
+        <div className="fx-v-livro fx-guia" style={{ '--capa': '#1f4d42', '--tinta': '#f6efdd', '--giro': '2.5deg' } as CSSProperties}>
+            <p className="fx-v-livro-colecao">
+                guias <b>Lajedo</b> ★ de bolso
+            </p>
+            <p className="fx-v-livro-titulo">
+                Serra
+                <br />
+                do Seixo
+            </p>
+            <p className="fx-v-livro-autoria">trilhas, prainhas de rio e mirantes</p>
+            <p className="fx-mono fx-guia-coordenadas">21°47′ S ★ 47°03′ O</p>
+            <div className="fx-guia-foto">
+                <Paisagem />
+                <Placas />
+            </div>
+            <p className="fx-guia-edicao">edição 2026</p>
+            <i className="fx-guia-vinco" />
+            <p className="fx-guia-selo">
+                inclui
+                <b>mapa</b>
+                destacável
+            </p>
+        </div>
     );
 }
 export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
     const familia = familiaDe(estilo);
+    const l = INFANTIL;
     return (
-        <Painel colunas={4} linhas={2} rotulo="Capas de dois livros infantis: A pedrinha que rolou e Pra onde, pedrinha?" celular={{ colunas: 2, linhas: 3 }} nu>
+        <Painel colunas={4} linhas={2} rotulo="Capas de dois livros: o infantil A pedrinha que rolou e o guia de viagem Serra do Seixo" celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-v-mesa fx-v-estante" style={{ fontFamily: familia }} aria-hidden>
-                {LIVROS.map(l => (
-                    <div
-                        key={l.titulo.join(' ')}
-                        className="fx-v-livro"
-                        data-cena={l.cena}
-                        style={{ '--capa': l.capa, '--tinta': l.tinta, '--onda': l.onda, '--selo': l.selo, '--giro': `${l.giro}deg` } as CSSProperties}
-                    >
-                        <p className="fx-v-livro-colecao">
-                            coleção <b>Correnteza</b>
-                        </p>
-                        <p className="fx-v-livro-titulo">
-                            {l.titulo[0]}
-                            <br />
-                            {l.titulo[1]}
-                        </p>
-                        <p className="fx-v-livro-autoria">texto e ilustrações de {l.autoria}</p>
-                        {l.cena === 'placas' ? <Placas /> : <Pedrinha classe="fx-v-livro-pedrinha" />}
-                        <Ondas />
-                        <p className="fx-v-livro-idade">
-                            a partir de
-                            <b>{l.idade} anos</b>
-                        </p>
-                        <p className="fx-v-livro-editora">Edições Correnteza</p>
-                    </div>
-                ))}
+                <div
+                    className="fx-v-livro"
+                    style={{ '--capa': l.capa, '--tinta': l.tinta, '--onda': l.onda, '--selo': l.selo, '--giro': `${l.giro}deg` } as CSSProperties}
+                >
+                    <p className="fx-v-livro-colecao">
+                        coleção <b>Correnteza</b>
+                    </p>
+                    <p className="fx-v-livro-titulo">
+                        {l.titulo[0]}
+                        <br />
+                        {l.titulo[1]}
+                    </p>
+                    <p className="fx-v-livro-autoria">texto e ilustrações de {l.autoria}</p>
+                    <Pedrinha classe="fx-v-livro-pedrinha" />
+                    <Ondas />
+                    <p className="fx-v-livro-idade">
+                        a partir de
+                        <b>4 anos</b>
+                    </p>
+                    <p className="fx-v-livro-editora">Edições Correnteza</p>
+                </div>
+                <GuiaViagem />
             </div>
         </Painel>
     );
