@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import Painel from './Painel';
 import { familiaDe } from './Faixa';
 
@@ -123,13 +123,33 @@ export function CartazCut() {
 // ——— Cut: o ingresso, em texto pequeno ———
 // as barras do número do ingresso, na codificação do EAN (o lado esquerdo, 7 módulos por algarismo, com as guardas)
 const EAN_L = ['0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'];
-function Barras({ numero }: { numero: string }) {
+function Barras({ numero, classe = 'fx-ingresso-barras' }: { numero: string; classe?: string }) {
     const modulos = `101${[...numero].map(d => EAN_L[Number(d)]).join('')}101`;
     return (
-        <svg className="fx-ingresso-barras" viewBox={`0 0 ${modulos.length} 10`} preserveAspectRatio="none" aria-hidden>
+        <svg className={classe} viewBox={`0 0 ${modulos.length} 10`} preserveAspectRatio="none" aria-hidden>
             {[...modulos].map((m, i) => (m === '1' ? <rect key={i} x={i} y="0" width="1.02" height="10" fill="currentColor" /> : null))}
         </svg>
     );
+}
+
+// os tamanhos de verdade de três textos de uma peça, medidos na tela (os corpos são em u, então só na largura de
+// desenho dão o número do CSS); refaz quando a peça muda de tamanho
+type Tres = { a: number; b: number; c: number };
+function usePx(caixa: RefObject<HTMLElement | null>, alvos: [RefObject<HTMLElement | null>, RefObject<HTMLElement | null>, RefObject<HTMLElement | null>], padrao: Tres) {
+    const [px, setPx] = useState(padrao);
+    useEffect(() => {
+        const el = caixa.current;
+        if (!el) return;
+        const tam = (e: Element | null, p: number) => (e ? Math.round(parseFloat(getComputedStyle(e).fontSize)) || p : p);
+        const medir = () => setPx({ a: tam(alvos[0].current, padrao.a), b: tam(alvos[1].current, padrao.b), c: tam(alvos[2].current, padrao.c) });
+        medir();
+        const obs = new ResizeObserver(medir);
+        obs.observe(el);
+        return () => obs.disconnect();
+        // as refs e os padrões não mudam
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    return px;
 }
 
 const NUMERO = '000311';
@@ -138,18 +158,8 @@ export function IngressoCut() {
     const titulo = useRef<HTMLParagraphElement>(null);
     const texto = useRef<HTMLParagraphElement>(null);
     const miudo = useRef<HTMLParagraphElement>(null);
-    // os tamanhos de verdade, medidos na tela (os corpos são em u; só na largura de desenho dão 84, 17 e 14 px)
-    const [px, setPx] = useState({ titulo: 84, texto: 17, miudo: 14 });
-    useEffect(() => {
-        const el = caixa.current;
-        if (!el) return;
-        const tam = (e: Element | null, padrao: number) => (e ? Math.round(parseFloat(getComputedStyle(e).fontSize)) || padrao : padrao);
-        const medir = () => setPx({ titulo: tam(titulo.current, 84), texto: tam(texto.current, 17), miudo: tam(miudo.current, 14) });
-        medir();
-        const obs = new ResizeObserver(medir);
-        obs.observe(el);
-        return () => obs.disconnect();
-    }, []);
+    const { a: pxTitulo, b: pxTexto, c: pxMiudo } = usePx(caixa, [titulo, texto, miudo], { a: 84, b: 17, c: 14 });
+    const px = { titulo: pxTitulo, texto: pxTexto, miudo: pxMiudo };
     return (
         <Painel colunas={4} linhas={1} rotulo="Ingresso do festival, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
             <div ref={caixa} className="fx-ingresso-painel">
@@ -182,6 +192,79 @@ export function IngressoCut() {
                 </div>
                 <p className="fx-ingresso-legenda">
                     No ingresso: título a {px.titulo} px, texto a {px.texto} px e detalhes a {px.miudo} px
+                </p>
+            </div>
+        </Painel>
+    );
+}
+
+// ——— Polished: o sabonete ———
+// a pedra que o rio alisou vira sabonete: uma barra com a cinta de papel do rótulo (a cinta fica presa no contorno da
+// barra, como o papel que abraça o sabão) e outra já sem embalagem, com a marca gravada no sabão
+export function SabonetePolished() {
+    return (
+        <Painel colunas={4} linhas={2} rotulo="Sabonete seixo: uma barra com a cinta do rótulo e outra com a marca gravada" celular={{ colunas: 2, linhas: 3 }} nu>
+            <div className="fx-pia" style={{ fontFamily: familiaDe('polished') }} aria-hidden>
+                <div className="fx-sabonete" data-barra="cinta">
+                    <div className="fx-sabonete-cinta">
+                        <p className="fx-cinta-miudo">FEITO À MÃO ★ ARGILA BRANCA</p>
+                        <p className="fx-cinta-marca">seixo</p>
+                        <p className="fx-cinta-sub">sabonete liso como pedra de rio</p>
+                        <p className="fx-cinta-peso">100 g</p>
+                    </div>
+                </div>
+                <div className="fx-sabonete" data-barra="nua">
+                    <p className="fx-sabonete-gravado">seixo</p>
+                </div>
+            </div>
+        </Painel>
+    );
+}
+
+// ——— Polished: o rótulo de trás, em texto pequeno ———
+const ROTULO: [string, string][] = [
+    [
+        'INGREDIENTES',
+        'Óleo de coco, azeite de oliva, manteiga de karité, argila branca, água filtrada, hidróxido de sódio (ele some na cura e vira sabão) e óleo essencial de alecrim.',
+    ],
+    ['MODO DE USAR', 'Molhe as mãos e o sabonete, faça espuma e espalhe pela pele. Enxágue bem. Guarde fora d’água: como a pedra no rio, ele fica mais liso a cada uso.'],
+    ['CUIDADOS', 'Uso externo. Evite o contato com os olhos; se acontecer, lave com água corrente. Em caso de irritação, suspenda o uso.'],
+];
+const LOTE = '000026';
+export function RotuloPolished() {
+    const caixa = useRef<HTMLDivElement>(null);
+    const marca = useRef<HTMLParagraphElement>(null);
+    const texto = useRef<HTMLParagraphElement>(null);
+    const titulo = useRef<HTMLParagraphElement>(null);
+    const { a: pxMarca, b: pxTexto, c: pxTitulo } = usePx(caixa, [marca, texto, titulo], { a: 72, b: 16, c: 13 });
+    return (
+        <Painel colunas={4} linhas={1} rotulo="Rótulo de trás do sabonete, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
+            <div ref={caixa} className="fx-ingresso-painel">
+                <div className="fx-rotulo" style={{ fontFamily: familiaDe('polished') }}>
+                    <div className="fx-rotulo-marca">
+                        <p ref={marca} className="fx-rotulo-logo">
+                            seixo
+                        </p>
+                        <p className="fx-rotulo-sub">sabonete de argila branca</p>
+                        <p className="fx-rotulo-sub">100 g ★ feito à mão</p>
+                    </div>
+                    {ROTULO.map(([t, p], i) => (
+                        <div key={t} className="fx-rotulo-coluna">
+                            <p ref={i === 0 ? titulo : undefined} className="fx-rotulo-titulo">
+                                {t}
+                            </p>
+                            <p ref={i === 0 ? texto : undefined} className="fx-rotulo-texto">
+                                {p}
+                            </p>
+                        </div>
+                    ))}
+                    <div className="fx-rotulo-pe">
+                        <p className="fx-rotulo-titulo">LOTE 026 ★ VALIDADE 03/2028</p>
+                        <Barras numero={LOTE} classe="fx-rotulo-barras" />
+                    </div>
+                </div>
+                <p className="fx-ingresso-legenda">
+                    No rótulo: marca a {pxMarca} px, texto a {pxTexto} px e títulos a {pxTitulo} px
                 </p>
             </div>
         </Painel>

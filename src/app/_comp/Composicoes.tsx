@@ -8,11 +8,10 @@ import { Ferramentas, Janela, ReguaFonte } from './Moldura';
 import { familiaDe } from './Faixa';
 import type { Estilo } from '../_lib/conteudo';
 import { LINHAS } from '../_lib/glifos';
-import { ESTILOS as ESTILOS_SIGMA } from '../_lib/medidas';
 import { useLaco, vaiEVolta } from '../_lib/movimento';
 
-// as composições das faixas Polished e Worn que ainda não passaram para o padrão novo (o Cut já está em Pratica.tsx):
-// cartaz, citação, onomatopeias, letra grande com seleção. Os controles que se mexem sozinhos: "DESGASTE" gasta o n do
+// as composições da faixa Worn, que ainda não passou para o padrão novo (o Cut e o Polished já estão em Pratica.tsx):
+// onomatopeias e letra grande com seleção. Os controles que se mexem sozinhos: "DESGASTE" gasta o n do
 // Cut até virar o Worn (com o σ de agora na janela), e "ALTERNATIVAS" liga e desliga o calt, trocando as letras
 // repetidas pelas variações da fonte (toda palavra que passa por ele tem uma minúscula repetida a até duas letras de
 // distância, a regra do calt, para a troca aparecer). Os números são da fonte: o σ de cada estilo e as réguas em
@@ -87,66 +86,6 @@ export function Simbolos({ estilo }: { estilo: Estilo }) {
                     </div>
                 </Painel>
             ))}
-        </div>
-    );
-}
-
-// ——— Polished (azul): o cartaz do R com a lente e a pilha de palavras, e a citação emoldurada ———
-// o R do cartaz: corpo 540 u, cortado na maiúscula (text-box), então a linha de base fica na altura da maiúscula
-const CORPO_R = 540;
-// a citação, uma linha por estilo, cada uma na sua fonte e com o σ de verdade do estilo
-const CITACAO: [Estilo, string][] = [
-    ['cut', 'Ditado de rio, verdade de pedra:'],
-    ['polished', 'rolar tira as quinas e o limo'],
-    ['worn', 'e deixa tudo mais liso.'],
-];
-export function CartazPolido({ estilo }: { estilo: Estilo }) {
-    const familia = familiaDe(estilo);
-    const sigma = (e: Estilo) => ESTILOS_SIGMA.find(s => s.nome.toLowerCase() === e)!.sigma;
-    return (
-        <div className="fx-grade">
-            <Painel colunas={2} linhas={1} solto rotulo="Cartaz" estilo={{ gridColumn: '1 / span 2' }}>
-                <div className="fx-solto" style={{ fontFamily: familia }}>
-                    <ReguaFonte corpo={CORPO_R} base={(CORPO_R * LINHAS.maiuscula) / 1000} linha={LINHAS.maiuscula} estilo={{ left: 0, right: 'auto' }} />
-                    <span className="fx-cartaz-r" aria-hidden>
-                        R
-                    </span>
-                    <div className="fx-cartaz-lente" aria-hidden>
-                        <span>R</span>
-                    </div>
-                    <div className="fx-cartaz-pilha">
-                        <div style={{ fontSize: u(104) }}>SEIXO</div>
-                        <div style={{ fontSize: u(92) }}>RIO</div>
-                        <div style={{ fontSize: u(80) }}>RODA</div>
-                        <div className="fx-dupla" style={{ fontSize: u(60) }}>
-                            <span>LIXA</span>
-                            <span>σ{sigma(estilo)}</span>
-                        </div>
-                        <div className="fx-dupla" style={{ fontSize: u(44) }}>
-                            <span>RUNE</span>
-                            <span>POLISHED</span>
-                        </div>
-                    </div>
-                </div>
-            </Painel>
-            <Painel colunas={2} linhas={1} solto rotulo="Pedra que rola não cria limo" estilo={{ gridColumn: '3 / span 2' }}>
-                <div className="fx-solto" style={{ fontFamily: familia }}>
-                    <div className="fx-citacao">
-                        Pedra que rola
-                        <br />
-                        não cria limo!
-                    </div>
-                    <div className="fx-citacao-linhas">
-                        {CITACAO.map(([e, l]) => (
-                            <div key={l} style={{ fontFamily: familiaDe(e) }}>
-                                <small>{ESTILOS_SIGMA.find(s => s.nome.toLowerCase() === e)!.nome}</small>
-                                <span>{l}</span>
-                                <b>σ{sigma(e)}</b>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </Painel>
         </div>
     );
 }
