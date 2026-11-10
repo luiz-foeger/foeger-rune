@@ -853,3 +853,50 @@ export function EtiquetaWorn() {
         </Painel>
     );
 }
+
+// ——— 10. o ingresso comprido (era o texto pequeno da Cut, antes das caixinhas) ———
+const NUMERO = '000311';
+export function IngressoCut() {
+    const caixa = useRef<HTMLDivElement>(null);
+    const titulo = useRef<HTMLParagraphElement>(null);
+    const texto = useRef<HTMLParagraphElement>(null);
+    const miudo = useRef<HTMLParagraphElement>(null);
+    const { a: pxTitulo, b: pxTexto, c: pxMiudo } = usePx(caixa, [titulo, texto, miudo], { a: 84, b: 17, c: 14 });
+    const px = { titulo: pxTitulo, texto: pxTexto, miudo: pxMiudo };
+    return (
+        <Painel colunas={4} linhas={1} rotulo="Ingresso do festival, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
+            <div ref={caixa} className="fx-ingresso-painel">
+                <div className="fx-ingresso" style={{ fontFamily: familiaDe('cut') }}>
+                    <div className="fx-ingresso-corpo">
+                        <p ref={miudo} className="fx-ingresso-miudo">
+                            <span>INGRESSO ★ PISTA ★ 2º LOTE</span>
+                            <span>Nº {NUMERO}</span>
+                        </p>
+                        <p ref={titulo} className="fx-ingresso-titulo">
+                            Quebra Pedra
+                        </p>
+                        <p className="fx-ingresso-sub">festival de rock bruto ★ 21 de março ★ 20h ★ Galpão da Pedreira</p>
+                        <p ref={texto} className="fx-ingresso-texto">
+                            Vale uma entrada, uma vez só. Guarde o canhoto até o fim: na saída, ele vira uma lasca da pedra do palco. Não entra vidro nem
+                            pedra de fora, e o capacete é por sua conta.
+                        </p>
+                    </div>
+                    <div className="fx-ingresso-canhoto">
+                        <p className="fx-ingresso-setor">
+                            <span>PISTA</span>
+                            <span>R$ 20</span>
+                        </p>
+                        <p className="fx-ingresso-miudo">
+                            <span>21/03 ★ 20H</span>
+                            <span>Nº {NUMERO}</span>
+                        </p>
+                        <Barras numero={NUMERO} />
+                    </div>
+                </div>
+                <p className="fx-ingresso-legenda">
+                    No ingresso: título a {px.titulo} px, texto a {px.texto} px e detalhes a {px.miudo} px
+                </p>
+            </div>
+        </Painel>
+    );
+}

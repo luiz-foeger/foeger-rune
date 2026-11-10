@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import Painel from './Painel';
 import { familiaDe } from './Faixa';
 import type { Estilo } from '../_lib/conteudo';
@@ -9,7 +9,8 @@ import type { Estilo } from '../_lib/conteudo';
 // grande e numa peça de texto pequeno (com os tamanhos medidos na tela de quem lê), soltas na cor da faixa, sem régua
 // nem trama: a régua fica com a frase que corre, a letra medida; embaixo, a mesma letra em uso. No Cut, o cartaz
 // lambe-lambe de um festival colado na parede (cada linha na largura inteira, em corpos diferentes, como o tipo de
-// madeira da gráfica de cartaz de rua) e o ingresso do mesmo festival, com as regras em letra miúda. No Polished, o
+// madeira da gráfica de cartaz de rua) e, embaixo, quatro caixinhas do mesmo festival em texto pequeno (o ingresso,
+// a pulseira, o crachá e a setlist). No Polished, o
 // livro infantil (as capas e uma página dupla da história); no Worn, o disco gasto (a capa, o disco e o encarte).
 
 // uma linha que ocupa a largura inteira da caixa: mede a frase a 100 px e escala o corpo até a largura bater. Só refaz
@@ -154,49 +155,100 @@ export function usePx(caixa: RefObject<HTMLElement | null>, alvos: [RefObject<HT
     return px;
 }
 
-const NUMERO = '000311';
-export function IngressoCut() {
+// ——— as caixinhas de texto pequeno (as quatro, lado a lado, como os painéis de texto de antes) ———
+// cada caixinha é um painel 1 × 1 com um objeto pequeno do mesmo mundo da peça grande, e no alto o tamanho de verdade
+// do texto dele na tela (o do elemento marcado com data-medida, medido e refeito quando a tela muda). No celular, cada
+// caixinha ocupa a largura toda e o objeto cresce junto (o CSS aumenta o u dentro dela), para o texto continuar legível
+function Caixinha({ rotulo, children }: { rotulo: string; children: ReactNode }) {
     const caixa = useRef<HTMLDivElement>(null);
-    const titulo = useRef<HTMLParagraphElement>(null);
-    const texto = useRef<HTMLParagraphElement>(null);
-    const miudo = useRef<HTMLParagraphElement>(null);
-    const { a: pxTitulo, b: pxTexto, c: pxMiudo } = usePx(caixa, [titulo, texto, miudo], { a: 84, b: 17, c: 14 });
-    const px = { titulo: pxTitulo, texto: pxTexto, miudo: pxMiudo };
+    const [px, setPx] = useState<number | null>(null);
+    useEffect(() => {
+        const el = caixa.current;
+        if (!el) return;
+        const medir = () => {
+            const alvo = el.querySelector('[data-medida]');
+            if (alvo) setPx(Math.round(parseFloat(getComputedStyle(alvo).fontSize)));
+        };
+        medir();
+        const obs = new ResizeObserver(medir);
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, []);
     return (
-        <Painel colunas={4} linhas={1} rotulo="Ingresso do festival, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
-            <div ref={caixa} className="fx-ingresso-painel">
-                <div className="fx-ingresso" style={{ fontFamily: familiaDe('cut') }}>
-                    <div className="fx-ingresso-corpo">
-                        <p ref={miudo} className="fx-ingresso-miudo">
-                            <span>INGRESSO ★ PISTA ★ 2º LOTE</span>
-                            <span>Nº {NUMERO}</span>
-                        </p>
-                        <p ref={titulo} className="fx-ingresso-titulo">
-                            Quebra Pedra
-                        </p>
-                        <p className="fx-ingresso-sub">festival de rock bruto ★ 21 de março ★ 20h ★ Galpão da Pedreira</p>
-                        <p ref={texto} className="fx-ingresso-texto">
-                            Vale uma entrada, uma vez só. Guarde o canhoto até o fim: na saída, ele vira uma lasca da pedra do palco. Não entra vidro nem
-                            pedra de fora, e o capacete é por sua conta.
-                        </p>
-                    </div>
-                    <div className="fx-ingresso-canhoto">
-                        <p className="fx-ingresso-setor">
-                            <span>PISTA</span>
-                            <span>R$ 20</span>
-                        </p>
-                        <p className="fx-ingresso-miudo">
-                            <span>21/03 ★ 20H</span>
-                            <span>Nº {NUMERO}</span>
-                        </p>
-                        <Barras numero={NUMERO} />
-                    </div>
-                </div>
-                <p className="fx-ingresso-legenda">
-                    No ingresso: título a {px.titulo} px, texto a {px.texto} px e detalhes a {px.miudo} px
-                </p>
+        <Painel colunas={1} linhas={1} rotulo={rotulo} celular={{ colunas: 2, linhas: 2 }}>
+            <div ref={caixa} className="fx-caixinha">
+                <p className="fx-caixinha-tamanho">{px ?? '…'} px</p>
+                {children}
             </div>
         </Painel>
+    );
+}
+
+// ——— Cut: as quatro caixinhas do festival ———
+// o ingresso em pé, a pulseira de acesso, o crachá da equipe com o cordão e a setlist colada no palco com fita
+const SETLIST = ['Pedra no sapato', 'Cinzel', 'Rocha bruta', 'Lasca', 'Brita 3', 'Quebra pedra'];
+export function CaixinhasCut() {
+    const fonte = { fontFamily: familiaDe('cut') };
+    return (
+        <div className="fx-grade" style={fonte}>
+            <Caixinha rotulo="O ingresso do festival, em pé">
+                <div className="fx-mini-ingresso">
+                    <div className="fx-mini-ingresso-corpo">
+                        <p className="fx-mini-miudo">INGRESSO ★ PISTA</p>
+                        <p className="fx-mini-ingresso-titulo">Quebra Pedra</p>
+                        <p className="fx-mini-ingresso-data">21 de março ★ 20h</p>
+                        <p data-medida className="fx-mini-ingresso-texto">
+                            Vale uma entrada, uma vez só. Guarde o canhoto até o fim da noite.
+                        </p>
+                    </div>
+                    <div className="fx-mini-ingresso-canhoto">
+                        <p className="fx-mini-miudo">Nº 000311</p>
+                        <Barras numero="000311" classe="fx-mini-barras" />
+                    </div>
+                </div>
+            </Caixinha>
+            <Caixinha rotulo="A pulseira de acesso do festival">
+                <div className="fx-pulseira">
+                    <p data-medida className="fx-pulseira-texto">
+                        QUEBRA PEDRA ★ 21.03 ★ PISTA ★ QUEBRA PEDRA ★
+                    </p>
+                    <p className="fx-pulseira-ponta">000311</p>
+                </div>
+            </Caixinha>
+            <Caixinha rotulo="O crachá da equipe do festival">
+                <div className="fx-cracha">
+                    <span className="fx-cracha-cordao">
+                        <span>QUEBRA PEDRA ★ QUEBRA PEDRA ★ QUEBRA PEDRA</span>
+                    </span>
+                    <div className="fx-cracha-cartao">
+                        <i className="fx-cracha-furo" />
+                        <p className="fx-cracha-faixa">STAFF</p>
+                        <p className="fx-cracha-nome">Joana Lasca</p>
+                        <p className="fx-cracha-funcao">técnica de palco</p>
+                        <p data-medida className="fx-cracha-acesso">
+                            acesso ao palco, ao camarim e à área técnica
+                        </p>
+                        <p className="fx-mini-miudo">21 MAR ★ QUEBRA PEDRA</p>
+                    </div>
+                </div>
+            </Caixinha>
+            <Caixinha rotulo="A setlist dos Lascados, colada no palco">
+                <div className="fx-setlist">
+                    <i className="fx-setlist-fita" data-lado="esq" />
+                    <i className="fx-setlist-fita" data-lado="dir" />
+                    <p className="fx-setlist-banda">OS LASCADOS</p>
+                    <p className="fx-mini-miudo">21.03 ★ QUEBRA PEDRA</p>
+                    <ol>
+                        {SETLIST.map((m, i) => (
+                            <li key={m} data-medida={i === 0 || undefined}>
+                                {m}
+                            </li>
+                        ))}
+                    </ol>
+                    <p className="fx-setlist-bis">bis: Cascalho</p>
+                </div>
+            </Caixinha>
+        </div>
     );
 }
 

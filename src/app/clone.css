@@ -3407,3 +3407,248 @@ html[data-paleta='azul'] [data-clone] {
         font-size: calc(18 * var(--u));
     }
 }
+
+/* as caixinhas de texto pequeno: o tamanho medido no alto e o objeto no meio do painel */
+.fx-caixinha {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+}
+.fx-caixinha p {
+    margin: 0;
+}
+.fx-caixinha .fx-caixinha-tamanho {
+    position: absolute;
+    left: calc(24 * var(--u));
+    top: calc(20 * var(--u));
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sec);
+    font-weight: 500;
+    line-height: 1.2;
+}
+.fx-mini-miudo {
+    font-size: calc(11 * var(--u));
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+}
+
+/* Cut, 1: o ingresso em pé (o corpo em cima, o picote deitado e o canhoto embaixo) */
+.fx-mini-ingresso {
+    --corte: calc(250 * var(--u));
+    --furo: calc(14 * var(--u));
+    position: relative;
+    width: calc(270 * var(--u));
+    height: calc(330 * var(--u));
+    margin-top: calc(30 * var(--u));
+    display: grid;
+    grid-template-rows: var(--corte) 1fr;
+    border-radius: calc(8 * var(--u));
+    background: var(--tinta);
+    color: var(--cor-faixa);
+    transform: rotate(-4deg);
+    -webkit-mask:
+        radial-gradient(circle at 0 var(--corte), #0000 var(--furo), #000 calc(var(--furo) + 0.5px)) left / 51% 100% no-repeat,
+        radial-gradient(circle at 100% var(--corte), #0000 var(--furo), #000 calc(var(--furo) + 0.5px)) right / 51% 100% no-repeat;
+    mask:
+        radial-gradient(circle at 0 var(--corte), #0000 var(--furo), #000 calc(var(--furo) + 0.5px)) left / 51% 100% no-repeat,
+        radial-gradient(circle at 100% var(--corte), #0000 var(--furo), #000 calc(var(--furo) + 0.5px)) right / 51% 100% no-repeat;
+}
+.fx-mini-ingresso::after {
+    content: '';
+    position: absolute;
+    left: calc(var(--furo) + 8 * var(--u));
+    right: calc(var(--furo) + 8 * var(--u));
+    top: var(--corte);
+    border-top: max(1px, calc(2 * var(--u))) dashed var(--cor-faixa);
+    opacity: 0.55;
+}
+.fx-mini-ingresso-corpo {
+    display: flex;
+    flex-direction: column;
+    gap: calc(8 * var(--u));
+    padding: calc(20 * var(--u)) calc(22 * var(--u));
+}
+.fx-mini-ingresso-titulo {
+    font-size: calc(46 * var(--u));
+    line-height: 0.95;
+}
+.fx-mini-ingresso-data {
+    font-size: calc(15 * var(--u));
+}
+.fx-mini-ingresso-texto {
+    margin-top: auto !important;
+    font-size: calc(13 * var(--u));
+    line-height: 1.35;
+}
+.fx-mini-ingresso-canhoto {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: calc(6 * var(--u));
+    padding: 0 calc(22 * var(--u));
+}
+.fx-mini-barras {
+    display: block;
+    width: 100%;
+    height: calc(26 * var(--u));
+}
+
+/* Cut, 2: a pulseira de acesso (a fita de Tyvek atravessada, com a ponta do adesivo e o número) */
+.fx-pulseira {
+    position: relative;
+    width: calc(400 * var(--u));
+    height: calc(76 * var(--u));
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border-radius: calc(4 * var(--u));
+    background:
+        linear-gradient(180deg, rgb(255 255 255 / 0.18), transparent 35%, rgb(0 0 0 / 0.12)),
+        var(--p-quente);
+    color: var(--p-papel);
+    box-shadow: 0 calc(6 * var(--u)) calc(10 * var(--u)) rgb(0 0 0 / 0.22);
+    transform: rotate(-34deg);
+}
+.fx-pulseira-texto {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    padding-left: calc(22 * var(--u));
+    font-size: calc(19 * var(--u));
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+.fx-pulseira-ponta {
+    flex: none;
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+    width: calc(88 * var(--u));
+    border-left: max(1px, calc(2 * var(--u))) dashed rgb(255 255 255 / 0.6);
+    background: rgb(255 255 255 / 0.16);
+    font-size: calc(12 * var(--u));
+}
+
+/* Cut, 3: o crachá da equipe (o cordão impresso descendo do alto e o cartão com a faixa preta) */
+.fx-cracha {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: calc(-30 * var(--u));
+    transform: rotate(3deg);
+}
+.fx-cracha-cordao {
+    width: calc(34 * var(--u));
+    height: calc(110 * var(--u));
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--p-frio);
+    color: var(--p-papel);
+}
+.fx-cracha-cordao span {
+    font-size: calc(10 * var(--u));
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    transform: rotate(90deg);
+}
+.fx-cracha-cartao {
+    position: relative;
+    width: calc(230 * var(--u));
+    display: flex;
+    flex-direction: column;
+    gap: calc(6 * var(--u));
+    padding: calc(30 * var(--u)) 0 calc(18 * var(--u));
+    overflow: hidden;
+    border-radius: calc(12 * var(--u));
+    background: var(--p-papel);
+    color: var(--tinta);
+    text-align: center;
+    box-shadow: 0 calc(8 * var(--u)) calc(14 * var(--u)) rgb(0 0 0 / 0.25);
+}
+.fx-cracha-furo {
+    position: absolute;
+    left: calc(50% - 26 * var(--u));
+    top: calc(10 * var(--u));
+    width: calc(52 * var(--u));
+    height: calc(10 * var(--u));
+    border-radius: calc(5 * var(--u));
+    background: var(--cor-faixa);
+}
+.fx-cracha-faixa {
+    padding: calc(8 * var(--u)) 0 calc(4 * var(--u));
+    background: var(--tinta);
+    color: var(--p-papel);
+    font-size: calc(54 * var(--u));
+    line-height: 1;
+}
+.fx-cracha-nome {
+    margin-top: calc(8 * var(--u)) !important;
+    font-size: calc(24 * var(--u));
+    line-height: 1;
+}
+.fx-cracha-funcao {
+    font-size: calc(14 * var(--u));
+}
+.fx-cracha-acesso {
+    padding: 0 calc(20 * var(--u));
+    font-size: calc(12 * var(--u));
+    line-height: 1.35;
+}
+
+/* Cut, 4: a setlist no chão do palco (a folha branca presa por duas tiras de fita preta) */
+.fx-setlist {
+    position: relative;
+    width: calc(270 * var(--u));
+    margin-top: calc(26 * var(--u));
+    padding: calc(26 * var(--u)) calc(26 * var(--u)) calc(20 * var(--u));
+    background: #fbfaf6;
+    color: var(--tinta);
+    box-shadow: 0 calc(6 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.22);
+    transform: rotate(2.5deg);
+}
+.fx-setlist-fita {
+    position: absolute;
+    top: calc(-12 * var(--u));
+    width: calc(80 * var(--u));
+    height: calc(26 * var(--u));
+    background: rgb(20 20 20 / 0.88);
+}
+.fx-setlist-fita[data-lado='esq'] {
+    left: calc(-20 * var(--u));
+    transform: rotate(-28deg);
+}
+.fx-setlist-fita[data-lado='dir'] {
+    right: calc(-20 * var(--u));
+    transform: rotate(24deg);
+}
+.fx-setlist-banda {
+    font-size: calc(24 * var(--u));
+    line-height: 1;
+}
+.fx-setlist ol {
+    margin: calc(12 * var(--u)) 0 0;
+    padding: 0 0 0 1.2em;
+    font-size: calc(21 * var(--u));
+    line-height: 1.3;
+}
+.fx-setlist-bis {
+    margin-top: calc(8 * var(--u)) !important;
+    padding-top: calc(6 * var(--u));
+    border-top: max(1px, calc(2 * var(--u))) solid currentColor;
+    font-size: calc(17 * var(--u));
+}
+@media (max-width: 899px) {
+    /* a caixinha ocupa as duas colunas (885 u em vez de 413): o u de dentro dela cresce na mesma proporção, e o objeto
+       fica do mesmo tamanho relativo que no desktop; o tamanho escrito no alto continua no u da página */
+    .fx-caixinha {
+        --u: calc(100cqw / 945 * 885 / 413);
+    }
+    .fx-caixinha .fx-caixinha-tamanho {
+        left: calc(100cqw / 945 * 40);
+        top: calc(100cqw / 945 * 34);
+        font-size: max(11px, calc(100cqw / 945 * 24));
+    }
+}
