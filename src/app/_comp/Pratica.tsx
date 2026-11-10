@@ -250,7 +250,7 @@ export function CaixinhasCut() {
 // plastificada (o brilho do verniz, o grão da impressão, a lombada, o miolo nas bordas e as sombras da mesma luz do
 // livro 3D). A Rune fica com o principal (o título); os detalhes vão em letra de texto, como num livro de verdade: a
 // autoria, a coleção, o selo da idade e a editora na Inter Tight. A ilustração é impressa: as ondas e, no primeiro, a
-// pedrinha personagem, com olhos e sorriso; no segundo, a placa de direção da beira do rio
+// pedrinha personagem, com olhos e sorriso; no segundo, a placa do parque com as direções
 const LIVROS = [
     { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3, cena: 'pedrinha' },
     { titulo: ['O rio que', 'não parava'], autoria: 'Caio Rios', capa: '#ee8a5e', tinta: '#1f3a6e', onda: '#ffd9c4', selo: '#7cc49a', giro: 2.5, cena: 'placas' },
@@ -267,25 +267,28 @@ function Ondas() {
     );
 }
 // a pedrinha personagem: o seixo com os dois olhos (com o brilho) e o sorriso
-// a placa de direção da beira do rio, desenhada para a capa do segundo livro: o poste de madeira e as três setas
-// (o mar e a cachoeira para um lado, a nascente para o outro), com a pedrinha espiando no pé do poste
-const SETAS: { nome: string; lado: 'dir' | 'esq'; cor: string; giro: number }[] = [
-    { nome: 'mar', lado: 'dir', cor: '#f3c24a', giro: -5 },
-    { nome: 'nascente', lado: 'esq', cor: '#7cc49a', giro: 4 },
-    { nome: 'cachoeira', lado: 'dir', cor: '#fff6e4', giro: -2 },
+// a placa do parque, desenhada para a capa do segundo livro: os dois postes de madeira, a placa de boas-vindas e as três
+// direções com a seta, o lugar e a distância (as letras, os números e as setas da fonte na mesma ilustração), com a
+// pedrinha espiando no pé, entre as ondas
+const DESTINOS: [string, string, string][] = [
+    ['→', 'Prainha do rio', '300 m'],
+    ['←', 'Trilha das lajes', '1,2 km'],
+    ['↑', 'Mirante', '600 m'],
 ];
 function Placas() {
     return (
-        <span className="fx-v-livro-placas" aria-hidden>
-            <i className="fx-placa-poste" />
-            {SETAS.map((s, i) => (
-                <span
-                    key={s.nome}
-                    className="fx-placa-seta"
-                    data-lado={s.lado}
-                    style={{ '--cor-placa': s.cor, '--giro': `${s.giro}deg`, top: `calc(${22 + i * 74} * var(--u))` } as CSSProperties}
-                >
-                    {s.nome}
+        <span className="fx-placa-mini" aria-hidden>
+            <i className="fx-placa-mini-poste" data-lado="esq" />
+            <i className="fx-placa-mini-poste" data-lado="dir" />
+            <span className="fx-placa-mini-nome">
+                <span className="fx-placa-mini-miudo">BEM-VINDO AO</span>
+                <span className="fx-placa-mini-titulo">Parque das Pedras Roladas</span>
+            </span>
+            {DESTINOS.map(([seta, lugar, distancia], k) => (
+                <span key={lugar} className="fx-placa-mini-destino" data-i={k}>
+                    <span className="fx-placa-mini-seta">{seta}</span>
+                    <span>{lugar}</span>
+                    <span className="fx-placa-mini-distancia">{distancia}</span>
                 </span>
             ))}
             <Pedrinha classe="fx-placa-pedrinha" />
@@ -310,6 +313,7 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
                     <div
                         key={l.titulo.join(' ')}
                         className="fx-v-livro"
+                        data-cena={l.cena}
                         style={{ '--capa': l.capa, '--tinta': l.tinta, '--onda': l.onda, '--selo': l.selo, '--giro': `${l.giro}deg` } as CSSProperties}
                     >
                         <p className="fx-v-livro-colecao">

@@ -4706,71 +4706,97 @@ html[data-paleta='azul'] [data-clone] {
     user-select: none;
 }
 
-/* a placa de direção na capa do segundo livro: o poste de madeira, as setas coloridas presas por um prego e a pedrinha
-   espiando no pé (a sombra de impressão das setas é a mesma do título) */
-.fx-v-livro-placas {
+/* a placa do parque na capa do segundo livro: a miniatura da placa marrom de moldura creme (a de boas-vindas e as três
+   direções), nos dois postes de madeira que descem até as ondas, com a sombra de impressão do título */
+.fx-placa-mini {
     position: absolute;
-    left: calc(74 * var(--u));
-    bottom: calc(140 * var(--u));
-    width: calc(400 * var(--u));
-    height: calc(290 * var(--u));
+    left: calc(60 * var(--u));
+    right: calc(52 * var(--u));
+    bottom: calc(126 * var(--u));
+    height: calc(310 * var(--u));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(9 * var(--u));
+    color: var(--p-papel);
 }
-.fx-placa-poste {
+.fx-placa-mini-poste {
     position: absolute;
-    left: calc(176 * var(--u));
-    top: 0;
-    bottom: calc(-30 * var(--u));
-    width: calc(28 * var(--u));
-    border-radius: calc(14 * var(--u)) calc(14 * var(--u)) calc(3 * var(--u)) calc(3 * var(--u));
+    top: calc(24 * var(--u));
+    bottom: calc(-46 * var(--u));
+    width: calc(18 * var(--u));
     background:
-        repeating-linear-gradient(90deg, rgb(0 0 0 / 0.1) 0 calc(2 * var(--u)), transparent calc(2 * var(--u)) calc(7 * var(--u))),
-        linear-gradient(90deg, rgb(255 255 255 / 0.18), transparent 45%, rgb(0 0 0 / 0.22)),
-        #8a5a3c;
-    box-shadow: calc(4 * var(--u)) calc(5 * var(--u)) 0 rgb(0 0 0 / 0.16);
+        repeating-linear-gradient(90deg, rgb(0 0 0 / 0.1) 0 calc(2 * var(--u)), transparent calc(2 * var(--u)) calc(6 * var(--u))),
+        linear-gradient(90deg, rgb(255 255 255 / 0.16), transparent 45%, rgb(0 0 0 / 0.24)),
+        #7a5236;
+    box-shadow: calc(3 * var(--u)) calc(4 * var(--u)) 0 rgb(0 0 0 / 0.16);
 }
-.fx-placa-seta {
-    position: absolute;
-    display: block;
-    padding: calc(12 * var(--u)) calc(44 * var(--u)) calc(14 * var(--u)) calc(24 * var(--u));
-    background: var(--cor-placa);
-    color: #1f2a44;
-    font-size: calc(31 * var(--u));
+.fx-placa-mini-poste[data-lado='esq'] {
+    left: 22%;
+}
+.fx-placa-mini-poste[data-lado='dir'] {
+    right: 22%;
+}
+/* as placas ficam na frente das ondas; os postes e a pedrinha, dentro d'água */
+.fx-placa-mini-nome,
+.fx-placa-mini-destino {
+    position: relative;
+    z-index: 1;
+    border-radius: calc(12 * var(--u));
+    background: #8a3422;
+    box-shadow:
+        inset 0 0 0 calc(4 * var(--u)) #8a3422,
+        inset 0 0 0 calc(5.5 * var(--u)) var(--p-papel),
+        calc(3 * var(--u)) calc(4 * var(--u)) 0 rgb(0 0 0 / 0.16);
+}
+.fx-placa-mini-nome {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(4 * var(--u));
+    padding: calc(14 * var(--u)) calc(18 * var(--u)) calc(16 * var(--u));
+    text-align: center;
+}
+.fx-placa-mini-miudo {
+    font-size: calc(11 * var(--u));
+    letter-spacing: 0.12em;
+}
+.fx-placa-mini-titulo {
+    font-size: calc(36 * var(--u));
     line-height: 1;
-    white-space: nowrap;
-    filter: drop-shadow(calc(4 * var(--u)) calc(5 * var(--u)) 0 rgb(0 0 0 / 0.16));
-    transform: rotate(var(--giro));
 }
-.fx-placa-seta[data-lado='dir'] {
-    left: calc(166 * var(--u));
-    clip-path: polygon(0 0, calc(100% - 30 * var(--u)) 0, 100% 50%, calc(100% - 30 * var(--u)) 100%, 0 100%);
-    transform-origin: 0 50%;
+.fx-placa-mini-destino {
+    width: 88%;
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    padding: calc(7 * var(--u)) calc(16 * var(--u));
+    font-size: calc(21 * var(--u));
+    line-height: 1.15;
 }
-.fx-placa-seta[data-lado='esq'] {
-    right: calc(400 * var(--u) - 214 * var(--u));
-    padding: calc(12 * var(--u)) calc(24 * var(--u)) calc(14 * var(--u)) calc(44 * var(--u));
-    clip-path: polygon(calc(30 * var(--u)) 0, 100% 0, 100% 100%, calc(30 * var(--u)) 100%, 0 50%);
-    transform-origin: 100% 50%;
+.fx-placa-mini-destino[data-i='0'] {
+    transform: rotate(-1.2deg);
 }
-/* o prego: um pontinho perto do poste */
-.fx-placa-seta::before {
-    content: '';
-    position: absolute;
-    top: calc(50% - 4 * var(--u));
-    width: calc(8 * var(--u));
-    height: calc(8 * var(--u));
-    border-radius: 50%;
-    background: rgb(0 0 0 / 0.35);
+.fx-placa-mini-destino[data-i='2'] {
+    transform: rotate(0.8deg);
 }
-.fx-placa-seta[data-lado='dir']::before {
-    left: calc(10 * var(--u));
+.fx-placa-mini-seta {
+    width: 1.1em;
+    text-align: center;
 }
-.fx-placa-seta[data-lado='esq']::before {
-    right: calc(10 * var(--u));
+.fx-placa-mini-distancia {
+    margin-left: auto;
+    opacity: 0.85;
+}
+/* no segundo livro, o selo da idade desce para o canto de baixo, para não cobrir a placa */
+.fx-v-livro[data-cena='placas'] .fx-v-livro-idade {
+    bottom: calc(40 * var(--u));
 }
 .fx-placa-pedrinha {
     position: absolute;
-    left: calc(206 * var(--u));
-    bottom: calc(-36 * var(--u));
+    left: calc(50% - 56 * var(--u));
+    bottom: calc(-58 * var(--u));
     width: calc(112 * var(--u));
     height: calc(76 * var(--u));
     transform: rotate(-4deg);
