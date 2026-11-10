@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode, RefObject } from 'react';
 import Seta from './Seta';
 
-// as peças que se repetem nos cartões: a barra de ferramentas, a régua vertical da direita e as janelinhas de controle
+// as peças que se repetem nos cartões: a barra de ferramentas, a régua vertical em unidades da fonte e as janelinhas de controle
 // (nas faixas coloridas) e, na seção do desgaste, as faixas cinza das linhas da fonte, a lente de transferidor, a lupa
 // com cabo e a etiqueta do canto.
 // Medidas em unidades do vídeo (u); dentro do SVG do cartão, 1 unidade = 1 u.
@@ -42,43 +42,55 @@ export function Ferramentas({ lupa = false, estilo }: { lupa?: boolean; estilo?:
     );
 }
 
-// a régua da direita: blocos de 01 a 12 com tracinhos e a barra preta, repetidos na altura do cartão
-export function ReguaV({ altura, estilo }: { altura: number; estilo?: CSSProperties }) {
-    const blocos = Math.max(1, Math.floor((altura - 6) / 203));
+// a régua vertical em unidades da fonte, a de quem desenha a letra: o 0 na linha de base da letra ao lado, um risco a
+// cada 50 unidades e o número a cada 100; a barra preta vai da base até a linha da fonte que importa (a altura do x, a
+// maiúscula), marcada com o valor dela. corpo e base em u: o tamanho da letra e a altura da linha de base no painel
+export function ReguaFonte({ corpo, base, linha, altura = 413, estilo }: { corpo: number; base: number; linha: number; altura?: number; estilo?: CSSProperties }) {
+    const k = corpo / 1000; // u por unidade da fonte
+    const y = (v: number) => base - v * k;
+    const de = Math.ceil((base - (altura - 2)) / k / 50) * 50;
+    const ate = Math.floor((base - 2) / k / 50) * 50;
+    const riscos = Array.from({ length: Math.max(0, (ate - de) / 50 + 1) }, (_, i) => de + i * 50);
+    const yLinha = Math.max(1, y(linha));
     return (
         <svg className="fx-regua-v" viewBox={`0 0 49 ${altura}`} preserveAspectRatio="none" style={estilo} aria-hidden>
-            {Array.from({ length: blocos }, (_, bloco) => (
-                <g key={bloco}>
-                    {Array.from({ length: 12 }, (_, k) => {
-                        const y = 12 + bloco * 203 + k * 16.6;
-                        return (
-                            <g key={k}>
-                                <text x="1" y={y + 3.4} fontSize="9.5" fill="#111" fontFamily="var(--ff-ui)">
-                                    {String(k + 1).padStart(2, '0')}
-                                </text>
-                                <path d={`M20 ${y}H27M23 ${y + 8.3}H27`} stroke="#111" strokeWidth="0.8" />
-                            </g>
-                        );
-                    })}
-                    <rect x="35" y={6 + bloco * 203} width="9" height="196" fill="#111" />
-                </g>
-            ))}
-            <path d={`M29 4V${altura - 4}`} stroke="#111" strokeWidth="0.8" />
+            {riscos.map(v => {
+                const cheio = v % 100 === 0;
+                return (
+                    <g key={v}>
+                        {cheio && Math.abs(y(v) - yLinha) > 9 && (
+                            <text x="1" y={y(v) + 3.4} fontSize="9.5" fill="#111" fontFamily="var(--ff-ui)">
+                                {v}
+                            </text>
+                        )}
+                        <path d={`M${cheio ? 20 : 23} ${y(v)}H27`} stroke="#111" strokeWidth="0.8" />
+                    </g>
+                );
+            })}
+            <text x="1" y={yLinha + (yLinha < 8 ? 8.4 : 3.4)} fontSize="9.5" fontWeight="700" fill="#111" fontFamily="var(--ff-ui)">
+                {linha}
+            </text>
+            <path d={`M18 ${yLinha}H49`} stroke="#111" strokeWidth="1.2" />
+            <rect x="35" y={yLinha} width="9" height={y(0) - yLinha} fill="#111" />
+            <path d={`M29 2V${altura - 2}`} stroke="#111" strokeWidth="0.8" />
         </svg>
     );
 }
 
-// a janelinha com um ou mais controles deslizantes; o pegador de cada um é movido por fora (pela ref), em %
+// a janelinha com um ou mais controles deslizantes; o pegador de cada um é movido por fora (pela ref), em %. Com
+// "valores", cada controle ganha um número à direita do nome, também escrito por fora (o σ de agora, por exemplo)
 export type Controle = { nome: string; cor: string };
 export function Janela({
     itens,
     pegadores,
+    valores,
     escura = false,
     seta,
     estilo,
 }: {
     itens: Controle[];
     pegadores: RefObject<(HTMLSpanElement | null)[]>;
+    valores?: RefObject<(HTMLSpanElement | null)[]>;
     escura?: boolean;
     seta?: number; // em qual pegador fica a seta do mouse
     estilo?: CSSProperties;
@@ -91,7 +103,17 @@ export function Janela({
             </div>
             {itens.map((c, i) => (
                 <div key={c.nome} className="fx-controle-item">
-                    <div className="fx-controle-nome">{c.nome}</div>
+                    <div className="fx-controle-nome">
+                        {c.nome}
+                        {valores && (
+                            <span
+                                ref={el => {
+                                    valores.current[i] = el;
+                                }}
+                                className="fx-controle-valor"
+                            />
+                        )}
+                    </div>
                     <div className="fx-controle-trilho">
                         <span
                             ref={el => {
