@@ -254,14 +254,36 @@ export function CaixinhasCut() {
 }
 
 // ——— Polished: o livro infantil ———
-// a pedra que rolou no rio vira a história: as capas de dois livros da mesma coleção (capa dura vista de cima, com a
-// lombada, o miolo aparecendo na borda e a pedrinha). Com o mesmo realismo do livro 3D: a capa de tecido com a
-// trama, as cores apagadas, o título impresso que deixa a trama aparecer, a pedra com luz e sombra de verdade e as
-// sombras de contato e de ambiente caindo para a direita e para baixo, como a luz do livro (do alto, à esquerda)
+// a pedra que rolou no rio vira a história infantil: as capas de dois livros da mesma coleção, de capa dura
+// plastificada (o brilho do verniz, o grão da impressão, a lombada, o miolo nas bordas e as sombras da mesma luz do
+// livro 3D). A Rune fica com o principal (o título); os detalhes vão em letra de texto, como num livro de verdade: a
+// autoria, a coleção, o selo da idade e a editora na Inter Tight. A ilustração é impressa: as ondas e a pedrinha
+// personagem, com olhos e sorriso
 const LIVROS = [
-    { titulo: ['A pedrinha', 'que rolou'], capa: '#2f3d63', tinta: '#ece3cf', pedra: '#a49c90', giro: -3 },
-    { titulo: ['O rio que', 'não parava'], capa: '#bf7a5f', tinta: '#26345a', pedra: '#8f877b', giro: 2.5 },
+    { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3 },
+    { titulo: ['O rio que', 'não parava'], autoria: 'Caio Rios', capa: '#ee8a5e', tinta: '#1f3a6e', onda: '#ffd9c4', selo: '#7cc49a', giro: 2.5 },
 ];
+// as ondas do rio, impressas na capa: três linhas onduladas, em SVG
+function Ondas() {
+    const onda = (y: number) => `M0 ${y}` + Array.from({ length: 8 }, (_, i) => ` q 25 ${i % 2 ? 14 : -14} 50 0`).join('');
+    return (
+        <svg className="fx-v-livro-ondas" viewBox="0 0 400 150" preserveAspectRatio="none" aria-hidden>
+            {[30, 75, 120].map(y => (
+                <path key={y} d={onda(y)} fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
+            ))}
+        </svg>
+    );
+}
+// a pedrinha personagem: o seixo com os dois olhos (com o brilho) e o sorriso
+function Pedrinha({ classe }: { classe: string }) {
+    return (
+        <span className={`fx-pedrinha ${classe}`} aria-hidden>
+            <i />
+            <i />
+            <b />
+        </span>
+    );
+}
 export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
     const familia = familiaDe(estilo);
     return (
@@ -271,16 +293,24 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
                     <div
                         key={l.titulo.join(' ')}
                         className="fx-v-livro"
-                        style={{ '--capa': l.capa, '--tinta': l.tinta, '--pedra': l.pedra, '--giro': `${l.giro}deg` } as CSSProperties}
+                        style={{ '--capa': l.capa, '--tinta': l.tinta, '--onda': l.onda, '--selo': l.selo, '--giro': `${l.giro}deg` } as CSSProperties}
                     >
-                        <p className="fx-v-livro-colecao">COLEÇÃO CORRENTEZA</p>
+                        <p className="fx-v-livro-colecao">
+                            coleção <b>Correnteza</b>
+                        </p>
                         <p className="fx-v-livro-titulo">
                             {l.titulo[0]}
                             <br />
                             {l.titulo[1]}
                         </p>
-                        <span className="fx-v-livro-seixo" />
-                        <p className="fx-v-livro-pe">uma história de pedra e água ★ 4 a 8 anos</p>
+                        <p className="fx-v-livro-autoria">texto e ilustrações de {l.autoria}</p>
+                        <Pedrinha classe="fx-v-livro-pedrinha" />
+                        <Ondas />
+                        <p className="fx-v-livro-idade">
+                            a partir de
+                            <b>4 anos</b>
+                        </p>
+                        <p className="fx-v-livro-editora">Edições Correnteza</p>
                     </div>
                 ))}
             </div>
@@ -290,7 +320,9 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
 
 // ——— Polished: as quatro caixinhas do livro ———
 // uma página da história, o marcador com o cordão, a ficha de empréstimo da biblioteca (as datas carimbadas e os
-// nomes de quem levou) e o ex-libris colado na capa
+// nomes de quem levou) e o ex-libris colado na capa. A Rune fica com o texto que a caixinha mede (a história, a frase
+// do marcador, os nomes escritos na ficha, o recado do ex-libris) e com os títulos; os impressos miúdos vão na Inter
+// Tight e as datas do carimbo na DM Mono, como os carimbos de data de verdade
 const EMPRESTIMOS: [string, string][] = [
     ['12 MAR', 'Ana'],
     ['02 ABR', 'Pedro'],
@@ -304,12 +336,13 @@ export function CaixinhasPolished() {
         <div className="fx-grade" style={{ fontFamily: familiaDe('polished') }}>
             <Caixinha rotulo="Uma página do livro A pedrinha que rolou">
                 <div className="fx-mini-pagina">
-                    <p className="fx-mini-miudo">A PEDRINHA QUE ROLOU</p>
+                    <p className="fx-apoio fx-apoio-caixa">A pedrinha que rolou</p>
                     <p data-medida className="fx-mini-pagina-texto">
                         Era uma vez uma pedra cheia de quinas. Ela morava no alto do morro e espetava tudo o que chegava perto: o vento, a chuva e até as
                         formigas.
                     </p>
-                    <p className="fx-mini-miudo fx-mini-pagina-numero">12</p>
+                    <Pedrinha classe="fx-mini-pagina-pedrinha" />
+                    <p className="fx-apoio fx-mini-pagina-numero">12</p>
                 </div>
             </Caixinha>
             <Caixinha rotulo="O marcador de página da coleção">
@@ -320,17 +353,20 @@ export function CaixinhasPolished() {
                     <p data-medida className="fx-marcador-texto">
                         a pedra também levou tempo para ficar lisa
                     </p>
-                    <p className="fx-mini-miudo">COLEÇÃO CORRENTEZA</p>
+                    <Pedrinha classe="fx-marcador-pedrinha" />
+                    <p className="fx-apoio">
+                        coleção <b>Correnteza</b>
+                    </p>
                 </div>
             </Caixinha>
             <Caixinha rotulo="A ficha de empréstimo da biblioteca, com as datas carimbadas">
                 <div className="fx-ficha">
                     <FiltroTinta id={id} semente={7} />
-                    <p className="fx-mini-miudo">BIBLIOTECA DA ESCOLA</p>
+                    <p className="fx-apoio fx-apoio-caixa">Biblioteca da escola ★ ficha de empréstimo</p>
                     <p className="fx-ficha-livro">A pedrinha que rolou</p>
                     <div className="fx-ficha-tabela">
-                        <p className="fx-mini-miudo">DEVOLVER ATÉ</p>
-                        <p className="fx-mini-miudo">NOME</p>
+                        <p className="fx-apoio fx-apoio-caixa">Devolver até</p>
+                        <p className="fx-apoio fx-apoio-caixa">Nome</p>
                         {EMPRESTIMOS.map(([data, nome], i) => (
                             <Fragment key={data}>
                                 <p className="fx-ficha-carimbo" style={{ filter: `url(#${id})`, rotate: `${[-4, 3, -2, 5, -3][i]}deg` }}>
@@ -346,9 +382,9 @@ export function CaixinhasPolished() {
             </Caixinha>
             <Caixinha rotulo="O ex-libris colado na capa: este livro pertence a Lia">
                 <div className="fx-exlibris">
-                    <p className="fx-mini-miudo">EX-LIBRIS</p>
-                    <span className="fx-exlibris-ornamento">★</span>
-                    <p className="fx-mini-miudo">ESTE LIVRO PERTENCE A</p>
+                    <p className="fx-apoio fx-apoio-caixa">Ex-libris</p>
+                    <Pedrinha classe="fx-exlibris-pedrinha" />
+                    <p className="fx-apoio fx-apoio-caixa">Este livro pertence a</p>
                     <p className="fx-exlibris-nome">Lia</p>
                     <p data-medida className="fx-exlibris-texto">
                         se encontrar, devolva: ele sempre rola de volta para casa

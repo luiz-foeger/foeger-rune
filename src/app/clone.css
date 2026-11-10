@@ -4110,3 +4110,231 @@ html[data-paleta='azul'] [data-clone] {
     background-size: calc(60 * var(--u)) calc(60 * var(--u));
     opacity: 0.45;
 }
+
+/* 18. a Polished infantil de novo, com as fontes de apoio: a capa plastificada colorida (o verniz, o grão da impressão)
+   no lugar do tecido, as ondas e a pedrinha personagem impressas, e os detalhes na Inter Tight e na DM Mono */
+.fx-apoio {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: calc(11 * var(--u));
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+}
+.fx-apoio b {
+    font-weight: 700;
+}
+.fx-apoio-caixa {
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* a capa plastificada: a cor viva da impressão, o brilho do verniz numa faixa diagonal, a lombada e o grão por cima */
+.fx-v-livro {
+    background:
+        linear-gradient(112deg, transparent 28%, rgb(255 255 255 / 0.2) 36%, rgb(255 255 255 / 0.06) 44%, transparent 52%),
+        linear-gradient(120deg, rgb(255 255 255 / 0.08), transparent 40%, rgb(0 0 0 / 0.1)),
+        linear-gradient(90deg, rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.08) calc(18 * var(--u)), rgb(255 255 255 / 0.14) calc(24 * var(--u)), transparent calc(34 * var(--u))),
+        var(--capa);
+}
+.fx-v-livro::after {
+    background: var(--grao-papel);
+    background-size: calc(90 * var(--u)) calc(90 * var(--u));
+    opacity: 0.55;
+}
+.fx-v-livro-colecao {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: calc(17 * var(--u));
+    font-weight: 500;
+    letter-spacing: 0.04em;
+}
+.fx-v-livro-colecao b {
+    font-weight: 800;
+}
+.fx-v-livro-titulo {
+    margin-top: calc(22 * var(--u)) !important;
+    /* a sombra de impressão do título dos livros infantis: um contorno escuro deslocado */
+    text-shadow: calc(4 * var(--u)) calc(5 * var(--u)) 0 rgb(0 0 0 / 0.18);
+}
+.fx-v-livro-autoria {
+    margin-top: calc(18 * var(--u)) !important;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: calc(17 * var(--u));
+    font-weight: 500;
+    opacity: 0.9;
+}
+.fx-v-livro-ondas {
+    display: block;
+    bottom: calc(80 * var(--u));
+    color: var(--onda);
+    opacity: 0.9;
+}
+/* o selo redondo da idade, no canto */
+.fx-v-livro-idade {
+    position: absolute !important;
+    right: calc(34 * var(--u));
+    bottom: calc(150 * var(--u));
+    width: calc(104 * var(--u));
+    height: calc(104 * var(--u));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--selo);
+    color: #1f2a44;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: calc(12 * var(--u));
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+    transform: rotate(10deg);
+    box-shadow: calc(2 * var(--u)) calc(3 * var(--u)) 0 rgb(0 0 0 / 0.15);
+}
+.fx-v-livro-idade b {
+    font-size: calc(22 * var(--u));
+    font-weight: 800;
+}
+.fx-v-livro-editora {
+    margin-top: auto !important;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: calc(14 * var(--u));
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+.fx-v-livro-seixo {
+    display: none;
+}
+
+/* a pedrinha personagem: o seixo cinza da ilustração, com a luz no alto, os dois olhos com o brilho e o sorriso */
+.fx-pedrinha {
+    position: relative;
+    display: block;
+    border-radius: 48% 52% 44% 56% / 58% 50% 50% 42%;
+    background:
+        radial-gradient(ellipse 40% 32% at 32% 26%, rgb(255 255 255 / 0.5), transparent 70%),
+        radial-gradient(ellipse 80% 70% at 68% 80%, rgb(0 0 0 / 0.22), transparent 70%),
+        #b9b2a6;
+}
+.fx-pedrinha i {
+    position: absolute;
+    top: 38%;
+    width: 11%;
+    height: 17%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0 22%, #1d1d1d 24%);
+}
+.fx-pedrinha i:first-child {
+    left: 36%;
+}
+.fx-pedrinha i + i {
+    left: 54%;
+}
+.fx-pedrinha b {
+    position: absolute;
+    left: 40%;
+    top: 58%;
+    width: 22%;
+    height: 14%;
+    border: solid #1d1d1d;
+    border-width: 0 0 max(1px, calc(3 * var(--u))) 0;
+    border-radius: 0 0 50% 50%;
+}
+.fx-v-livro-pedrinha {
+    position: absolute;
+    left: calc(190 * var(--u));
+    bottom: calc(176 * var(--u));
+    width: calc(200 * var(--u));
+    height: calc(136 * var(--u));
+    transform: rotate(-6deg);
+    box-shadow: calc(4 * var(--u)) calc(8 * var(--u)) 0 rgb(0 0 0 / 0.16);
+}
+
+/* as caixinhas mais coloridas, com a pedrinha aparecendo nelas */
+.fx-mini-pagina {
+    background:
+        linear-gradient(315deg, rgb(0 0 0 / 0.1), transparent 14%),
+        linear-gradient(90deg, rgb(0 0 0 / 0.14), transparent calc(30 * var(--u))),
+        #fbf5e8;
+    color: #22407a;
+}
+.fx-mini-pagina-pedrinha {
+    width: calc(64 * var(--u));
+    height: calc(44 * var(--u));
+    margin: auto auto 0;
+}
+.fx-mini-pagina-numero {
+    margin-top: calc(6 * var(--u)) !important;
+}
+.fx-marcador {
+    background:
+        linear-gradient(112deg, transparent 30%, rgb(255 255 255 / 0.2) 38%, transparent 50%),
+        #ee8a5e;
+    color: #fff8ea;
+}
+.fx-marcador-cordao {
+    background: repeating-linear-gradient(160deg, #e9b93e 0 calc(3 * var(--u)), #f6d77a calc(3 * var(--u)) calc(6 * var(--u)));
+}
+.fx-marcador-pedrinha {
+    width: calc(70 * var(--u));
+    height: calc(48 * var(--u));
+    margin-top: auto;
+}
+.fx-marcador > :last-child {
+    margin-top: calc(10 * var(--u));
+}
+.fx-ficha {
+    color: #22407a;
+}
+.fx-ficha-carimbo {
+    font-family: var(--ff-mono), monospace;
+    font-size: calc(15 * var(--u));
+    letter-spacing: 0.04em;
+    color: #6e2a85;
+    opacity: 1;
+    -webkit-text-stroke: calc(0.4 * var(--u)) currentColor;
+}
+.fx-exlibris {
+    background: #fff7e8;
+    color: #22407a;
+    box-shadow:
+        inset 0 0 0 calc(8 * var(--u)) #fff7e8,
+        inset 0 0 0 calc(11 * var(--u)) #3f74c4,
+        inset 0 0 0 calc(14 * var(--u)) #fff7e8,
+        inset 0 0 0 calc(15.5 * var(--u)) #ee8a5e,
+        var(--sombra-real);
+}
+.fx-exlibris-pedrinha {
+    width: calc(76 * var(--u));
+    height: calc(52 * var(--u));
+}
+.fx-exlibris-ornamento {
+    display: none;
+}
+
+/* a Polished infantil no celular: a capa é maior (720 u), então os detalhes e a pedrinha crescem junto */
+@media (max-width: 899px) {
+    .fx-v-livro-colecao,
+    .fx-v-livro-autoria {
+        font-size: calc(26 * var(--u));
+    }
+    .fx-v-livro-editora {
+        font-size: calc(22 * var(--u));
+    }
+    .fx-v-livro-idade {
+        right: calc(44 * var(--u));
+        bottom: calc(200 * var(--u));
+        width: calc(140 * var(--u));
+        height: calc(140 * var(--u));
+        font-size: calc(17 * var(--u));
+    }
+    .fx-v-livro-idade b {
+        font-size: calc(30 * var(--u));
+    }
+    .fx-v-livro-pedrinha {
+        left: calc(250 * var(--u));
+        bottom: calc(230 * var(--u));
+        width: calc(250 * var(--u));
+        height: calc(170 * var(--u));
+    }
+}
