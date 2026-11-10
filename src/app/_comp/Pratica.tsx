@@ -56,8 +56,8 @@ export function LinhaCheia({ texto, largura }: { texto: string; largura: number 
 // quatro cartazes em pé (2:3) do mesmo fim de semana, lado a lado e encostados, como o lambe-lambe é colado na rua: cada
 // um num papel, um pouco torto, com a textura e os vincos da cola. O do festival empilha as linhas na largura inteira; o do
 // ônibus tem a tabela de ida e volta e o preço enorme; o procura-se tem as abinhas de destacar o telefone no pé (duas
-// já arrancadas) e a tira de "já achamos!" colada torta por cima, de quando a vaga foi preenchida; o da feira de discos, a lista com as
-// estrelas, a tira de "troca, venda e pechincha" colada do mesmo jeito e o canto rasgado. A tinta passa por um filtro que deixa a borda áspera e umas falhas onde ela não pegou,
+// já arrancadas); o da feira de discos, a lista com as
+// estrelas, a tira de "troca, venda e pechincha" colada torta por cima e o canto rasgado. A tinta passa por um filtro que deixa a borda áspera e umas falhas onde ela não pegou,
 // como na impressão de cartaz de rua. No pé, a linha da gráfica em letra de texto, como nos lambe-lambes de verdade. Os
 // papéis são claro, vermelho, azul e preto (no preto, a tinta é creme). No celular fica só o do festival
 // os blocos de um cartaz: as linhas na largura inteira (com a faixa invertida e o recuo, a margem dos dois lados em u,
@@ -94,7 +94,6 @@ export const CARTAZES: Bloco[][] = [
         { linhas: ['PROCURA-SE'] },
         { linhas: ['BAIXISTA'], faixa: true },
         { linhas: ['toca alto?', 'chega cedo?'] },
-        { tarja: ['JÁ ACHAMOS!'] },
         { linhas: ['ensaio às terças, 19h ★ Os Lascados'] },
         { abas: '99 1234-5678' },
     ],
