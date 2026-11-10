@@ -4931,3 +4931,43 @@ html[data-paleta='azul'] [data-clone] {
     margin-right: 0.45em;
     vertical-align: -0.3em;
 }
+
+/* o selo do lado B arrumado como os de verdade: o furo no centro exato do disco (com a marca clara do pino em volta),
+   a banda e o título em cima, "Lado B" e "33 rpm" um de cada lado do furo, e as faixas e a matriz embaixo */
+.fx-selo-b-papel {
+    display: block;
+}
+.fx-selo-b-cima,
+.fx-selo-b-baixo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(4 * var(--u));
+}
+.fx-selo-b-cima {
+    bottom: calc(50% + 20 * var(--u));
+}
+.fx-selo-b-baixo {
+    top: calc(50% + 20 * var(--u));
+    gap: calc(6 * var(--u));
+}
+.fx-selo-b-meio {
+    position: absolute;
+    left: calc(38 * var(--u));
+    right: calc(38 * var(--u));
+    top: 50%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+}
+.fx-selo-b-furo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 calc(5 * var(--u)) rgb(0 0 0 / 0.07);
+}

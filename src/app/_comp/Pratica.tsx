@@ -696,7 +696,7 @@ export const somaTempo = (faixas: [string, string][]) => {
 // a contracapa com as faixas, o selo do lado B, a etiqueta de preço do sebo no canto da capa e a ficha técnica
 const FICHA: [string, string][] = [
     ['voz e violão', 'Ana Seixas'],
-    ['baixo', 'Beto Lajes'],
+    ['baixo', 'Beto Calhau'],
     ['bateria', 'Caio Rocha'],
     ['gravação', 'Estúdio Correnteza'],
     ['capa', 'Os Rolados'],
@@ -730,19 +730,28 @@ export function CaixinhasWorn() {
             </Caixinha>
             <Caixinha rotulo="O selo do lado B do disco">
                 <div className="fx-selo-b">
+                    {/* como num selo de verdade: o furo no centro exato, a banda e o título em cima, o lado e a rotação
+                        um de cada lado do furo e as faixas embaixo */}
                     <div className="fx-selo-b-papel">
-                        <p className="fx-apoio fx-apoio-caixa">Os Rolados</p>
-                        <p className="fx-selo-b-titulo">foz</p>
+                        <div className="fx-selo-b-cima">
+                            <p className="fx-apoio fx-apoio-caixa">Os Rolados</p>
+                            <p className="fx-selo-b-titulo">foz</p>
+                        </div>
+                        <div className="fx-selo-b-meio">
+                            <p className="fx-apoio fx-apoio-caixa">Lado B</p>
+                            <p className="fx-apoio fx-apoio-caixa">33 rpm</p>
+                        </div>
                         <i className="fx-selo-b-furo" />
-                        <ol>
-                            {ladoB.map(([nome, tempo], k) => (
-                                <li key={nome}>
-                                    {nome} <span>{tempo}</span>
-                                </li>
-                            ))}
-                        </ol>
-                        <p className="fx-apoio fx-apoio-caixa">Lado B ★ 33 rpm</p>
-                        <p className="fx-mono fx-disco-selo-miudo">LP-026-B</p>
+                        <div className="fx-selo-b-baixo">
+                            <ol>
+                                {ladoB.map(([nome, tempo]) => (
+                                    <li key={nome}>
+                                        {nome} <span>{tempo}</span>
+                                    </li>
+                                ))}
+                            </ol>
+                            <p className="fx-mono fx-disco-selo-miudo">LP-026-B</p>
+                        </div>
                     </div>
                 </div>
             </Caixinha>
