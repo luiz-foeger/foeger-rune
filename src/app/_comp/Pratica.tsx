@@ -16,9 +16,8 @@ import type { Estilo } from '../_lib/conteudo';
 // disco gasto (a capa e o disco e, nas caixinhas, a contracapa, o selo do lado B, a etiqueta do sebo e a ficha técnica).
 
 // uma linha que ocupa a largura inteira da caixa: mede a frase a 100 px e escala o corpo até a largura bater. Só refaz
-// a conta quando a largura da caixa muda (a altura muda junto com o corpo e não pode disparar outra conta). Com o teto
-// (maximo, em vezes o corpo da caixa), a linha só encolhe: um texto curto fica no corpo da caixa e não estoura
-export function LinhaCheia({ texto, largura, maximo }: { texto: string; largura: number; maximo?: number }) {
+// a conta quando a largura da caixa muda (a altura muda junto com o corpo e não pode disparar outra conta)
+export function LinhaCheia({ texto, largura }: { texto: string; largura: number }) {
     const ref = useRef<HTMLSpanElement>(null);
     useLayoutEffect(() => {
         const el = ref.current;
@@ -33,9 +32,7 @@ export function LinhaCheia({ texto, largura, maximo }: { texto: string; largura:
             ultima = W;
             el.style.fontSize = '100px';
             const w = el.getBoundingClientRect().width;
-            if (!w) return;
-            const teto = maximo ? maximo * parseFloat(cs.fontSize) : Infinity;
-            el.style.fontSize = `${Math.min(teto, (100 * W) / w).toFixed(2)}px`;
+            if (w) el.style.fontSize = `${((100 * W) / w).toFixed(2)}px`;
         };
         ajustar();
         document.fonts.ready.then(() => vivo && ajustar(true));
@@ -45,7 +42,7 @@ export function LinhaCheia({ texto, largura, maximo }: { texto: string; largura:
             vivo = false;
             obs.disconnect();
         };
-    }, [texto, maximo]);
+    }, [texto]);
     // o corpo de antes da conta, estimado pelo número de letras, para a página não pular quando a conta chega
     const estimado = largura / (texto.length * 0.62);
     return (
@@ -67,8 +64,7 @@ export function LinhaCheia({ texto, largura, maximo }: { texto: string; largura:
 // para a linha não ocupar a largura toda), a tabela (o rótulo num corpo fixo e o texto na largura que sobra, com os fios)
 // (rotulo: a largura da coluna do rótulo, em u), a tarja, uma tira de outro papel colada torta atravessando o cartaz
 // de borda a borda, e as abinhas de destacar no pé, com o contato escrito em pé (duas já foram arrancadas)
-// (teto: o corpo máximo das linhas, em u, para um texto de fora muito curto não estourar o cartaz)
-type Linhas = { linhas: string[]; faixa?: boolean; recuo?: number; teto?: number };
+type Linhas = { linhas: string[]; faixa?: boolean; recuo?: number };
 type Grade = { grade: [string, string][]; rotulo?: number };
 type Tarja = { tarja: string[] };
 type Abas = { abas: string };
@@ -141,7 +137,7 @@ export function FiltroTinta({ id, semente }: { id: string; semente: number }) {
     );
 }
 
-export function Lambe({ filtro, cartaz }: { filtro: string; cartaz: Bloco[] }) {
+function Lambe({ filtro, cartaz }: { filtro: string; cartaz: Bloco[] }) {
     // a linha da gráfica vai no pé, ou logo acima das abinhas, quando o cartaz tem
     const credito = <p className="fx-lambe-credito">Gráfica Pedreira ★ impressão em tipo de madeira</p>;
     const temAbas = cartaz.some(b => 'abas' in b);
@@ -181,37 +177,15 @@ export function Lambe({ filtro, cartaz }: { filtro: string; cartaz: Bloco[] }) {
                         key={k}
                         className="fx-lambe-bloco"
                         data-faixa={b.faixa || undefined}
-                        style={{
-                            ...(b.recuo ? { paddingInline: `calc(${b.recuo} * var(--u))` } : {}),
-                            ...(b.teto ? { fontSize: `calc(${b.teto} * var(--u))` } : {}),
-                        }}
+                        style={b.recuo ? { paddingInline: `calc(${b.recuo} * var(--u))` } : undefined}
                     >
-                        {b.linhas.map((l, i) => (
-                            <LinhaCheia key={`${i}-${l}`} texto={l} largura={472} maximo={b.teto ? 1 : undefined} />
+                        {b.linhas.map(l => (
+                            <LinhaCheia key={l} texto={l} largura={472} />
                         ))}
                     </div>
                 ),
             )}
             {!temAbas && credito}
-        </div>
-    );
-}
-
-// uma folha de cartaz colada: o papel e a tinta de uma das cópias da parede, a textura, os vincos e o filtro da tinta
-export function FolhaCartaz({ cartaz, copia, filtro }: { cartaz: Bloco[]; copia: number; filtro: string }) {
-    const c = COPIAS[copia];
-    return (
-        <div
-            className="fx-cartaz-folha"
-            data-copia={copia}
-            data-rasgo={c.rasgo || undefined}
-            data-abas={cartaz.some(b => 'abas' in b) || undefined}
-            style={{ '--papel': c.papel, '--tinta-cartaz': c.tinta, '--giro': `${c.giro}deg`, '--desce': `calc(${c.desce} * var(--u))` } as CSSProperties}
-        >
-            <FiltroTinta id={filtro} semente={copia} />
-            <div className="fx-cartaz-papel">
-                <Lambe filtro={filtro} cartaz={cartaz} />
-            </div>
         </div>
     );
 }
@@ -222,8 +196,20 @@ export function CartazCut({ cartazes = CARTAZES }: { cartazes?: Bloco[][] }) {
     return (
         <Painel colunas={4} linhas={2} rotulo={`Quatro cartazes colados na parede: ${texto}`} celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-muro" style={{ fontFamily: familiaDe('cut') }}>
-                {COPIAS.map((_, i) => (
-                    <FolhaCartaz key={i} cartaz={cartazes[i]} copia={i} filtro={`${filtro}-${i}`} />
+                {COPIAS.map((c, i) => (
+                    <div
+                        key={i}
+                        className="fx-cartaz-folha"
+                        data-copia={i}
+                        data-rasgo={c.rasgo || undefined}
+                        data-abas={cartazes[i].some(b => 'abas' in b) || undefined}
+                        style={{ '--papel': c.papel, '--tinta-cartaz': c.tinta, '--giro': `${c.giro}deg`, '--desce': `calc(${c.desce} * var(--u))` } as CSSProperties}
+                    >
+                        <FiltroTinta id={`${filtro}-${i}`} semente={i} />
+                        <div className="fx-cartaz-papel">
+                            <Lambe filtro={`${filtro}-${i}`} cartaz={cartazes[i]} />
+                        </div>
+                    </div>
                 ))}
             </div>
         </Painel>
@@ -617,11 +603,12 @@ function GuiaViagem() {
         </div>
     );
 }
-// a capa do livro infantil; com um título de fora (o "escreva aqui"), cada linha dele cabe na largura da capa, no
-// máximo no corpo do título
-export function CapaInfantil({ titulo }: { titulo?: string[] }) {
+export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
+    const familia = familiaDe(estilo);
     const l = INFANTIL;
     return (
+        <Painel colunas={4} linhas={2} rotulo="Capas de dois livros: o infantil A pedrinha que rolou e o guia de viagem Serra do Seixo" celular={{ colunas: 2, linhas: 3 }} nu>
+            <div className="fx-v-mesa fx-v-estante" style={{ fontFamily: familia }} aria-hidden>
                 <div
                     className="fx-v-livro"
                     style={{ '--capa': l.capa, '--tinta': l.tinta, '--onda': l.onda, '--selo': l.selo, '--giro': `${l.giro}deg` } as CSSProperties}
@@ -631,19 +618,9 @@ export function CapaInfantil({ titulo }: { titulo?: string[] }) {
                         coleção <b>Correnteza</b>
                     </p>
                     <p className="fx-v-livro-titulo">
-                        {titulo ? (
-                            titulo.map((linha, i) => (
-                                <span key={i} className="fx-encaixe">
-                                    <LinhaCheia texto={linha} largura={480} maximo={1} />
-                                </span>
-                            ))
-                        ) : (
-                            <>
-                                {l.titulo[0]}
-                                <br />
-                                {l.titulo[1]}
-                            </>
-                        )}
+                        {l.titulo[0]}
+                        <br />
+                        {l.titulo[1]}
                     </p>
                     <p className="fx-v-livro-autoria">texto e ilustrações de {l.autoria}</p>
                     <CenaInfantil />
@@ -662,14 +639,6 @@ export function CapaInfantil({ titulo }: { titulo?: string[] }) {
                         Edições Correnteza
                     </p>
                 </div>
-    );
-}
-export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
-    const familia = familiaDe(estilo);
-    return (
-        <Painel colunas={4} linhas={2} rotulo="Capas de dois livros: o infantil A pedrinha que rolou e o guia de viagem Serra do Seixo" celular={{ colunas: 2, linhas: 3 }} nu>
-            <div className="fx-v-mesa fx-v-estante" style={{ fontFamily: familia }} aria-hidden>
-                <CapaInfantil />
                 <GuiaViagem />
             </div>
         </Painel>
@@ -758,48 +727,25 @@ export function CaixinhasPolished() {
 // o LP "foz", dos Rolados: a capa desbotada com a marca redonda que o disco deixou de tanto entrar e sair da estante e
 // os cantos moles, e o disco saindo de dentro (os sulcos, o brilho e o selo do lado A). A Rune fica com o título; os
 // créditos, o selo "estéreo" e o número de matriz gravado no fim do sulco vão em letra de texto, como num LP de verdade
-// o disco saindo da capa; com um título de fora (o "escreva aqui"), as linhas dele cabem na capa (no máximo no corpo
-// do "foz") e o selo do disco leva o texto inteiro, no tamanho que couber
-export function CenaDisco({ titulo }: { titulo?: string[] }) {
-    return (
-        <>
-            <div className="fx-disco">
-                <p className="fx-mono fx-disco-matriz">LP-026-A ★ 1</p>
-                <div className="fx-disco-selo">
-                    <p className="fx-apoio fx-apoio-caixa">Os Rolados</p>
-                    {titulo ? (
-                        <p className="fx-disco-selo-titulo" data-livre>
-                            <LinhaCheia texto={titulo.join(' ')} largura={170} maximo={1} />
-                        </p>
-                    ) : (
-                        <p className="fx-disco-selo-titulo">foz</p>
-                    )}
-                    <p className="fx-apoio fx-apoio-caixa">Lado A ★ 33 rpm</p>
-                </div>
-            </div>
-            <div className="fx-capa">
-                <span className="fx-capa-sol" />
-                <p className="fx-capa-estereo">ESTÉREO</p>
-                <p className="fx-apoio fx-apoio-caixa fx-capa-artista">Os Rolados</p>
-                <p className="fx-capa-titulo">
-                    {titulo
-                        ? titulo.map((linha, i) => (
-                              <span key={i} className="fx-encaixe">
-                                  <LinhaCheia texto={linha} largura={650} maximo={0.75} />
-                              </span>
-                          ))
-                        : 'foz'}
-                </p>
-                <p className="fx-apoio fx-apoio-caixa fx-capa-rodape">Discos Correnteza ★ LP-026</p>
-            </div>
-        </>
-    );
-}
 export function DiscoWorn() {
     return (
         <Painel colunas={4} linhas={2} rotulo="A capa do disco foz, dos Rolados, gasta pelo tempo, com o disco saindo de dentro" celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-v-mesa" style={{ fontFamily: familiaDe('worn') }} aria-hidden>
-                <CenaDisco />
+                <div className="fx-disco">
+                    <p className="fx-mono fx-disco-matriz">LP-026-A ★ 1</p>
+                    <div className="fx-disco-selo">
+                        <p className="fx-apoio fx-apoio-caixa">Os Rolados</p>
+                        <p className="fx-disco-selo-titulo">foz</p>
+                        <p className="fx-apoio fx-apoio-caixa">Lado A ★ 33 rpm</p>
+                    </div>
+                </div>
+                <div className="fx-capa">
+                    <span className="fx-capa-sol" />
+                    <p className="fx-capa-estereo">ESTÉREO</p>
+                    <p className="fx-apoio fx-apoio-caixa fx-capa-artista">Os Rolados</p>
+                    <p className="fx-capa-titulo">foz</p>
+                    <p className="fx-apoio fx-apoio-caixa fx-capa-rodape">Discos Correnteza ★ LP-026</p>
+                </div>
             </div>
         </Painel>
     );

@@ -42,6 +42,8 @@ export const VARIACOES = [
     { estilo: 'worn' as Estilo, titulo: 'Worn, com as variações', linhas: ['Nossa, essssa', 'correnteeeeza', 'tá me deixando', 'tooooda lisa.'] },
 ];
 export const TITULO_RECURSOS = 'Recursos';
+// o título do editor, solto, com a nota embaixo
+export const TITULO_ESCREVA = { texto: 'Escreva aqui', nota: 'Brinque com a Föeger Rune: escreva, troque o estilo, o tamanho, as cores e os efeitos, e gaste as letras' };
 // o título da seção dos caracteres, solto (na fonte de texto, como o dos estilos), com a nota embaixo
 export const TITULO_CARACTERES = { texto: 'Caracteres', nota: 'Números, acentos, pontuação e símbolos: 177 em cada estilo' };
 // o título do livro, digitado como o dos estilos, com a nota no pé do painel

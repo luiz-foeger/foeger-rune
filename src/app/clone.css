@@ -5279,123 +5279,230 @@ html[data-paleta='azul'] [data-clone] {
     }
 }
 
-/* 22. o "escreva aqui": a faixa na cor do estilo escolhido, o campo do texto escrito na própria fonte, as escolhas da
-   peça e do estilo (os botões redondos, o escolhido cheio) e a peça com o texto. As linhas que cabem na capa ficam uma
-   embaixo da outra */
-.fx-escreva {
-    align-self: stretch;
-    transition: background-color 0.4s;
-}
-.fx-escreva-controles {
-    position: absolute;
-    inset: 0;
-}
-.fx-escreva-campo {
-    position: absolute;
-    left: calc(59 * var(--u));
-    right: calc(59 * var(--u));
-    top: calc(132 * var(--u));
-    height: calc(150 * var(--u));
-    padding: 0;
-    border: 0;
-    border-bottom: max(1px, calc(3 * var(--u))) solid var(--tinta);
-    border-radius: 0;
-    background: none;
-    color: var(--tinta);
-    font-size: calc(112 * var(--u));
-    line-height: 1;
-    outline: none;
-    font-feature-settings: 'calt' 1;
-}
-.fx-escreva-campo::placeholder {
-    color: rgb(0 0 0 / 0.35);
-}
-.fx-escreva-campo:focus-visible {
-    border-bottom-style: dashed;
-}
-.fx-escreva-opcoes {
-    position: absolute;
-    left: calc(59 * var(--u));
-    right: calc(59 * var(--u));
-    bottom: calc(44 * var(--u));
+/* 23. o editor do "escreva aqui": a barra (os grupos de botões redondos, as réguas e as cores, sobre a trama dos
+   painéis) e a arte embaixo (o fundo na cor escolhida, com o grão do papel se quiser, e os dois blocos escritos direto
+   na tela; o escolhido ganha um contorno claro e escuro, que aparece em qualquer fundo, e a etiqueta com o nome) */
+.fx-editor {
+    position: relative;
+    width: calc(4 * var(--M) + 3 * var(--G));
     display: flex;
-    justify-content: space-between;
-    gap: calc(30 * var(--u));
+    flex-direction: column;
+    gap: calc(34 * var(--u));
 }
-.fx-escreva-grupo {
+.fx-editor-sonda {
+    position: absolute;
+    width: calc(1000 * var(--u));
+    height: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+.fx-editor-barra {
     display: flex;
+    flex-direction: column;
+    gap: calc(22 * var(--u));
+    padding: calc(30 * var(--u)) calc(40 * var(--u));
+    border: var(--linha-fina) solid var(--borda);
+    border-radius: calc(2 * var(--u));
+    background-color: var(--fundo);
+    background-image: var(--trama);
+    background-size: calc(29.5 * var(--u)) calc(29.5 * var(--u));
+}
+.fx-editor-linha {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: calc(14 * var(--u));
+    gap: calc(20 * var(--u)) calc(46 * var(--u));
 }
-.fx-escreva-grupo-nome {
+.fx-editor-grupo,
+.fx-editor-regua {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: calc(8 * var(--u));
+}
+.fx-editor-grupo-nome {
     margin-right: calc(6 * var(--u));
     font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-sec);
+    font-size: var(--t-rot);
     font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     opacity: 0.6;
 }
-.fx-escreva-botao {
-    padding: calc(12 * var(--u)) calc(22 * var(--u));
+.fx-editor-botao {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(6 * var(--u));
+    padding: calc(9 * var(--u)) calc(16 * var(--u));
     border: var(--linha-fina) solid var(--tinta);
     border-radius: 999px;
-    background: none;
+    background: var(--fundo);
     color: var(--tinta);
     font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-sub);
+    font-size: var(--t-sec);
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
     transition:
-        background-color 0.2s,
-        color 0.2s;
+        background-color 0.15s,
+        color 0.15s;
 }
-.fx-escreva-botao:hover {
-    background: rgb(0 0 0 / 0.08);
+.fx-editor-botao:hover {
+    background: #ececec;
 }
-.fx-escreva-botao[data-ativo='true'] {
+.fx-editor-botao[data-ativo] {
     background: var(--tinta);
-    color: var(--cor-faixa);
+    color: var(--fundo);
 }
-.fx-escreva-muro .fx-cartaz-folha {
-    width: calc(520 * var(--u));
+.fx-editor-sorteio {
+    border-color: var(--p-worn);
+    background: var(--p-worn);
 }
-.fx-encaixe {
-    display: block;
+.fx-editor-sorteio:hover {
+    background: #57a07f;
 }
-.fx-v-livro-titulo .fx-encaixe + .fx-encaixe {
-    margin-top: 0.14em;
+.fx-editor-acoes {
+    display: flex;
+    gap: calc(10 * var(--u));
+    margin-left: auto;
 }
-.fx-capa-titulo .fx-encaixe + .fx-encaixe {
-    margin-top: 0.08em;
+.fx-editor-regua input[type='range'] {
+    width: calc(210 * var(--u));
+    min-width: 90px;
+    accent-color: var(--tinta);
+    cursor: pointer;
 }
-/* o espaçamento do título da capa vem em em e chega no filho já em px (o do corpo de 400 u): a linha declara o dela, para
-   ele crescer junto com o corpo e a conta da largura bater */
-.fx-capa-titulo .fx-linha-cheia {
-    letter-spacing: -0.02em;
+.fx-editor-valor {
+    min-width: 3.2em;
+    font-family: var(--ff-mono), monospace;
+    font-size: var(--t-rot);
 }
-.fx-disco-selo-titulo[data-livre] {
-    width: calc(170 * var(--u));
+.fx-editor-cor {
+    position: relative;
+    width: calc(30 * var(--u));
+    height: calc(30 * var(--u));
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0;
+    border: var(--linha-fina) solid rgb(0 0 0 / 0.35);
+    border-radius: 50%;
+    cursor: pointer;
+}
+.fx-editor-cor[data-ativo] {
+    outline: max(1.5px, calc(2 * var(--u))) solid var(--tinta);
+    outline-offset: max(2px, calc(3 * var(--u)));
+}
+/* a outra cor: o arco-íris até a pessoa escolher uma; o seletor de cor do navegador fica por cima, invisível */
+.fx-editor-cor-livre {
+    overflow: hidden;
+    background: conic-gradient(#e86f9a, #e3b55a, #62b08d, #8aa4da, #2d4ca3, #e86f9a);
+}
+.fx-editor-cor-livre input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+.fx-editor-arte {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: calc(44 * var(--u));
+    padding: calc(70 * var(--u)) calc(96 * var(--u));
+    overflow: hidden;
+    transition: background-color 0.3s;
+}
+.fx-editor-arte[data-papel]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--grao-papel);
+    background-size: calc(90 * var(--u)) calc(90 * var(--u));
+    mix-blend-mode: multiply;
+    opacity: 0.85;
+    pointer-events: none;
+}
+.fx-editor-bloco {
+    position: relative;
+}
+.fx-editor-texto {
+    min-height: 1em;
+    outline: none;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    cursor: text;
+}
+.fx-editor-bloco[data-ativo='true']::before {
+    content: '';
+    position: absolute;
+    inset: calc(-14 * var(--u)) calc(-22 * var(--u));
+    border-radius: calc(6 * var(--u));
+    box-shadow:
+        0 0 0 max(1px, calc(1.5 * var(--u))) rgb(255 255 255 / 0.7),
+        0 0 0 max(2px, calc(3 * var(--u))) rgb(0 0 0 / 0.3);
+    pointer-events: none;
+}
+.fx-editor-etiqueta {
+    position: absolute;
+    left: calc(-22 * var(--u));
+    top: calc(-14 * var(--u));
+    padding: calc(5 * var(--u)) calc(9 * var(--u));
+    border-radius: calc(4 * var(--u));
+    background: #111;
+    color: #fff;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-rot);
+    font-weight: 600;
+    line-height: 1;
+    opacity: 0;
+    transform: translateY(-100%);
+    transition: opacity 0.15s;
+    pointer-events: none;
+    z-index: 1;
+}
+.fx-editor-bloco[data-ativo='true'] .fx-editor-etiqueta {
+    opacity: 1;
 }
 @media (max-width: 899px) {
-    /* no celular, o campo maior no meio do painel e as escolhas embaixo, uma fileira para cada */
-    .fx-escreva-campo {
-        top: calc(230 * var(--u));
-        height: calc(230 * var(--u));
-        font-size: calc(160 * var(--u));
+    .fx-editor {
+        width: calc(2 * var(--M) + var(--G));
     }
-    .fx-escreva-opcoes {
-        flex-direction: column;
+    .fx-editor-barra {
+        padding: calc(36 * var(--u)) calc(34 * var(--u));
+        gap: calc(34 * var(--u));
+    }
+    .fx-editor-linha {
         gap: calc(30 * var(--u));
-        bottom: calc(90 * var(--u));
     }
-    .fx-escreva-grupo-nome {
-        width: calc(150 * var(--u));
+    .fx-editor-botao {
+        padding: calc(16 * var(--u)) calc(24 * var(--u));
     }
-    .fx-escreva-botao {
-        padding: calc(16 * var(--u)) calc(26 * var(--u));
-        font-size: max(13px, calc(30 * var(--u)));
+    .fx-editor-cor {
+        width: calc(56 * var(--u));
+        height: calc(56 * var(--u));
     }
-    .fx-escreva-muro .fx-cartaz-folha {
-        width: calc(800 * var(--u));
+    .fx-editor-regua input[type='range'] {
+        width: calc(420 * var(--u));
+    }
+    .fx-editor-acoes {
+        margin-left: 0;
+    }
+    .fx-editor-arte {
+        padding: calc(60 * var(--u)) calc(56 * var(--u));
+    }
+    /* a arte em cima e presa no alto da tela (logo abaixo do cabeçalho), para ver o resultado enquanto mexe na barra */
+    .fx-editor > .fx-painel {
+        order: -1;
+        position: sticky;
+        top: 64px;
+        z-index: 2;
+    }
+    /* a régua de baixo da arte presa cairia em cima da barra */
+    .fx-editor > .fx-painel .fx-regua[data-lado='base'] {
+        display: none !important;
     }
 }
