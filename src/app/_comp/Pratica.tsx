@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import Painel from './Painel';
 import { familiaDe } from './Faixa';
 
 // as faixas no padrão novo: depois da frase que corre, cada estilo aparece onde ele seria usado de verdade, numa peça
 // grande e numa peça de texto pequeno (com os tamanhos medidos na tela de quem lê). No Cut, o cartaz lambe-lambe de
-// um festival (cada linha na largura inteira, em corpos diferentes, como o tipo de madeira da gráfica de cartaz de
-// rua) e o ingresso do mesmo festival, com as regras em letra miúda.
+// um festival colado na parede (cada linha na largura inteira, em corpos diferentes, como o tipo de madeira da gráfica
+// de cartaz de rua) e o ingresso do mesmo festival, com as regras em letra miúda.
 
 // uma linha que ocupa a largura inteira da caixa: mede a frase a 100 px e escala o corpo até a largura bater. Só refaz
 // a conta quando a largura da caixa muda (a altura muda junto com o corpo e não pode disparar outra conta)
@@ -46,31 +46,47 @@ function LinhaCheia({ texto, largura }: { texto: string; largura: number }) {
     );
 }
 
-// ——— Cut: o cartaz do festival ———
+// ——— Cut: o cartaz do festival, colado na parede ———
+// o cartaz em pé (2:3), em três cópias lado a lado, como o lambe-lambe é colado na rua: cada cópia num papel, um pouco
+// torta, com a textura e os vincos da cola, e a última com o canto rasgado. A tinta passa por um filtro que deixa a
+// borda áspera e umas falhas onde ela não pegou, como na impressão de cartaz de rua. No celular fica uma cópia só
 type Bloco = { linhas: string[]; faixa?: boolean };
-const CARTAZ_LARGO: Bloco[] = [
-    { linhas: ['21 MAR ★ 20H ★ GALPÃO DA PEDREIRA'] },
-    { linhas: ['QUEBRA PEDRA'] },
-    { linhas: ['OS LASCADOS ★ CINZEL ★ BRITA 3'], faixa: true },
-    { linhas: ['festival de rock bruto'] },
-    { linhas: ['pista a R$ 20 ★ traga seu capacete'] },
-];
-// no celular o cartaz fica em pé, então as mesmas frases quebram em mais linhas
-const CARTAZ_CELULAR: Bloco[] = [
+const CARTAZ: Bloco[] = [
     { linhas: ['21 MAR ★ 20H', 'GALPÃO DA PEDREIRA'] },
     { linhas: ['QUEBRA', 'PEDRA'] },
     { linhas: ['OS LASCADOS', 'CINZEL ★ BRITA 3'], faixa: true },
     { linhas: ['festival de', 'rock bruto'] },
     { linhas: ['pista a R$ 20', 'traga seu capacete'] },
 ];
+const COPIAS: { papel: string; giro: number; desce: number; rasgo?: boolean }[] = [
+    { papel: 'var(--p-papel)', giro: -1.6, desce: 14 },
+    { papel: 'var(--p-quente)', giro: 0.9, desce: -6 },
+    { papel: 'var(--p-papel)', giro: -0.5, desce: 8, rasgo: true },
+];
 
-function Lambe({ blocos, tela, largura }: { blocos: Bloco[]; tela: 'largo' | 'celular'; largura: number }) {
+// a tinta do cartaz: a borda tremida (o ruído empurra a borda uns 2 px) e as falhas, onde um segundo ruído passa do
+// limite e a tinta some. Cada cópia tem a sua semente: duas cópias impressas nunca saem iguais
+function FiltroTinta({ id, semente }: { id: string; semente: number }) {
     return (
-        <div className="fx-lambe" data-tela={tela} aria-hidden>
-            {blocos.map(b => (
+        <svg className="fx-defs" width="0" height="0" aria-hidden>
+            <filter id={id} x="-2%" y="-2%" width="104%" height="104%" colorInterpolationFilters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed={3 + semente} result="ruido" />
+                <feDisplacementMap in="SourceGraphic" in2="ruido" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="borda" />
+                <feTurbulence type="fractalNoise" baseFrequency="0.16" numOctaves="2" seed={11 + 7 * semente} result="manchas" />
+                <feColorMatrix in="manchas" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -30 0 0 0 22.3" result="falhas" />
+                <feComposite in="borda" in2="falhas" operator="in" />
+            </filter>
+        </svg>
+    );
+}
+
+function Lambe({ filtro }: { filtro: string }) {
+    return (
+        <div className="fx-lambe" style={{ filter: `url(#${filtro})` }} aria-hidden>
+            {CARTAZ.map(b => (
                 <div key={b.linhas.join(' ')} className="fx-lambe-bloco" data-faixa={b.faixa || undefined}>
                     {b.linhas.map(l => (
-                        <LinhaCheia key={l} texto={l} largura={largura} />
+                        <LinhaCheia key={l} texto={l} largura={472} />
                     ))}
                 </div>
             ))}
@@ -79,12 +95,25 @@ function Lambe({ blocos, tela, largura }: { blocos: Bloco[]; tela: 'largo' | 'ce
 }
 
 export function CartazCut() {
-    const texto = CARTAZ_LARGO.flatMap(b => b.linhas).join('. ');
+    const filtro = `${useId().replace(/:/g, '')}-tinta`;
+    const texto = CARTAZ.flatMap(b => b.linhas).join('. ');
     return (
-        <Painel colunas={4} linhas={2} rotulo={`Cartaz: ${texto}`} celular={{ colunas: 2, linhas: 3 }}>
-            <div className="fx-lambe-papel" style={{ fontFamily: familiaDe('cut') }}>
-                <Lambe blocos={CARTAZ_LARGO} tela="largo" largura={1733} />
-                <Lambe blocos={CARTAZ_CELULAR} tela="celular" largura={813} />
+        <Painel colunas={4} linhas={2} rotulo={`Cartaz colado na parede: ${texto}`} celular={{ colunas: 2, linhas: 3 }}>
+            <div className="fx-muro" style={{ fontFamily: familiaDe('cut') }}>
+                {COPIAS.map((c, i) => (
+                    <div
+                        key={i}
+                        className="fx-cartaz-folha"
+                        data-copia={i}
+                        data-rasgo={c.rasgo || undefined}
+                        style={{ '--papel': c.papel, '--giro': `${c.giro}deg`, '--desce': `calc(${c.desce} * var(--u))` } as CSSProperties}
+                    >
+                        <FiltroTinta id={`${filtro}-${i}`} semente={i} />
+                        <div className="fx-cartaz-papel">
+                            <Lambe filtro={`${filtro}-${i}`} />
+                        </div>
+                    </div>
+                ))}
             </div>
         </Painel>
     );
