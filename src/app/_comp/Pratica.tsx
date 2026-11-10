@@ -249,11 +249,11 @@ export function CaixinhasCut() {
 // a pedra que rolou no rio vira a história infantil: as capas de dois livros da mesma coleção, de capa dura
 // plastificada (o brilho do verniz, o grão da impressão, a lombada, o miolo nas bordas e as sombras da mesma luz do
 // livro 3D). A Rune fica com o principal (o título); os detalhes vão em letra de texto, como num livro de verdade: a
-// autoria, a coleção, o selo da idade e a editora na Inter Tight. A ilustração é impressa: as ondas e a pedrinha
-// personagem, com olhos e sorriso
+// autoria, a coleção, o selo da idade e a editora na Inter Tight. A ilustração é impressa: as ondas e, no primeiro, a
+// pedrinha personagem, com olhos e sorriso; no segundo, a placa de direção da beira do rio
 const LIVROS = [
-    { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3 },
-    { titulo: ['O rio que', 'não parava'], autoria: 'Caio Rios', capa: '#ee8a5e', tinta: '#1f3a6e', onda: '#ffd9c4', selo: '#7cc49a', giro: 2.5 },
+    { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3, cena: 'pedrinha' },
+    { titulo: ['O rio que', 'não parava'], autoria: 'Caio Rios', capa: '#ee8a5e', tinta: '#1f3a6e', onda: '#ffd9c4', selo: '#7cc49a', giro: 2.5, cena: 'placas' },
 ];
 // as ondas do rio, impressas na capa: três linhas onduladas, em SVG
 function Ondas() {
@@ -267,6 +267,31 @@ function Ondas() {
     );
 }
 // a pedrinha personagem: o seixo com os dois olhos (com o brilho) e o sorriso
+// a placa de direção da beira do rio, desenhada para a capa do segundo livro: o poste de madeira e as três setas
+// (o mar e a cachoeira para um lado, a nascente para o outro), com a pedrinha espiando no pé do poste
+const SETAS: { nome: string; lado: 'dir' | 'esq'; cor: string; giro: number }[] = [
+    { nome: 'mar', lado: 'dir', cor: '#f3c24a', giro: -5 },
+    { nome: 'nascente', lado: 'esq', cor: '#7cc49a', giro: 4 },
+    { nome: 'cachoeira', lado: 'dir', cor: '#fff6e4', giro: -2 },
+];
+function Placas() {
+    return (
+        <span className="fx-v-livro-placas" aria-hidden>
+            <i className="fx-placa-poste" />
+            {SETAS.map((s, i) => (
+                <span
+                    key={s.nome}
+                    className="fx-placa-seta"
+                    data-lado={s.lado}
+                    style={{ '--cor-placa': s.cor, '--giro': `${s.giro}deg`, top: `calc(${22 + i * 74} * var(--u))` } as CSSProperties}
+                >
+                    {s.nome}
+                </span>
+            ))}
+            <Pedrinha classe="fx-placa-pedrinha" />
+        </span>
+    );
+}
 function Pedrinha({ classe }: { classe: string }) {
     return (
         <span className={`fx-pedrinha ${classe}`} aria-hidden>
@@ -296,7 +321,7 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
                             {l.titulo[1]}
                         </p>
                         <p className="fx-v-livro-autoria">texto e ilustrações de {l.autoria}</p>
-                        <Pedrinha classe="fx-v-livro-pedrinha" />
+                        {l.cena === 'placas' ? <Placas /> : <Pedrinha classe="fx-v-livro-pedrinha" />}
                         <Ondas />
                         <p className="fx-v-livro-idade">
                             a partir de
