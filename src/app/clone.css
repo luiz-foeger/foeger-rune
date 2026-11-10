@@ -4365,39 +4365,6 @@ html[data-paleta='azul'] [data-clone] {
     text-transform: uppercase;
     opacity: 0.75;
 }
-/* o pedaço do cartaz velho, rasgado, por baixo das cópias: papel desbotado, as letras cortadas e as bordas picotadas */
-.fx-lambe-velho {
-    position: absolute;
-    left: calc(560 * var(--u));
-    top: calc(520 * var(--u));
-    width: calc(420 * var(--u));
-    height: calc(230 * var(--u));
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 calc(30 * var(--u));
-    overflow: hidden;
-    background:
-        var(--grao-papel),
-        linear-gradient(180deg, rgb(255 255 255 / 0.25), rgb(255 255 255 / 0.1)),
-        var(--p-polished);
-    color: rgb(17 17 17 / 0.75);
-    line-height: 0.9;
-    white-space: nowrap;
-    clip-path: polygon(0 12%, 6% 4%, 14% 9%, 22% 0, 33% 7%, 41% 2%, 52% 10%, 63% 3%, 71% 8%, 82% 1%, 90% 9%, 100% 4%, 97% 22%, 100% 37%, 95% 51%, 99% 66%, 94% 80%, 98% 95%, 86% 91%, 77% 100%, 66% 93%, 55% 99%, 44% 92%, 33% 100%, 22% 94%, 12% 99%, 3% 92%, 6% 76%, 0 61%, 4% 46%, 0 31%);
-    transform: rotate(-3deg);
-}
-.fx-lambe-velho span:first-child {
-    font-size: calc(96 * var(--u));
-}
-.fx-lambe-velho span + span {
-    font-size: calc(56 * var(--u));
-}
-@media (max-width: 899px) {
-    .fx-lambe-velho {
-        display: none;
-    }
-}
 
 /* o ingresso: o cartão preto com o grão da impressão por cima */
 .fx-mini-ingresso::before {
@@ -4714,4 +4681,27 @@ html[data-paleta='azul'] [data-clone] {
         radial-gradient(circle at 100% 100%, rgb(255 255 255 / 0.26), transparent calc(54 * var(--u))),
         linear-gradient(180deg, rgb(255 255 255 / 0.12), transparent calc(8 * var(--u)), transparent calc(100% - 8 * var(--u)), rgb(255 255 255 / 0.1));
     pointer-events: none;
+}
+
+/* o cartaz preto: a tinta da cópia vem da variável dela (no preto, creme), e a faixa das bandas se inverte junto */
+.fx-cartaz-papel {
+    color: var(--tinta-cartaz, var(--tinta));
+}
+.fx-cartaz-papel .fx-lambe-bloco[data-faixa] {
+    background: var(--tinta-cartaz, var(--tinta));
+    color: var(--papel);
+}
+
+/* a seleção de texto nas faixas só na Föeger Rune: os blocos na Rune (o estilo da fonte vem no atributo) selecionam, e
+   o resto (as réguas, os miúdos na Inter Tight e na DM Mono) não */
+.fx-faixas {
+    user-select: none;
+}
+.fx-faixas [style*="--ff-cut"],
+.fx-faixas [style*="--ff-polished"],
+.fx-faixas [style*="--ff-worn"] {
+    user-select: text;
+}
+.fx-faixas :is(.fx-apoio, .fx-mono, .fx-lambe-credito, .fx-capa-estereo, .fx-v-livro-colecao, .fx-v-livro-autoria, .fx-v-livro-idade, .fx-v-livro-editora, .fx-cracha-cordao, .fx-etiqueta-estilo, .fx-regua, .fx-lado) {
+    user-select: none;
 }

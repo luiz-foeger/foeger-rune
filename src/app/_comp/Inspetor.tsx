@@ -4,15 +4,14 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 // o inspetor das faixas: passando o mouse num texto de qualquer peça, uma etiqueta junto do ponteiro diz a fonte e o
-// tamanho dele (o corpo de verdade na tela), e o texto ganha um contorno. No toque, aparece ao tocar e some sozinho.
+// tamanho dele (o corpo de verdade na tela), e o texto ganha um contorno. Só para a Föeger Rune: os textos de apoio (a
+// Inter Tight e a DM Mono dos miúdos) não mostram nada. No toque, aparece ao tocar e some sozinho.
 // Fica no lugar das legendas de tamanho que iam embaixo das peças. A fonte sai do nome que o navegador resolveu,
 // comparado com as variáveis das fontes do layout (o next/font dá nomes gerados a elas)
 const NOMES: [string, string][] = [
     ['--ff-cut', 'Föeger Rune Cut'],
     ['--ff-polished', 'Föeger Rune Polished'],
     ['--ff-worn', 'Föeger Rune Worn'],
-    ['--ff-ui', 'Inter Tight'],
-    ['--ff-mono', 'DM Mono'],
 ];
 type Alvo = { nome: string; px: number; x: number; y: number; caixa: DOMRect };
 
@@ -25,7 +24,7 @@ export default function Inspetor({ escopo }: { escopo: string }) {
         if (!raiz) return;
         const cs = getComputedStyle(document.body);
         const familias = NOMES.map(([v, nome]) => [primeira(cs.getPropertyValue(v)), nome] as const);
-        const nomeDe = (ff: string) => familias.find(([f]) => f === primeira(ff))?.[1] ?? primeira(ff);
+        const nomeDe = (ff: string) => familias.find(([f]) => f === primeira(ff))?.[1] ?? null;
         // só conta o elemento que tem texto dele mesmo (não o painel inteiro que tem textos dentro)
         const temTexto = (el: Element) => Array.from(el.childNodes).some(n => n.nodeType === Node.TEXT_NODE && n.textContent?.trim());
         let some = 0;
@@ -39,7 +38,12 @@ export default function Inspetor({ escopo }: { escopo: string }) {
                     return;
                 }
                 const s = getComputedStyle(el);
-                setAlvo({ nome: nomeDe(s.fontFamily), px: Math.round(parseFloat(s.fontSize)), x: e.clientX, y: e.clientY, caixa: el.getBoundingClientRect() });
+                const nome = nomeDe(s.fontFamily);
+                if (!nome) {
+                    if (e.pointerType !== 'touch') setAlvo(null);
+                    return;
+                }
+                setAlvo({ nome, px: Math.round(parseFloat(s.fontSize)), x: e.clientX, y: e.clientY, caixa: el.getBoundingClientRect() });
                 if (e.pointerType === 'touch') {
                     window.clearTimeout(some);
                     some = window.setTimeout(() => setAlvo(null), 2200);

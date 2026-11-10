@@ -55,8 +55,8 @@ export function LinhaCheia({ texto, largura }: { texto: string; largura: number 
 // o cartaz em pé (2:3), em três cópias lado a lado, como o lambe-lambe é colado na rua: cada cópia num papel, um pouco
 // torta, com a textura e os vincos da cola, e a última com o canto rasgado. A tinta passa por um filtro que deixa a
 // borda áspera e umas falhas onde ela não pegou, como na impressão de cartaz de rua. No pé, a linha da gráfica em letra
-// de texto, como nos lambe-lambes de verdade; atrás, um pedaço rasgado de um cartaz mais velho. No celular fica uma
-// cópia só
+// de texto, como nos lambe-lambes de verdade. As cópias em papel claro, vermelho e preto (no preto, a tinta é creme).
+// No celular fica uma cópia só
 type Bloco = { linhas: string[]; faixa?: boolean };
 const CARTAZ: Bloco[] = [
     { linhas: ['21 MAR ★ 20H', 'GALPÃO DA PEDREIRA'] },
@@ -65,10 +65,10 @@ const CARTAZ: Bloco[] = [
     { linhas: ['festival de', 'rock bruto'] },
     { linhas: ['pista a R$ 20', 'traga seu capacete'] },
 ];
-const COPIAS: { papel: string; giro: number; desce: number; rasgo?: boolean }[] = [
-    { papel: 'var(--p-papel)', giro: -1.6, desce: 14 },
-    { papel: 'var(--p-quente)', giro: 0.9, desce: -6 },
-    { papel: 'var(--p-papel)', giro: -0.5, desce: 8, rasgo: true },
+const COPIAS: { papel: string; tinta: string; giro: number; desce: number; rasgo?: boolean }[] = [
+    { papel: 'var(--p-papel)', tinta: '#111', giro: -1.6, desce: 14 },
+    { papel: 'var(--p-quente)', tinta: '#111', giro: 0.9, desce: -6 },
+    { papel: '#161616', tinta: '#efe7d6', giro: -0.5, desce: 8, rasgo: true },
 ];
 
 // a tinta do cartaz: a borda tremida (o ruído empurra a borda uns 2 px) e as falhas, onde um segundo ruído passa do
@@ -108,18 +108,13 @@ export function CartazCut() {
     return (
         <Painel colunas={4} linhas={2} rotulo={`Cartaz colado na parede: ${texto}`} celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-muro" style={{ fontFamily: familiaDe('cut') }}>
-                {/* o pedaço do cartaz velho, rasgado, que ficou na parede por baixo dos novos */}
-                <div className="fx-lambe-velho" aria-hidden>
-                    <span>RODA DE SAMBA</span>
-                    <span>SÁB ★ 14H</span>
-                </div>
                 {COPIAS.map((c, i) => (
                     <div
                         key={i}
                         className="fx-cartaz-folha"
                         data-copia={i}
                         data-rasgo={c.rasgo || undefined}
-                        style={{ '--papel': c.papel, '--giro': `${c.giro}deg`, '--desce': `calc(${c.desce} * var(--u))` } as CSSProperties}
+                        style={{ '--papel': c.papel, '--tinta-cartaz': c.tinta, '--giro': `${c.giro}deg`, '--desce': `calc(${c.desce} * var(--u))` } as CSSProperties}
                     >
                         <FiltroTinta id={`${filtro}-${i}`} semente={i} />
                         <div className="fx-cartaz-papel">
@@ -165,12 +160,13 @@ export function usePx(caixa: RefObject<HTMLElement | null>, alvos: [RefObject<HT
 }
 
 // ——— as caixinhas de texto pequeno (as quatro, lado a lado, como os painéis de texto de antes) ———
-// cada caixinha é um painel 1 × 1 com um objeto pequeno do mesmo mundo da peça grande. A fonte e o tamanho de cada
+// cada caixinha é um módulo 1 × 1, sem régua nem moldura (como as peças grandes), com um objeto pequeno do mesmo
+// mundo da peça grande. A fonte e o tamanho de cada
 // texto aparecem passando o mouse (o Inspetor, na página). No celular, cada caixinha ocupa a largura toda e o objeto
 // cresce junto (o CSS aumenta o u dentro dela), para o texto continuar legível
 function Caixinha({ rotulo, children }: { rotulo: string; children: ReactNode }) {
     return (
-        <Painel colunas={1} linhas={1} rotulo={rotulo} celular={{ colunas: 2, linhas: 2 }}>
+        <Painel colunas={1} linhas={1} rotulo={rotulo} celular={{ colunas: 2, linhas: 2 }} nu>
             <div className="fx-caixinha">{children}</div>
         </Painel>
     );
@@ -376,12 +372,12 @@ export function CaixinhasPolished() {
                     </div>
                 </div>
             </Caixinha>
-            <Caixinha rotulo="O ex-libris colado na capa: este livro pertence a Lia">
+            <Caixinha rotulo="O ex-libris colado na capa: este livro pertence a Nina">
                 <div className="fx-exlibris">
                     <p className="fx-apoio fx-apoio-caixa">Ex-libris</p>
                     <Pedrinha classe="fx-exlibris-pedrinha" />
                     <p className="fx-apoio fx-apoio-caixa">Este livro pertence a</p>
-                    <p className="fx-exlibris-nome">Lia</p>
+                    <p className="fx-exlibris-nome">Nina</p>
                     <p className="fx-exlibris-texto">
                         se encontrar, devolva: ele sempre rola de volta para casa
                     </p>
