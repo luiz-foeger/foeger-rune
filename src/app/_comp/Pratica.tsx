@@ -255,22 +255,13 @@ export function CaixinhasCut() {
 
 // ——— Polished: o livro infantil ———
 // a pedra que rolou no rio vira a história: as capas de dois livros da mesma coleção (capa dura vista de cima, com a
-// lombada, o miolo aparecendo na borda, a pedrinha e as ondas do rio)
+// lombada, o miolo aparecendo na borda e a pedrinha). Com o mesmo realismo do livro 3D: a capa de tecido com a
+// trama, as cores apagadas, o título impresso que deixa a trama aparecer, a pedra com luz e sombra de verdade e as
+// sombras de contato e de ambiente caindo para a direita e para baixo, como a luz do livro (do alto, à esquerda)
 const LIVROS = [
-    { titulo: ['A pedrinha', 'que rolou'], capa: 'var(--p-frio)', tinta: 'var(--p-papel)', onda: 'var(--p-polished)', giro: -3 },
-    { titulo: ['O rio que', 'não parava'], capa: 'var(--p-quente-claro)', tinta: 'var(--p-frio)', onda: 'var(--p-tinta-quente)', giro: 2.5 },
+    { titulo: ['A pedrinha', 'que rolou'], capa: '#2f3d63', tinta: '#ece3cf', pedra: '#a49c90', giro: -3 },
+    { titulo: ['O rio que', 'não parava'], capa: '#bf7a5f', tinta: '#26345a', pedra: '#8f877b', giro: 2.5 },
 ];
-// as ondas do rio na capa: três linhas onduladas, em SVG, embaixo do título
-function Ondas() {
-    const onda = (y: number) => `M0 ${y}` + Array.from({ length: 8 }, (_, i) => ` q 25 ${i % 2 ? 14 : -14} 50 0`).join('');
-    return (
-        <svg className="fx-v-livro-ondas" viewBox="0 0 400 150" preserveAspectRatio="none" aria-hidden>
-            {[30, 75, 120].map(y => (
-                <path key={y} d={onda(y)} fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
-            ))}
-        </svg>
-    );
-}
 export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
     const familia = familiaDe(estilo);
     return (
@@ -280,7 +271,7 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
                     <div
                         key={l.titulo.join(' ')}
                         className="fx-v-livro"
-                        style={{ '--capa': l.capa, '--tinta': l.tinta, '--onda': l.onda, '--giro': `${l.giro}deg` } as CSSProperties}
+                        style={{ '--capa': l.capa, '--tinta': l.tinta, '--pedra': l.pedra, '--giro': `${l.giro}deg` } as CSSProperties}
                     >
                         <p className="fx-v-livro-colecao">COLEÇÃO CORRENTEZA</p>
                         <p className="fx-v-livro-titulo">
@@ -289,7 +280,6 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
                             {l.titulo[1]}
                         </p>
                         <span className="fx-v-livro-seixo" />
-                        <Ondas />
                         <p className="fx-v-livro-pe">uma história de pedra e água ★ 4 a 8 anos</p>
                     </div>
                 ))}
@@ -330,7 +320,6 @@ export function CaixinhasPolished() {
                     <p data-medida className="fx-marcador-texto">
                         a pedra também levou tempo para ficar lisa
                     </p>
-                    <span className="fx-marcador-seixo" />
                     <p className="fx-mini-miudo">COLEÇÃO CORRENTEZA</p>
                 </div>
             </Caixinha>
@@ -358,7 +347,7 @@ export function CaixinhasPolished() {
             <Caixinha rotulo="O ex-libris colado na capa: este livro pertence a Lia">
                 <div className="fx-exlibris">
                     <p className="fx-mini-miudo">EX-LIBRIS</p>
-                    <span className="fx-exlibris-seixo" />
+                    <span className="fx-exlibris-ornamento">★</span>
                     <p className="fx-mini-miudo">ESTE LIVRO PERTENCE A</p>
                     <p className="fx-exlibris-nome">Lia</p>
                     <p data-medida className="fx-exlibris-texto">
