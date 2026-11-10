@@ -42,6 +42,8 @@ export const VARIACOES = [
     { estilo: 'worn' as Estilo, titulo: 'Worn, com as variações', linhas: ['Nossa, essssa', 'correnteeeeza', 'tá me deixando', 'tooooda lisa.'] },
 ];
 export const TITULO_RECURSOS = 'Recursos';
+// o título da seção dos caracteres, solto (na fonte de texto, como o dos estilos), com a nota embaixo
+export const TITULO_CARACTERES = { texto: 'Caracteres', nota: 'Números, acentos, pontuação e símbolos: 177 em cada estilo' };
 // o título do livro, digitado como o dos estilos, com a nota no pé do painel
 export const TITULO_LIVRO = { texto: 'O Livro', asteriscoDepois: 7, nota: '* O espécime da Föeger Rune, para folhear aqui ou baixar em PDF' };
 
@@ -54,6 +56,7 @@ export const CABECALHO = {
         { texto: 'Alfabeto', alvo: 'alfabeto' },
         { texto: 'Estilos', alvo: 'estilos' },
         { texto: 'Testar', alvo: 'testador' },
+        { texto: 'Caracteres', alvo: 'caracteres' },
         { texto: 'Recursos', alvo: 'recursos' },
         { texto: 'O Livro', alvo: 'livro' },
     ],

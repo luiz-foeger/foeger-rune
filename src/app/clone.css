@@ -5072,3 +5072,209 @@ html[data-paleta='azul'] [data-clone] {
         margin-left: 0;
     }
 }
+
+/* 21. os caracteres: os números de ponta a ponta, o mostruário (o caractere grande com as linhas da fonte, o nome e o
+   código à esquerda; os grupos e a grade à direita) e os quatro símbolos se gastando. Sem o calt, como no alfabeto */
+.fx-car-numeros,
+.fx-car-grade,
+.fx-car-letra {
+    font-feature-settings: 'calt' 0;
+}
+.fx-car-numeros {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: calc(60 * var(--u));
+    padding: 0 calc(120 * var(--u));
+}
+.fx-car {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+.fx-car-vista {
+    position: relative;
+    border-right: var(--linha-fina) solid rgb(0 0 0 / 0.14);
+}
+/* a caixa da letra vai da altura das maiúsculas até a linha de base (o text-box corta o resto); as linhas saem dela */
+.fx-car-letra {
+    position: absolute;
+    left: 50%;
+    top: calc(140 * var(--u));
+    font-size: calc(400 * var(--u));
+    line-height: 1;
+    white-space: nowrap;
+    text-box: trim-both cap alphabetic;
+    transform: translateX(-50%);
+}
+.fx-car-grande {
+    position: relative;
+    z-index: 1;
+}
+.fx-car-guia {
+    position: absolute;
+    left: calc(50% - 380 * var(--u));
+    width: calc(760 * var(--u));
+    height: 0;
+    border-top: var(--linha-fina) solid rgb(0 0 0 / 0.16);
+}
+.fx-car-guia[data-guia='maiusculas'] {
+    top: 0;
+}
+.fx-car-guia[data-guia='minusculas'] {
+    top: calc((1 - var(--x)) * 100%);
+}
+.fx-car-guia[data-guia='base'] {
+    top: 100%;
+    border-top-color: rgb(0 0 0 / 0.32);
+}
+.fx-car-guia[data-guia='descendente'] {
+    top: calc((1 + var(--desc)) * 100%);
+}
+.fx-car-guia span {
+    position: absolute;
+    left: 0;
+    bottom: calc(6 * var(--u));
+    font-family: var(--ff-mono), monospace;
+    font-size: max(9px, calc(13 * var(--u)));
+    font-style: normal;
+    line-height: 1;
+    color: rgb(0 0 0 / 0.45);
+}
+.fx-car-nome,
+.fx-car-codigo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: 0;
+    text-align: center;
+    line-height: 1;
+}
+.fx-car-nome {
+    top: calc(590 * var(--u));
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sub);
+    font-weight: 600;
+}
+.fx-car-nome::first-letter {
+    text-transform: uppercase;
+}
+.fx-car-codigo {
+    top: calc(634 * var(--u));
+    font-family: var(--ff-mono), monospace;
+    font-size: max(10px, calc(15 * var(--u)));
+    opacity: 0.6;
+}
+.fx-car-estilos {
+    bottom: calc(60 * var(--u));
+}
+.fx-car-estilos .fx-estilo-aa {
+    font-size: calc(70 * var(--u));
+}
+.fx-car-lista {
+    position: relative;
+    padding: calc(46 * var(--u)) calc(40 * var(--u));
+}
+.fx-car-grupos {
+    display: flex;
+    gap: calc(30 * var(--u));
+}
+.fx-car-grupo {
+    padding: 0 0 calc(8 * var(--u));
+    border: 0;
+    border-bottom: max(1px, calc(2 * var(--u))) solid transparent;
+    background: none;
+    color: var(--tinta);
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sec);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+}
+.fx-car-grupo span {
+    font-family: var(--ff-mono), monospace;
+    font-size: 0.7em;
+    font-weight: 400;
+    opacity: 0.55;
+}
+.fx-car-grupo[data-ativo='true'] {
+    color: var(--p-worn);
+    border-bottom-color: currentColor;
+}
+.fx-car-grade {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: calc(4 * var(--u));
+    margin-top: calc(34 * var(--u));
+}
+.fx-car-celula {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: calc(6 * var(--u));
+    background: rgb(0 0 0 / 0.035);
+    color: var(--tinta);
+    font-family: inherit;
+    font-size: calc(44 * var(--u));
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.fx-car-celula:hover {
+    background: rgb(0 0 0 / 0.08);
+}
+.fx-car-celula[data-ativo='true'] {
+    background: rgb(98 176 141 / 0.16);
+    color: var(--p-worn);
+}
+@media (max-width: 899px) {
+    /* no celular, os números em duas linhas de cinco, centradas no painel (o utilitário do celular deixa em bloco) */
+    .fx-car-numeros.fx-so-celular {
+        display: flex !important;
+        gap: calc(36 * var(--u));
+        padding: 0 calc(140 * var(--u));
+    }
+    .fx-car {
+        grid-template-columns: 1fr;
+        grid-template-rows: calc(840 * var(--u)) 1fr;
+    }
+    .fx-car-vista {
+        border-right: 0;
+        border-bottom: var(--linha-fina) solid rgb(0 0 0 / 0.14);
+    }
+    .fx-car-letra {
+        top: calc(140 * var(--u));
+        font-size: calc(380 * var(--u));
+    }
+    .fx-car-guia {
+        left: calc(50% - 400 * var(--u));
+        width: calc(800 * var(--u));
+    }
+    .fx-car-nome {
+        top: calc(586 * var(--u));
+    }
+    .fx-car-codigo {
+        top: calc(632 * var(--u));
+    }
+    .fx-car-estilos {
+        bottom: calc(46 * var(--u));
+    }
+    .fx-car-lista {
+        padding: calc(30 * var(--u)) calc(40 * var(--u));
+    }
+    .fx-car-grupos {
+        justify-content: space-between;
+        gap: 0;
+    }
+    .fx-car-grade {
+        grid-template-columns: repeat(9, 1fr);
+    }
+    .fx-car-celula {
+        font-size: calc(48 * var(--u));
+    }
+}
