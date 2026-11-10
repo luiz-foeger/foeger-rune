@@ -57,7 +57,7 @@ export function LinhaCheia({ texto, largura }: { texto: string; largura: number 
 // um num papel, um pouco torto, com a textura e os vincos da cola. O do festival empilha as linhas na largura inteira; o do
 // ônibus tem a tabela de ida e volta e o preço enorme; o procura-se tem as abinhas de destacar o telefone no pé (duas
 // já arrancadas) e a tira de "já achamos!" colada torta por cima, de quando a vaga foi preenchida; o da feira de discos, a lista com as
-// estrelas e o canto rasgado. A tinta passa por um filtro que deixa a borda áspera e umas falhas onde ela não pegou,
+// estrelas, a tira de "troca, venda e pechincha" colada do mesmo jeito e o canto rasgado. A tinta passa por um filtro que deixa a borda áspera e umas falhas onde ela não pegou,
 // como na impressão de cartaz de rua. No pé, a linha da gráfica em letra de texto, como nos lambe-lambes de verdade. Os
 // papéis são claro, vermelho, azul e preto (no preto, a tinta é creme). No celular fica só o do festival
 // os blocos de um cartaz: as linhas na largura inteira (com a faixa invertida e o recuo, a margem dos dois lados em u,
@@ -66,7 +66,7 @@ export function LinhaCheia({ texto, largura }: { texto: string; largura: number 
 // de borda a borda, e as abinhas de destacar no pé, com o contato escrito em pé (duas já foram arrancadas)
 type Linhas = { linhas: string[]; faixa?: boolean; recuo?: number };
 type Grade = { grade: [string, string][]; rotulo?: number };
-type Tarja = { tarja: string };
+type Tarja = { tarja: string[] };
 type Abas = { abas: string };
 export type Bloco = Linhas | Grade | Tarja | Abas;
 export const CARTAZES: Bloco[][] = [
@@ -94,7 +94,7 @@ export const CARTAZES: Bloco[][] = [
         { linhas: ['PROCURA-SE'] },
         { linhas: ['BAIXISTA'], faixa: true },
         { linhas: ['toca alto?', 'chega cedo?'] },
-        { tarja: 'JÁ ACHAMOS!' },
+        { tarja: ['JÁ ACHAMOS!'] },
         { linhas: ['ensaio às terças, 19h ★ Os Lascados'] },
         { abas: '99 1234-5678' },
     ],
@@ -110,7 +110,7 @@ export const CARTAZES: Bloco[][] = [
             ],
             rotulo: 44,
         },
-        { linhas: ['troca, venda', 'e pechincha'], faixa: true },
+        { tarja: ['troca, venda', 'e pechincha'] },
     ],
 ];
 const COPIAS: { papel: string; tinta: string; giro: number; desce: number; rasgo?: boolean }[] = [
@@ -120,7 +120,7 @@ const COPIAS: { papel: string; tinta: string; giro: number; desce: number; rasgo
     { papel: '#161616', tinta: '#efe7d6', giro: 1.2, desce: -4, rasgo: true },
 ];
 const textoDo = (cartaz: Bloco[]) =>
-    cartaz.flatMap(b => ('linhas' in b ? b.linhas : 'grade' in b ? b.grade.map(l => l.join(' ')) : ['tarja' in b ? b.tarja : b.abas])).join('. ');
+    cartaz.flatMap(b => ('linhas' in b ? b.linhas : 'grade' in b ? b.grade.map(l => l.join(' ')) : 'tarja' in b ? b.tarja : [b.abas])).join('. ');
 
 // a tinta do cartaz: a borda tremida (o ruído empurra a borda uns 2 px) e as falhas, onde um segundo ruído passa do
 // limite e a tinta some. Cada cópia tem a sua semente: duas cópias impressas nunca saem iguais
@@ -156,7 +156,9 @@ function Lambe({ filtro, cartaz }: { filtro: string; cartaz: Bloco[] }) {
                     </Fragment>
                 ) : 'tarja' in b ? (
                     <div key={k} className="fx-lambe-tarja">
-                        <LinhaCheia texto={b.tarja} largura={300} />
+                        {b.tarja.map(l => (
+                            <LinhaCheia key={l} texto={l} largura={300} />
+                        ))}
                     </div>
                 ) : 'grade' in b ? (
                     // a tabela da programação: o horário num corpo fixo e a banda na largura que sobra, com o fio

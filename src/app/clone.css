@@ -5013,6 +5013,9 @@ html[data-paleta='azul'] [data-clone] {
    o papel do cartaz corta), com a sombra de papel colado. Ela ocupa o lugar dela entre os blocos; só a inclinação
    passa um pouco para os vãos */
 .fx-lambe-tarja {
+    display: flex;
+    flex-direction: column;
+    gap: calc(8 * var(--u));
     margin: 0 -14%;
     padding: 2.6% 22%;
     background: var(--p-quente);
