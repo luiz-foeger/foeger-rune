@@ -250,10 +250,11 @@ export function CaixinhasCut() {
 // plastificada (o brilho do verniz, o grão da impressão, a lombada, o miolo nas bordas e as sombras da mesma luz do
 // livro 3D). A Rune fica com o principal (o título); os detalhes vão em letra de texto, como num livro de verdade: a
 // autoria, a coleção, o selo da idade e a editora na Inter Tight. A ilustração é impressa: as ondas e, no primeiro, a
-// pedrinha personagem, com olhos e sorriso; no segundo, a placa do parque com as direções
+// pedrinha personagem, com olhos e sorriso; no segundo, o passeio dela no parque: a placa com as direções, e o título,
+// a autoria e a idade acompanham o desenho
 const LIVROS = [
-    { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3, cena: 'pedrinha' },
-    { titulo: ['O rio que', 'não parava'], autoria: 'Caio Rios', capa: '#ee8a5e', tinta: '#1f3a6e', onda: '#ffd9c4', selo: '#7cc49a', giro: 2.5, cena: 'placas' },
+    { titulo: ['A pedrinha', 'que rolou'], autoria: 'Lia Seixas', idade: 4, capa: '#3f74c4', tinta: '#fff6e4', onda: '#9cc2ee', selo: '#f3c24a', giro: -3, cena: 'pedrinha' },
+    { titulo: ['Pra onde,', 'pedrinha?'], autoria: 'Bia Caminha', idade: 5, capa: '#ee8a5e', tinta: '#1f3a6e', onda: '#ffd9c4', selo: '#7cc49a', giro: 2.5, cena: 'placas' },
 ];
 // as ondas do rio, impressas na capa: três linhas onduladas, em SVG
 function Ondas() {
@@ -307,7 +308,7 @@ function Pedrinha({ classe }: { classe: string }) {
 export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
     const familia = familiaDe(estilo);
     return (
-        <Painel colunas={4} linhas={2} rotulo="Capas de dois livros infantis: A pedrinha que rolou e O rio que não parava" celular={{ colunas: 2, linhas: 3 }} nu>
+        <Painel colunas={4} linhas={2} rotulo="Capas de dois livros infantis: A pedrinha que rolou e Pra onde, pedrinha?" celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-v-mesa fx-v-estante" style={{ fontFamily: familia }} aria-hidden>
                 {LIVROS.map(l => (
                     <div
@@ -329,7 +330,7 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
                         <Ondas />
                         <p className="fx-v-livro-idade">
                             a partir de
-                            <b>4 anos</b>
+                            <b>{l.idade} anos</b>
                         </p>
                         <p className="fx-v-livro-editora">Edições Correnteza</p>
                     </div>
