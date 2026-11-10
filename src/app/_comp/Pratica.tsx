@@ -394,23 +394,26 @@ export function CaixinhasPolished() {
 
 // ——— Worn: o disco gasto ———
 // o LP "foz", dos Rolados: a capa desbotada com a marca redonda que o disco deixou de tanto entrar e sair da estante e
-// os cantos moles, e o disco saindo de dentro (os sulcos, o brilho e o selo do lado A)
+// os cantos moles, e o disco saindo de dentro (os sulcos, o brilho e o selo do lado A). A Rune fica com o título; os
+// créditos, o selo "estéreo" e o número de matriz gravado no fim do sulco vão em letra de texto, como num LP de verdade
 export function DiscoWorn() {
     return (
         <Painel colunas={4} linhas={2} rotulo="A capa do disco foz, dos Rolados, gasta pelo tempo, com o disco saindo de dentro" celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-v-mesa" style={{ fontFamily: familiaDe('worn') }} aria-hidden>
                 <div className="fx-disco">
+                    <p className="fx-mono fx-disco-matriz">LP-026-A ★ 1</p>
                     <div className="fx-disco-selo">
-                        <p>OS ROLADOS</p>
+                        <p className="fx-apoio fx-apoio-caixa">Os Rolados</p>
                         <p className="fx-disco-selo-titulo">foz</p>
-                        <p>LADO A ★ 33 RPM</p>
+                        <p className="fx-apoio fx-apoio-caixa">Lado A ★ 33 rpm</p>
                     </div>
                 </div>
                 <div className="fx-capa">
                     <span className="fx-capa-sol" />
-                    <p className="fx-capa-artista">OS ROLADOS</p>
+                    <p className="fx-capa-estereo">ESTÉREO</p>
+                    <p className="fx-apoio fx-apoio-caixa fx-capa-artista">Os Rolados</p>
                     <p className="fx-capa-titulo">foz</p>
-                    <p className="fx-capa-rodape">DISCOS CORRENTEZA ★ LP-026</p>
+                    <p className="fx-apoio fx-apoio-caixa fx-capa-rodape">Discos Correnteza ★ LP-026</p>
                 </div>
             </div>
         </Painel>
@@ -461,7 +464,7 @@ export function CaixinhasWorn() {
         <div className="fx-grade" style={{ fontFamily: familiaDe('worn') }}>
             <Caixinha rotulo="A contracapa do disco foz, com as faixas">
                 <div className="fx-contracapa">
-                    <p className="fx-mini-miudo">OS ROLADOS ★ FOZ</p>
+                    <p className="fx-apoio fx-apoio-caixa">Os Rolados ★ foz</p>
                     <div className="fx-contracapa-lados">
                         {[ladoA, ladoB].map((faixas, i) => (
                             <ol key={i}>
@@ -474,7 +477,10 @@ export function CaixinhasWorn() {
                         ))}
                     </div>
                     <div className="fx-contracapa-pe">
-                        <p className="fx-mini-miudo">DISCOS CORRENTEZA ★ LP-026</p>
+                        <div>
+                            <p className="fx-apoio fx-apoio-caixa">Discos Correnteza ★ LP-026</p>
+                            <p className="fx-mono fx-contracapa-miudo">Fabricado no Brasil ★ Indústria Brasileira</p>
+                        </div>
                         <Barras numero="000026" classe="fx-contracapa-barras" />
                     </div>
                 </div>
@@ -482,7 +488,7 @@ export function CaixinhasWorn() {
             <Caixinha rotulo="O selo do lado B do disco">
                 <div className="fx-selo-b">
                     <div className="fx-selo-b-papel">
-                        <p className="fx-mini-miudo">OS ROLADOS</p>
+                        <p className="fx-apoio fx-apoio-caixa">Os Rolados</p>
                         <p className="fx-selo-b-titulo">foz</p>
                         <i className="fx-selo-b-furo" />
                         <ol>
@@ -492,7 +498,8 @@ export function CaixinhasWorn() {
                                 </li>
                             ))}
                         </ol>
-                        <p className="fx-mini-miudo">LADO B ★ 33 RPM</p>
+                        <p className="fx-apoio fx-apoio-caixa">Lado B ★ 33 rpm</p>
+                        <p className="fx-mono fx-disco-selo-miudo">LP-026-B</p>
                     </div>
                 </div>
             </Caixinha>
@@ -500,7 +507,7 @@ export function CaixinhasWorn() {
                 <div className="fx-sebo">
                     <span className="fx-sebo-capa" />
                     <div className="fx-sebo-etiqueta">
-                        <p className="fx-mini-miudo">SEBO BEIRA-RIO</p>
+                        <p className="fx-apoio fx-apoio-caixa">Sebo Beira-Rio ★ discos usados</p>
                         <p className="fx-sebo-preco">R$ 35</p>
                         <p className="fx-sebo-texto">
                             LP usado, capa com marcas. Chia um pouco no lado B, faixa 2.
@@ -514,12 +521,12 @@ export function CaixinhasWorn() {
                     <dl>
                         {FICHA.map(([papel, nome], i) => (
                             <Fragment key={papel}>
-                                <dt>{papel}</dt>
+                                <dt className="fx-apoio">{papel}</dt>
                                 <dd>{nome}</dd>
                             </Fragment>
                         ))}
                     </dl>
-                    <p className="fx-mini-miudo">© DISCOS CORRENTEZA</p>
+                    <p className="fx-apoio fx-apoio-caixa">© Discos Correnteza ★ gravado ao vivo no estúdio</p>
                 </div>
             </Caixinha>
         </div>
