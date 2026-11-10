@@ -53,51 +53,74 @@ export function LinhaCheia({ texto, largura }: { texto: string; largura: number 
 }
 
 // ——— Cut: os cartazes do festival, colados na parede ———
-// três cartazes em pé (2:3) da mesma noite, lado a lado, como o lambe-lambe é colado na rua: cada um num papel, um pouco
-// torto, com a textura e os vincos da cola, e o último com o canto rasgado. O do festival empilha as linhas na largura
-// inteira; o do show dos Lascados gira em volta da data enorme; o da programação é uma tabela de horários, com os fios
-// de metal da gráfica entre as linhas e o nome de cada banda no corpo que couber. A tinta passa por um filtro que deixa
-// a borda áspera e umas falhas onde ela não pegou, como na impressão de cartaz de rua. No pé, a linha da gráfica em
-// letra de texto, como nos lambe-lambes de verdade. Os papéis são claro, vermelho e preto (no preto, a tinta é creme).
-// No celular fica só o do festival
-// recuo: a margem dos dois lados do bloco (em u), para a linha não ocupar a largura toda
-type Bloco = { linhas: string[]; faixa?: boolean; recuo?: number; grade?: undefined } | { grade: [string, string][]; linhas?: undefined };
-const CARTAZES: Bloco[][] = [
+// quatro cartazes em pé (2:3) do mesmo fim de semana, lado a lado e encostados, como o lambe-lambe é colado na rua: cada
+// um num papel, um pouco torto, com a textura e os vincos da cola. O do festival empilha as linhas na largura inteira e
+// ganhou a tira de "esgotado" colada torta por cima; o do ônibus tem a tabela de ida e volta e o preço enorme; o
+// procura-se tem as abinhas de destacar o telefone no pé (duas já arrancadas); o da feira de discos, a lista com as
+// estrelas e o canto rasgado. A tinta passa por um filtro que deixa a borda áspera e umas falhas onde ela não pegou,
+// como na impressão de cartaz de rua. No pé, a linha da gráfica em letra de texto, como nos lambe-lambes de verdade. Os
+// papéis são claro, vermelho, azul e preto (no preto, a tinta é creme). No celular fica só o do festival
+// os blocos de um cartaz: as linhas na largura inteira (com a faixa invertida e o recuo, a margem dos dois lados em u,
+// para a linha não ocupar a largura toda), a tabela (o rótulo num corpo fixo e o texto na largura que sobra, com os fios)
+// (rotulo: a largura da coluna do rótulo, em u), a tarja, uma tira de outro papel colada torta por cima do cartaz (altura:
+// onde ela cola, em % da altura), e as abinhas de destacar no pé, com o contato escrito em pé (duas já foram arrancadas)
+type Linhas = { linhas: string[]; faixa?: boolean; recuo?: number };
+type Grade = { grade: [string, string][]; rotulo?: number };
+type Tarja = { tarja: string; altura?: number };
+type Abas = { abas: string };
+export type Bloco = Linhas | Grade | Tarja | Abas;
+export const CARTAZES: Bloco[][] = [
     [
         { linhas: ['21 MAR ★ 20H', 'GALPÃO DA PEDREIRA'] },
         { linhas: ['QUEBRA', 'PEDRA'] },
         { linhas: ['OS LASCADOS', 'CINZEL ★ BRITA 3'], faixa: true },
         { linhas: ['festival de', 'rock bruto'] },
         { linhas: ['pista a R$ 20', 'traga seu capacete'] },
+        { tarja: 'ESGOTADO', altura: 74 },
     ],
     [
-        { linhas: ['SÁBADO ★ 22H'] },
-        { linhas: ['21'], recuo: 46 },
-        { linhas: ['DE MARÇO'] },
-        { linhas: ['OS LASCADOS'], faixa: true },
-        { linhas: ['lançam o disco', 'CASCALHO'] },
-        { linhas: ['entrada R$ 15'] },
-    ],
-    [
-        { linhas: ['QUEBRA PEDRA ★ 21 MAR'] },
-        { linhas: ['PROGRAMA'], faixa: true },
+        { linhas: ['SAI DA PRAÇA DA BRITA'] },
+        { linhas: ['ÔNIBUS'] },
+        { linhas: ['PRO FESTIVAL'], faixa: true },
         {
             grade: [
-                ['20H', 'CINZEL'],
-                ['21H', 'BRITA 3'],
-                ['22H', 'OS LASCADOS'],
-                ['23H30', 'DJ MARRETA'],
+                ['18H30', 'IDA DA PRAÇA'],
+                ['02H', 'VOLTA DO GALPÃO'],
             ],
         },
-        { linhas: ['entrada pela', 'rua da brita →'] },
+        { linhas: ['R$ 10'] },
+        { linhas: ['lugares contados', 'chegue cedo'] },
+    ],
+    [
+        { linhas: ['PROCURA-SE'] },
+        { linhas: ['BAIXISTA'], faixa: true },
+        { linhas: ['que toque alto', 'e chegue cedo'] },
+        { linhas: ['ensaio às terças ★ Os Lascados'] },
+        { abas: '99 1234-5678' },
+    ],
+    [
+        { linhas: ['DOMINGO 22 ★ 14H'] },
+        { linhas: ['FEIRA'] },
+        { linhas: ['DE DISCOS'] },
+        {
+            grade: [
+                ['★', 'VINIL USADO'],
+                ['★', 'FITA K7 E CD'],
+                ['★', 'CAMISETA DE BANDA'],
+            ],
+            rotulo: 44,
+        },
+        { linhas: ['troca, venda', 'e pechincha'], faixa: true },
     ],
 ];
 const COPIAS: { papel: string; tinta: string; giro: number; desce: number; rasgo?: boolean }[] = [
     { papel: 'var(--p-papel)', tinta: '#111', giro: -1.6, desce: 14 },
-    { papel: 'var(--p-quente)', tinta: '#111', giro: 0.9, desce: -6 },
-    { papel: '#161616', tinta: '#efe7d6', giro: -0.5, desce: 8, rasgo: true },
+    { papel: 'var(--p-quente)', tinta: '#111', giro: 0.9, desce: -10 },
+    { papel: 'var(--p-polished)', tinta: '#111', giro: -0.7, desce: 18 },
+    { papel: '#161616', tinta: '#efe7d6', giro: 1.2, desce: -4, rasgo: true },
 ];
-const textoDo = (cartaz: Bloco[]) => cartaz.flatMap(b => b.linhas ?? b.grade.map(l => l.join(' '))).join('. ');
+const textoDo = (cartaz: Bloco[]) =>
+    cartaz.flatMap(b => ('linhas' in b ? b.linhas : 'grade' in b ? b.grade.map(l => l.join(' ')) : ['tarja' in b ? b.tarja : b.abas])).join('. ');
 
 // a tinta do cartaz: a borda tremida (o ruído empurra a borda uns 2 px) e as falhas, onde um segundo ruído passa do
 // limite e a tinta some. Cada cópia tem a sua semente: duas cópias impressas nunca saem iguais
@@ -116,13 +139,29 @@ export function FiltroTinta({ id, semente }: { id: string; semente: number }) {
 }
 
 function Lambe({ filtro, cartaz }: { filtro: string; cartaz: Bloco[] }) {
+    // a linha da gráfica vai no pé, ou logo acima das abinhas, quando o cartaz tem
+    const credito = <p className="fx-lambe-credito">Gráfica Pedreira ★ impressão em tipo de madeira</p>;
+    const temAbas = cartaz.some(b => 'abas' in b);
     return (
         <div className="fx-lambe" style={{ filter: `url(#${filtro})` }} aria-hidden>
             {cartaz.map((b, k) =>
-                b.grade ? (
+                'abas' in b ? (
+                    <Fragment key={k}>
+                        {credito}
+                        <div className="fx-lambe-abas">
+                            {Array.from({ length: 7 }, (_, i) => (
+                                <span key={i}>{b.abas}</span>
+                            ))}
+                        </div>
+                    </Fragment>
+                ) : 'tarja' in b ? (
+                    <div key={k} className="fx-lambe-tarja" style={b.altura ? { top: `${b.altura}%` } : undefined}>
+                        <LinhaCheia texto={b.tarja} largura={330} />
+                    </div>
+                ) : 'grade' in b ? (
                     // a tabela da programação: o horário num corpo fixo e a banda na largura que sobra, com o fio
                     // de metal em cima de cada linha
-                    <div key={k} className="fx-lambe-grade">
+                    <div key={k} className="fx-lambe-grade" style={b.rotulo ? ({ '--rotulo': `calc(${b.rotulo} * var(--u))` } as CSSProperties) : undefined}>
                         {b.grade.map(([hora, banda]) => (
                             <div key={banda} className="fx-lambe-grade-linha">
                                 <span className="fx-lambe-hora">{hora}</span>
@@ -145,16 +184,16 @@ function Lambe({ filtro, cartaz }: { filtro: string; cartaz: Bloco[] }) {
                     </div>
                 ),
             )}
-            <p className="fx-lambe-credito">Gráfica Pedreira ★ impressão em tipo de madeira</p>
+            {!temAbas && credito}
         </div>
     );
 }
 
-export function CartazCut() {
+export function CartazCut({ cartazes = CARTAZES }: { cartazes?: Bloco[][] }) {
     const filtro = `${useId().replace(/:/g, '')}-tinta`;
-    const texto = CARTAZES.map(textoDo).join(' | ');
+    const texto = cartazes.map(textoDo).join(' | ');
     return (
-        <Painel colunas={4} linhas={2} rotulo={`Três cartazes colados na parede: ${texto}`} celular={{ colunas: 2, linhas: 3 }} nu>
+        <Painel colunas={4} linhas={2} rotulo={`Quatro cartazes colados na parede: ${texto}`} celular={{ colunas: 2, linhas: 3 }} nu>
             <div className="fx-muro" style={{ fontFamily: familiaDe('cut') }}>
                 {COPIAS.map((c, i) => (
                     <div
@@ -162,11 +201,12 @@ export function CartazCut() {
                         className="fx-cartaz-folha"
                         data-copia={i}
                         data-rasgo={c.rasgo || undefined}
+                        data-abas={cartazes[i].some(b => 'abas' in b) || undefined}
                         style={{ '--papel': c.papel, '--tinta-cartaz': c.tinta, '--giro': `${c.giro}deg`, '--desce': `calc(${c.desce} * var(--u))` } as CSSProperties}
                     >
                         <FiltroTinta id={`${filtro}-${i}`} semente={i} />
                         <div className="fx-cartaz-papel">
-                            <Lambe filtro={`${filtro}-${i}`} cartaz={CARTAZES[i]} />
+                            <Lambe filtro={`${filtro}-${i}`} cartaz={cartazes[i]} />
                         </div>
                     </div>
                 ))}
