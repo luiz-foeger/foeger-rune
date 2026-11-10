@@ -3,14 +3,16 @@
 import { useId, useRef, type CSSProperties } from 'react';
 import Painel from './Painel';
 import { familiaDe } from './Faixa';
-import { Barras, usePx } from './Pratica';
+import { Barras, FiltroTinta, LinhaCheia, usePx } from './Pratica';
 import type { Estilo } from '../_lib/conteudo';
 
 // a gaveta: as peças das faixas que não estão na home, guardadas para o "escreva aqui" (onde a pessoa vai poder ver o
 // texto dela em cada uma) e para as páginas de comparação (/versoes/polished e /versoes/worn, que não sobem). Cada
 // uma com a peça grande e a de texto pequeno, no estilo pedido: 1 o sabonete; 2 o picolé (as embalagens e a tabela
 // nutricional); 4 a placa do parque (a sinalização e o painel que explica por que o seixo é redondo); 5 o bolo da vó
-// (as bandeirinhas, o bolo com as velas e a receita), uma opção para a Worn
+// (as bandeirinhas, o bolo com as velas e a receita); 7 o café (os sacos, o copo e a lousa); 8 o cartaz da exposição
+// (o quadro e as etiquetas de museu); 9 os bordados da puído (os patches e as etiquetas da roupa). O 3, o livro, e o 6,
+// o disco, foram para a home (Pratica.tsx)
 
 function Legenda({ texto }: { texto: string }) {
     return <p className="fx-ingresso-legenda">{texto}</p>;
@@ -494,6 +496,358 @@ export function ReceitaWorn() {
                 </div>
                 <p className="fx-ingresso-legenda">
                     Na receita: título a {a} px, texto a {b} px e nota a {c} px
+                </p>
+            </div>
+        </Painel>
+    );
+}
+
+// ——— 7. o café artesanal (uma opção para a Worn) ———
+// os sacos de papel kraft com a marca carimbada (a mesma tinta áspera do cartaz da Cut) e o copo com a cinta
+const SACOS = [
+    { cor: '#c49a6c', tinta: '#4a2c1e', torra: 'torra média', giro: -3 },
+    { cor: '#2b2522', tinta: 'var(--p-papel)', torra: 'torra escura', giro: 2 },
+];
+export function CafeWorn() {
+    const id = `${useId().replace(/:/g, '')}-cafe`;
+    return (
+        <Painel colunas={4} linhas={2} rotulo="Dois sacos do café moenda, um de torra média e um de torra escura, e um copo de café" celular={{ colunas: 2, linhas: 3 }} nu>
+            <div className="fx-v-mesa fx-balcao" style={{ fontFamily: familiaDe('worn') }} aria-hidden>
+                {SACOS.map((s, i) => (
+                    <div key={s.torra} className="fx-saco" data-i={i} style={{ '--saco': s.cor, '--carimbo': s.tinta, '--giro': `${s.giro}deg` } as CSSProperties}>
+                        <FiltroTinta id={`${id}-${i}`} semente={i + 4} />
+                        <div className="fx-saco-carimbo" style={{ filter: `url(#${id}-${i})` }}>
+                            <p className="fx-saco-miudo">CAFÉ DO SÍTIO</p>
+                            <p className="fx-saco-marca">moenda</p>
+                            <p className="fx-saco-miudo">
+                                {s.torra} ★ 250 g
+                            </p>
+                            <p className="fx-saco-selo">moído na hora</p>
+                        </div>
+                    </div>
+                ))}
+                <div className="fx-copo">
+                    <span className="fx-copo-tampa" />
+                    <div className="fx-copo-cinta">
+                        <p>moenda</p>
+                    </div>
+                </div>
+            </div>
+        </Painel>
+    );
+}
+
+// o cardápio na lousa, escrito a giz, em texto pequeno: os preços com a linha de pontinhos até o valor
+const CARDAPIO: [string, string][][] = [
+    [
+        ['Espresso', '6'],
+        ['Coado na hora', '8'],
+        ['Cappuccino', '12'],
+        ['Café com leite', '9'],
+    ],
+    [
+        ['Pão de queijo', '7'],
+        ['Bolo do dia', '9'],
+        ['Misto quente', '14'],
+        ['Suco da fruta', '10'],
+    ],
+];
+export function CardapioWorn() {
+    const caixa = useRef<HTMLDivElement>(null);
+    const titulo = useRef<HTMLParagraphElement>(null);
+    const item = useRef<HTMLLIElement>(null);
+    const nota = useRef<HTMLParagraphElement>(null);
+    const { a, b, c } = usePx(caixa, [titulo, item, nota], { a: 52, b: 20, c: 15 });
+    return (
+        <Painel colunas={4} linhas={1} rotulo="O cardápio da cafeteria, escrito a giz numa lousa, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
+            <div ref={caixa} className="fx-ingresso-painel">
+                <div className="fx-lousa" style={{ fontFamily: familiaDe('worn') }}>
+                    <div className="fx-lousa-cabeca">
+                        <p ref={titulo} className="fx-lousa-titulo">
+                            cardápio
+                        </p>
+                        <p ref={nota} className="fx-lousa-nota">
+                            o café é moído na hora: se demorar um pouquinho, é por isso
+                        </p>
+                    </div>
+                    {CARDAPIO.map((coluna, i) => (
+                        <ul key={i} className="fx-lousa-lista">
+                            {coluna.map(([nome, preco], k) => (
+                                <li key={nome} ref={i === 0 && k === 0 ? item : undefined}>
+                                    <span>{nome}</span>
+                                    <i />
+                                    <span>R$ {preco}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ))}
+                </div>
+                <p className="fx-ingresso-legenda">
+                    Na lousa: título a {a} px, itens a {b} px e nota a {c} px
+                </p>
+            </div>
+        </Painel>
+    );
+}
+
+// ——— 8. o cartaz da exposição (uma opção para a Worn) ———
+// só a letra: o pôster emoldurado da exposição "o tempo das pedras", com "erosão" de uma borda à outra
+export function ExposicaoWorn() {
+    return (
+        <Painel colunas={4} linhas={2} rotulo="Cartaz emoldurado da exposição o tempo das pedras: erosão, no Museu do Rio" celular={{ colunas: 2, linhas: 3 }} nu>
+            <div className="fx-v-mesa" style={{ fontFamily: familiaDe('worn') }} aria-hidden>
+                <div className="fx-quadro">
+                    <div className="fx-quadro-cartaz">
+                        <div className="fx-quadro-linha">
+                            <span>EXPOSIÇÃO ★ O TEMPO DAS PEDRAS</span>
+                            <span>12 MAR — 30 JUN</span>
+                        </div>
+                        <div className="fx-quadro-palavra">
+                            <LinhaCheia texto="erosão" largura={1330} />
+                        </div>
+                        <div className="fx-quadro-linha">
+                            <span>MUSEU DO RIO ★ ENTRADA GRATUITA</span>
+                            <span>TER A DOM, 10H ÀS 18H</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Painel>
+    );
+}
+
+// as etiquetas de museu de duas pedras da exposição, em texto pequeno: a lasca (o começo) e o seixo (o fim)
+const OBRAS = [
+    {
+        titulo: 'Lasca nº 1',
+        origem: 'Encosta do morro, sem data',
+        material: 'Quartzo bruto, 6 × 4 × 3 cm',
+        texto: 'Uma lasca recém-solta da rocha: quinas vivas, faces planas e nenhum sinal de água. Assim começa toda pedra de rio.',
+    },
+    {
+        titulo: 'Seixo nº 26',
+        origem: 'Leito do rio, sem data',
+        material: 'Quartzo rolado, 4 × 3 × 2 cm',
+        texto: 'A mesma pedra depois de muito tempo no fundo do rio. A correnteza gastou as pontas primeiro, e o que sobrou foi esta forma lisa, que ainda não terminou.',
+    },
+];
+export function EtiquetasMuseuWorn() {
+    const caixa = useRef<HTMLDivElement>(null);
+    const titulo = useRef<HTMLParagraphElement>(null);
+    const texto = useRef<HTMLParagraphElement>(null);
+    const ficha = useRef<HTMLParagraphElement>(null);
+    const { a, b, c } = usePx(caixa, [titulo, texto, ficha], { a: 30, b: 16, c: 14 });
+    return (
+        <Painel colunas={4} linhas={1} rotulo="As etiquetas de museu da lasca e do seixo, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
+            <div ref={caixa} className="fx-ingresso-painel">
+                <div className="fx-etiquetas-museu" style={{ fontFamily: familiaDe('worn') }}>
+                    {OBRAS.map((o, i) => (
+                        <div key={o.titulo} className="fx-etiqueta-museu">
+                            <p ref={i === 0 ? titulo : undefined} className="fx-etiqueta-museu-titulo">
+                                {o.titulo}
+                            </p>
+                            <p ref={i === 0 ? ficha : undefined} className="fx-etiqueta-museu-ficha">
+                                {o.origem}
+                                <br />
+                                {o.material}
+                            </p>
+                            <p ref={i === 0 ? texto : undefined} className="fx-etiqueta-museu-texto">
+                                {o.texto}
+                            </p>
+                            <p className="fx-etiqueta-museu-ficha">Acervo do Museu do Rio</p>
+                        </div>
+                    ))}
+                </div>
+                <p className="fx-ingresso-legenda">
+                    Nas etiquetas: título a {a} px, texto a {b} px e ficha a {c} px
+                </p>
+            </div>
+        </Painel>
+    );
+}
+// ——— 9. os bordados da puído (era a Worn da home) ———
+// a pedra que a correnteza gastou vira a roupa que o uso amaciou: a marca "puído" (o pano gasto de tanto usar) em três
+// patches bordados, com a sarja do fundo, a borda de overloque, as letras em ponto cetim (as listrinhas do fio) e o
+// relevo do bordado (a sombra embaixo das letras). Tudo em SVG, com a própria fonte nos textos
+function Tramas({ id }: { id: string }) {
+    // a sarja (o fundo do patch) e o cetim (o fio das letras), um par por cor
+    const sarja = (n: string, base: string) => (
+        <pattern id={`${id}-sarja-${n}`} patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+            <rect width="7" height="7" fill={base} />
+            <rect width="2.2" height="7" fill="#000" opacity="0.12" />
+        </pattern>
+    );
+    const cetim = (n: string, base: string) => (
+        <pattern id={`${id}-cetim-${n}`} patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(62)">
+            <rect width="4" height="4" fill={base} />
+            <rect width="1.3" height="4" fill="#fff" opacity="0.35" />
+        </pattern>
+    );
+    return (
+        <defs>
+            {sarja('verde', 'var(--p-worn-escuro)')}
+            {sarja('barro', 'var(--p-quente-claro)')}
+            {sarja('ocre', 'var(--p-cut)')}
+            {cetim('papel', 'var(--p-papel)')}
+            {cetim('azul', 'var(--p-frio)')}
+            {/* o relevo do bordado: a linha alta faz sombra no tecido */}
+            <filter id={`${id}-relevo`} x="-10%" y="-10%" width="120%" height="130%">
+                <feDropShadow dx="1.5" dy="2.5" stdDeviation="1.6" floodColor="#000" floodOpacity="0.4" />
+            </filter>
+        </defs>
+    );
+}
+
+// a borda de overloque: o fio grosso enrolado na beirada (a linha tracejada por cima faz os pontos do fio)
+function Borda({ d, fio = 'var(--p-papel)' }: { d: string; fio?: string }) {
+    return (
+        <g fill="none">
+            <path d={d} stroke={fio} strokeWidth="24" strokeLinejoin="round" />
+            <path d={d} stroke="#000" strokeOpacity="0.16" strokeWidth="24" strokeDasharray="1.6 2.4" strokeLinejoin="round" />
+        </g>
+    );
+}
+
+export function BordadosWorn() {
+    const id = `${useId().replace(/:/g, '')}-bordado`;
+    const fonte = { fontFamily: familiaDe('worn') };
+    const oval = 'M360 18 A342 212 0 1 1 359.9 18 Z';
+    const fita = 'M14 30 H746 L716 100 L746 170 H14 L44 100 Z';
+    return (
+        <Painel colunas={4} linhas={2} rotulo="Três patches bordados da marca puído: o nome, um coração e a frase macio de tanto lavar" celular={{ colunas: 2, linhas: 3 }} nu>
+            <div className="fx-v-mesa fx-armarinho" aria-hidden>
+                <svg className="fx-patch" data-patch="oval" viewBox="0 0 720 460" style={fonte}>
+                    <Tramas id={id} />
+                    <path d={oval} fill={`url(#${id}-sarja-verde)`} />
+                    <ellipse cx="360" cy="230" rx="306" ry="178" fill="none" stroke="var(--p-papel)" strokeWidth="3" strokeDasharray="12 8" opacity="0.8" />
+                    <g filter={`url(#${id}-relevo)`}>
+                        <text x="360" y="258" textAnchor="middle" fontSize="230" fill={`url(#${id}-cetim-papel)`}>
+                            puído
+                        </text>
+                        <text x="360" y="334" textAnchor="middle" fontSize="34" fill={`url(#${id}-cetim-papel)`}>
+                            roupa que melhora com o uso
+                        </text>
+                    </g>
+                    <Borda d={oval} />
+                </svg>
+                <svg className="fx-patch" data-patch="redondo" viewBox="0 0 420 420" style={fonte}>
+                    <Tramas id={`${id}-r`} />
+                    <circle cx="210" cy="210" r="196" fill={`url(#${id}-r-sarja-barro)`} />
+                    <circle cx="210" cy="210" r="160" fill="none" stroke="var(--p-papel)" strokeWidth="3" strokeDasharray="10 7" opacity="0.8" />
+                    <path id={`${id}-arco-cima`} d="M80 210 A130 130 0 0 1 340 210" fill="none" />
+                    <path id={`${id}-arco-baixo`} d="M58 210 A152 152 0 0 0 362 210" fill="none" />
+                    <g filter={`url(#${id}-r-relevo)`} fill={`url(#${id}-r-cetim-papel)`}>
+                        <text fontSize="34" letterSpacing="2">
+                            <textPath href={`#${id}-arco-cima`} startOffset="50%" textAnchor="middle">
+                                feito para gastar
+                            </textPath>
+                        </text>
+                        <text fontSize="150" x="210" y="262" textAnchor="middle">
+                            ♥
+                        </text>
+                        <text fontSize="28" letterSpacing="2">
+                            <textPath href={`#${id}-arco-baixo`} startOffset="50%" textAnchor="middle">
+                                lava ★ seca ★ repete
+                            </textPath>
+                        </text>
+                    </g>
+                    <Borda d="M210 14 A196 196 0 1 1 209.9 14 Z" />
+                </svg>
+                <svg className="fx-patch" data-patch="fita" viewBox="0 0 760 200" style={fonte}>
+                    <Tramas id={`${id}-f`} />
+                    <path d={fita} fill={`url(#${id}-f-sarja-ocre)`} />
+                    <g filter={`url(#${id}-f-relevo)`}>
+                        <text x="380" y="121" textAnchor="middle" fontSize="58" fill={`url(#${id}-f-cetim-azul)`}>
+                            macio de tanto lavar
+                        </text>
+                    </g>
+                    <Borda d={fita} />
+                </svg>
+            </div>
+        </Painel>
+    );
+}
+
+// ——— 9. a etiqueta de papel e a de lavagem, em texto pequeno ———
+// os símbolos de lavagem (NBR ISO 3758): à mão a 30 °C, não alvejar, secar à sombra pendurada, passar em temperatura
+// baixa e não lavar a seco
+function Cuidados() {
+    const traco = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.4, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+    return (
+        <div className="fx-cuidados" aria-label="Lavar à mão a 30 graus, não usar alvejante, secar à sombra, passar em temperatura baixa, não lavar a seco">
+            <svg viewBox="0 0 40 40" aria-hidden>
+                <path d="M4 13 L9 33 H31 L36 13" {...traco} />
+                <path d="M4 13 q4 -4 8 0 t8 0 t8 0 t8 0" {...traco} />
+                <text x="20" y="28" textAnchor="middle" fontSize="11" fill="currentColor" fontFamily="var(--ff-ui)">
+                    30
+                </text>
+            </svg>
+            <svg viewBox="0 0 40 40" aria-hidden>
+                <path d="M20 6 L36 33 H4 Z" {...traco} />
+                <path d="M8 8 L32 36 M32 8 L8 36" {...traco} />
+            </svg>
+            <svg viewBox="0 0 40 40" aria-hidden>
+                <rect x="5" y="5" width="30" height="30" {...traco} />
+                <path d="M5 17 L17 5 M5 24 L24 5" {...traco} />
+                <path d="M20 12 V30" {...traco} />
+            </svg>
+            <svg viewBox="0 0 40 40" aria-hidden>
+                <path d="M6 30 H35 V24 C35 16 30 12 22 12 H12 L8 18" {...traco} />
+                <path d="M8 18 L6 30" {...traco} />
+                <circle cx="21" cy="23" r="1.8" fill="currentColor" />
+            </svg>
+            <svg viewBox="0 0 40 40" aria-hidden>
+                <circle cx="20" cy="20" r="14" {...traco} />
+                <path d="M7 7 L33 33 M33 7 L7 33" {...traco} />
+            </svg>
+        </div>
+    );
+}
+
+export function EtiquetaWorn() {
+    const caixa = useRef<HTMLDivElement>(null);
+    const marca = useRef<HTMLParagraphElement>(null);
+    const texto = useRef<HTMLParagraphElement>(null);
+    const miudo = useRef<HTMLParagraphElement>(null);
+    const { a: pxMarca, b: pxTexto, c: pxMiudo } = usePx(caixa, [marca, texto, miudo], { a: 64, b: 16, c: 12 });
+    const fonte = { fontFamily: familiaDe('worn') };
+    return (
+        <Painel colunas={4} linhas={1} rotulo="A etiqueta de papel e a etiqueta de lavagem da camiseta, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
+            <div ref={caixa} className="fx-ingresso-painel">
+                <div className="fx-etiquetas" style={fonte}>
+                    <div className="fx-tag">
+                        <svg className="fx-tag-cordao" viewBox="0 0 120 120" aria-hidden>
+                            <path d="M118 62 C80 58 52 20 6 40" fill="none" stroke="var(--p-papel)" strokeWidth="3" strokeLinecap="round" />
+                        </svg>
+                        <div className="fx-tag-marca">
+                            <p ref={marca} className="fx-tag-logo">
+                                puído
+                            </p>
+                            <p className="fx-tag-sub">roupa que melhora com o uso</p>
+                        </div>
+                        <p ref={texto} className="fx-tag-texto">
+                            Esta camiseta foi feita para gastar. A cada lavagem o algodão fica mais macio e a cor desbota um pouco, como a pedra que o rio
+                            arredonda. Isso não é defeito: é o uso.
+                        </p>
+                        <div className="fx-tag-pe">
+                            <p className="fx-tag-miudo">TAMANHO M ★ 100% ALGODÃO</p>
+                            <p className="fx-tag-preco">R$ 89</p>
+                        </div>
+                    </div>
+                    <div className="fx-lavagem">
+                        <p ref={miudo} className="fx-lavagem-texto">
+                            100% ALGODÃO
+                            <br />
+                            FIO PENTEADO 30.1
+                            <br />
+                            FEITO NO BRASIL
+                        </p>
+                        <Cuidados />
+                        <p className="fx-lavagem-texto">LAVE DO AVESSO E SEM PRESSA</p>
+                    </div>
+                </div>
+                <p className="fx-ingresso-legenda">
+                    Nas etiquetas: marca a {pxMarca} px, texto a {pxTexto} px e detalhes a {pxMiudo} px
                 </p>
             </div>
         </Painel>
