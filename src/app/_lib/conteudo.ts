@@ -28,13 +28,6 @@ export const MANCHETES: Record<Estilo, string> = {
     polished: 'Rolando no rio, a pedra fica lisa!',
     worn: 'Tanto bate até que fura!',
 };
-export const TEXTOS = [
-    'A Föeger Rune começou desenhada à mão, uma letra por quadrado. Cada traço virou contorno, e cada contorno virou pedra: quinas vivas, cortes tortos de cinzel e nenhuma letra igual à outra.',
-    'São três desgastes da mesma pedra. A Cut é o corte de hoje, com retas e quinas vivas. A Polished já rolou um pouco no rio. A Worn passou anos na correnteza e ficou redonda.',
-    'Quando uma letra se repete na palavra, ela troca de corte: o segundo s não é igual ao primeiro, como acontece com quem talha à mão. O L e o f mudam conforme o lugar.',
-    'Tem os acentos do português, pontuação, números e símbolos no mesmo traço. São 311 glifos em cada estilo, e cada versão nova traz mais pedras.',
-];
-export const TAMANHOS_TEXTO = [20, 24, 27, 30];
 
 // o começo do "text book" da Ease (até 0:25): a seção escura com R U N E e o texto que troca de caixa (em minúsculas,
 // as letras repetidas mostram as variações da fonte; em maiúsculas, não) e os recursos

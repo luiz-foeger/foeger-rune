@@ -309,17 +309,6 @@
     z-index: 3;
 }
 
-.fx-ferramentas {
-    position: absolute;
-    left: calc(14 * var(--u));
-    top: calc(13 * var(--u));
-    width: calc(52 * var(--u));
-    padding: 0 calc(3 * var(--u)) calc(3 * var(--u));
-    border: var(--linha-fina) solid var(--tinta);
-    border-radius: calc(3 * var(--u));
-    background: #fff;
-    z-index: 2;
-}
 .fx-janela-barra {
     display: flex;
     justify-content: space-between;
@@ -328,93 +317,9 @@
     font-size: calc(11 * var(--u));
     line-height: 1;
 }
-.fx-ferramenta {
-    display: grid;
-    place-items: center;
-    width: calc(41 * var(--u));
-    height: calc(41 * var(--u));
-    margin-top: calc(3 * var(--u));
-    border: var(--linha-fina) solid var(--tinta);
-    border-radius: calc(4 * var(--u));
-}
-.fx-ferramenta svg {
-    width: calc(30 * var(--u));
-    height: calc(30 * var(--u));
-}
 
-.fx-regua-v {
-    position: absolute;
-    right: calc(8 * var(--u));
-    top: 0;
-    width: calc(49 * var(--u));
-    height: 100%;
-}
 
-.fx-controle {
-    position: absolute;
-    min-width: calc(137 * var(--u));
-    padding: 0 calc(5 * var(--u)) calc(9 * var(--u));
-    border: var(--linha-fina) solid var(--tinta);
-    border-radius: calc(3 * var(--u));
-    background: #fff;
-    z-index: 2;
-}
-.fx-controle-nome {
-    display: flex;
-    white-space: nowrap;
-    justify-content: space-between;
-    gap: calc(10 * var(--u));
-    margin-top: calc(5 * var(--u));
-    padding: calc(4 * var(--u)) calc(4 * var(--u)) calc(9 * var(--u));
-    border: 1px solid #9a9a9a;
-    font-size: var(--t-rot);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    line-height: 1;
-}
-.fx-controle-valor {
-    min-width: 3.4em;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-.fx-controle-trilho {
-    position: relative;
-    height: calc(14 * var(--u));
-    margin: calc(-8 * var(--u)) calc(8 * var(--u)) 0;
-}
-.fx-controle-trilho::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    height: 1px;
-    background: var(--tinta);
-}
-.fx-controle-pegador {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: calc(14 * var(--u));
-    height: calc(14 * var(--u));
-    margin: calc(-7 * var(--u)) 0 0 calc(-7 * var(--u));
-    border: var(--linha-fina) solid var(--tinta);
-    border-radius: 50%;
-    background: var(--p-quente);
-}
 
-.fx-ferramenta[data-escura] {
-    background: var(--tinta);
-}
-.fx-controle[data-escura] .fx-janela-barra {
-    margin: 0 calc(-5 * var(--u));
-    padding: 0 calc(4 * var(--u));
-    background: var(--tinta);
-    color: #fff;
-}
-.fx-controle-item + .fx-controle-item {
-    margin-top: calc(4 * var(--u));
-}
 
 /* a etiqueta do canto dos cartões de lupa: a letra inteira, pequena, com o círculo onde a lupa olha */
 .fx-etiqueta {
@@ -786,27 +691,7 @@
     z-index: 1;
 }
 
-.fx-texto-painel {
-    position: absolute;
-    inset: 0;
-    padding: calc(32 * var(--u)) calc(27 * var(--u));
-    overflow: hidden;
-}
-.fx-texto-tamanho {
-    margin: 0 0 calc(10 * var(--u));
-    font-size: var(--t-sec);
-    font-weight: 500;
-    line-height: 1.2;
-}
-.fx-texto-corpo {
-    margin: 0;
-    line-height: 1.24;
-}
 
-.fx-solto {
-    position: absolute;
-    inset: 0;
-}
 
 .fx-simbolo {
     position: absolute;
@@ -820,64 +705,6 @@
 }
 
 
-.fx-onomatopeias {
-    position: absolute;
-    left: calc(72 * var(--u));
-    top: calc(-4 * var(--u));
-    font-size: calc(136 * var(--u));
-    line-height: 1.02;
-    white-space: nowrap;
-}
-.fx-letra-grande {
-    position: absolute;
-    left: calc(52 * var(--u));
-    top: calc(64 * var(--u));
-    font-size: calc(520 * var(--u));
-    line-height: 1;
-    text-box: trim-both ex alphabetic;
-}
-.fx-selecao {
-    position: absolute;
-    left: calc(236 * var(--u));
-    top: calc(36 * var(--u));
-    width: calc(170 * var(--u));
-    height: calc(170 * var(--u));
-    border: max(1px, calc(1.5 * var(--u))) dashed var(--tinta);
-    border-radius: calc(30 * var(--u));
-}
-.fx-selecao i {
-    position: absolute;
-    width: calc(18 * var(--u));
-    height: calc(18 * var(--u));
-    margin: calc(-9 * var(--u)) 0 0 calc(-9 * var(--u));
-    border: max(1px, calc(2 * var(--u))) solid var(--tinta);
-    border-radius: 50%;
-    background: var(--cor-faixa);
-}
-.fx-selecao i:nth-child(2) {
-    left: 100%;
-}
-.fx-selecao i:nth-child(3) {
-    top: 100%;
-}
-.fx-selecao i:nth-child(4) {
-    left: 100%;
-    top: 100%;
-}
-.fx-pena {
-    position: absolute;
-    left: calc(20 * var(--u));
-    top: calc(36 * var(--u));
-    width: calc(60 * var(--u));
-    height: calc(60 * var(--u));
-}
-.fx-moldura-palavras {
-    position: absolute;
-    inset: 0;
-    padding: calc(30 * var(--u)) calc(22 * var(--u));
-    font-size: calc(82 * var(--u));
-    line-height: 1.02;
-}
 
 /* 7. a seção escura e os recursos */
 .fx-escura {
@@ -1057,9 +884,6 @@ html:has([data-clone]) {
 .fx-so-celular {
     display: none !important;
 }
-.fx-texto-corpo {
-    font-size: calc(var(--tam) * var(--u) * var(--fator-texto, 1));
-}
 .fx-humor-barra {
     height: var(--v);
 }
@@ -1189,10 +1013,6 @@ html:has([data-clone]) {
         text-align: right;
     }
 
-    /* faixas: os painéis de texto ocupam a largura inteira, com letra maior */
-    .fx-texto-corpo {
-        --fator-texto: 1.45;
-    }
 
     /* a seção escura: as duas metades do texto uma embaixo da outra */
     .fx-variacoes {
@@ -1215,10 +1035,6 @@ html:has([data-clone]) {
         font-size: calc(80 * var(--u));
     }
 
-    /* as barras de ferramentas das palavras soltas ficariam fora da tela (passam da margem): no celular, saem */
-    .fx-painel[data-solto] .fx-ferramentas {
-        display: none;
-    }
 }
 
 /* 10. o livro: o espécime da Rune (o motor do clone-tantan) solto direto no fundo da página, sem painel nem réguas, numa
@@ -2344,5 +2160,811 @@ html[data-paleta='azul'] [data-clone] {
     .fx-rotulo-barras {
         width: calc(300 * var(--u));
         height: calc(56 * var(--u));
+    }
+}
+
+/* 16. as peças guardadas na gaveta (Gaveta.tsx: o picolé e a placa do parque, para o "escreva aqui" e as páginas de
+   comparação) e o livro infantil, que está na faixa Polished (o celular dele vem no fim do arquivo) */
+.fx-v-versao {
+    margin: calc(40 * var(--u)) 0 0;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sub);
+    font-weight: 600;
+}
+.fx-v-mesa {
+    position: absolute;
+    inset: 0;
+}
+
+/* o picolé: a embalagem de plástico com as pontas seladas (a serrilha vem do clip-path), o brilho e a lupa */
+.fx-v-picole {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: calc(980 * var(--u));
+    height: calc(250 * var(--u));
+    transform: rotate(var(--giro));
+    filter: drop-shadow(0 calc(12 * var(--u)) calc(16 * var(--u)) rgb(0 0 0 / 0.25));
+}
+.fx-v-picole-plastico {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: calc(40 * var(--u));
+    padding: 0 calc(90 * var(--u));
+}
+.fx-v-picole-plastico::before,
+.fx-v-picole-plastico::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+/* as pontas seladas: listrinhas finas de solda; e o brilho do plástico em duas faixas */
+.fx-v-picole-plastico::before {
+    background:
+        repeating-linear-gradient(90deg, rgb(0 0 0 / 0.12) 0 calc(2 * var(--u)), transparent 0 calc(6 * var(--u))) left / calc(60 * var(--u)) 100% no-repeat,
+        repeating-linear-gradient(90deg, rgb(0 0 0 / 0.12) 0 calc(2 * var(--u)), transparent 0 calc(6 * var(--u))) right / calc(60 * var(--u)) 100% no-repeat;
+}
+.fx-v-picole-plastico::after {
+    background: linear-gradient(172deg, rgb(255 255 255 / 0.32), transparent 22%, transparent 58%, rgb(255 255 255 / 0.18) 64%, transparent 72%, rgb(0 0 0 / 0.08));
+}
+.fx-v-picole p {
+    margin: 0;
+}
+.fx-v-picole-marca {
+    font-size: calc(150 * var(--u));
+    line-height: 0.9;
+}
+.fx-v-picole-info {
+    flex: 1;
+}
+.fx-v-picole-sabor {
+    font-size: calc(46 * var(--u));
+    line-height: 1;
+}
+.fx-v-picole-miudo {
+    margin-top: calc(10 * var(--u)) !important;
+    font-size: calc(20 * var(--u));
+    letter-spacing: 0.04em;
+}
+/* a lupa da Anvisa: o retângulo preto com a lupa e o aviso em branco */
+.fx-v-lupa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    max-width: 10em;
+    padding: 0.45em 0.6em;
+    background: #111;
+    color: #fff;
+    font-size: calc(17 * var(--u));
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+}
+.fx-v-lupa > i {
+    position: relative;
+    flex: none;
+    width: 1.3em;
+    height: 1.3em;
+    border: 0.16em solid #fff;
+    border-radius: 50%;
+}
+.fx-v-lupa > i::after {
+    content: '';
+    position: absolute;
+    right: -0.42em;
+    bottom: -0.32em;
+    width: 0.5em;
+    height: 0.16em;
+    background: #fff;
+    transform: rotate(45deg);
+}
+
+/* o verso da embalagem: o texto à esquerda e a tabela nutricional (preto no branco, como manda a regra) */
+.fx-v-verso {
+    position: absolute;
+    left: calc(59 * var(--u));
+    right: calc(59 * var(--u));
+    top: calc(20 * var(--u));
+    bottom: calc(76 * var(--u));
+    display: grid;
+    grid-template-columns: 1fr calc(760 * var(--u));
+    gap: calc(50 * var(--u));
+    padding: calc(18 * var(--u)) calc(40 * var(--u));
+    border-radius: calc(6 * var(--u));
+    background: #fff;
+    color: #111;
+    box-shadow: 0 calc(4 * var(--u)) calc(10 * var(--u)) rgb(0 0 0 / 0.2);
+}
+.fx-v-verso p {
+    margin: 0;
+}
+.fx-v-verso-texto {
+    display: flex;
+    flex-direction: column;
+    gap: calc(10 * var(--u));
+}
+.fx-v-verso-titulo {
+    font-size: calc(34 * var(--u));
+    line-height: 1;
+}
+.fx-v-verso-corpo {
+    font-size: calc(15 * var(--u));
+    line-height: 1.35;
+}
+.fx-v-verso-pe {
+    margin-top: auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: calc(20 * var(--u));
+}
+.fx-v-verso-barras {
+    display: block;
+    width: calc(200 * var(--u));
+    height: calc(46 * var(--u));
+}
+.fx-v-tabela {
+    align-self: start;
+    width: 100%;
+    border-collapse: collapse;
+    border: max(1px, calc(2 * var(--u))) solid #111;
+    font-size: calc(12 * var(--u));
+    line-height: 1.1;
+}
+.fx-v-tabela caption {
+    padding: calc(3 * var(--u)) 0;
+    border: max(1px, calc(2 * var(--u))) solid #111;
+    border-bottom: 0;
+    font-size: calc(15 * var(--u));
+    text-align: left;
+    text-indent: calc(8 * var(--u));
+}
+.fx-v-tabela th,
+.fx-v-tabela td {
+    padding: calc(1 * var(--u)) calc(8 * var(--u));
+    border-bottom: max(1px, calc(1 * var(--u))) solid #111;
+    font-weight: 400;
+    text-align: right;
+}
+.fx-v-tabela th:first-child,
+.fx-v-tabela td:first-child {
+    text-align: left;
+}
+.fx-v-tabela td[data-dentro] {
+    padding-left: calc(22 * var(--u));
+}
+.fx-v-tabela .fx-v-tabela-porcao {
+    text-align: left;
+}
+.fx-v-tabela tfoot td {
+    border-bottom: 0;
+    text-align: left;
+    font-size: calc(11 * var(--u));
+}
+
+/* o livro infantil: capa dura vista de cima, com a lombada, o miolo aparecendo na borda e a sombra na mesa */
+.fx-v-estante {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: calc(110 * var(--u));
+}
+.fx-v-livro {
+    position: relative;
+    flex: none;
+    width: calc(590 * var(--u));
+    height: calc(760 * var(--u));
+    display: flex;
+    flex-direction: column;
+    padding: calc(44 * var(--u)) calc(40 * var(--u)) calc(36 * var(--u)) calc(70 * var(--u));
+    overflow: hidden;
+    border-radius: calc(4 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u)) calc(4 * var(--u));
+    background:
+        linear-gradient(90deg, rgb(0 0 0 / 0.28), rgb(0 0 0 / 0.08) calc(18 * var(--u)), rgb(255 255 255 / 0.16) calc(24 * var(--u)), transparent calc(34 * var(--u))),
+        var(--capa);
+    color: var(--tinta);
+    transform: rotate(var(--giro));
+    box-shadow:
+        calc(7 * var(--u)) calc(7 * var(--u)) 0 calc(-2 * var(--u)) var(--p-papel),
+        calc(8 * var(--u)) calc(8 * var(--u)) 0 calc(-1 * var(--u)) rgb(0 0 0 / 0.12),
+        0 calc(26 * var(--u)) calc(36 * var(--u)) rgb(0 0 0 / 0.28);
+}
+.fx-v-livro p {
+    position: relative;
+    margin: 0;
+}
+.fx-v-livro-colecao {
+    font-size: calc(18 * var(--u));
+    letter-spacing: 0.1em;
+}
+.fx-v-livro-titulo {
+    margin-top: calc(26 * var(--u)) !important;
+    font-size: calc(80 * var(--u));
+    line-height: 0.95;
+    white-space: nowrap;
+}
+/* a pedrinha da capa, um seixo liso em cima das ondas */
+.fx-v-livro-seixo {
+    position: absolute;
+    left: calc(250 * var(--u));
+    bottom: calc(200 * var(--u));
+    width: calc(170 * var(--u));
+    height: calc(112 * var(--u));
+    border-radius: 48% 52% 44% 56% / 58% 50% 50% 42%;
+    background: radial-gradient(ellipse 60% 55% at 35% 30%, rgb(255 255 255 / 0.45), transparent 70%), var(--tinta);
+    transform: rotate(-8deg);
+}
+.fx-v-livro-ondas {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(70 * var(--u));
+    width: 100%;
+    height: calc(130 * var(--u));
+    color: var(--onda);
+}
+.fx-v-livro-pe {
+    margin-top: auto !important;
+    font-size: calc(18 * var(--u));
+    line-height: 1.2;
+}
+
+/* a página dupla: o papel com a sombra da dobra no meio */
+.fx-v-paginas {
+    position: absolute;
+    left: calc(59 * var(--u));
+    right: calc(59 * var(--u));
+    top: calc(30 * var(--u));
+    bottom: calc(84 * var(--u));
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-radius: calc(6 * var(--u));
+    background:
+        linear-gradient(90deg, transparent 44%, rgb(0 0 0 / 0.1) 49.6%, rgb(0 0 0 / 0.18) 50%, rgb(0 0 0 / 0.1) 50.4%, transparent 56%),
+        var(--p-papel);
+    color: var(--p-frio);
+    box-shadow: 0 calc(5 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.22);
+}
+.fx-v-pagina {
+    display: flex;
+    flex-direction: column;
+    gap: calc(14 * var(--u));
+    padding: calc(28 * var(--u)) calc(70 * var(--u));
+}
+.fx-v-pagina p {
+    margin: 0;
+}
+.fx-v-pagina-cabeca {
+    font-size: calc(13 * var(--u));
+    letter-spacing: 0.1em;
+}
+.fx-v-pagina-texto {
+    font-size: calc(20 * var(--u));
+    line-height: 1.45;
+}
+.fx-v-pagina-numero {
+    margin-top: auto !important;
+    font-size: calc(13 * var(--u));
+}
+.fx-v-pagina + .fx-v-pagina .fx-v-pagina-cabeca,
+.fx-v-pagina + .fx-v-pagina .fx-v-pagina-numero {
+    text-align: right;
+}
+
+/* a placa do parque: o nome em cima e as três direções embaixo, nos dois postes de madeira */
+.fx-v-placa {
+    position: absolute;
+    left: calc(330 * var(--u));
+    right: calc(330 * var(--u));
+    top: calc(40 * var(--u));
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(22 * var(--u));
+    color: var(--p-papel);
+}
+.fx-v-poste {
+    position: absolute;
+    top: calc(40 * var(--u));
+    bottom: calc(-60 * var(--u));
+    width: calc(46 * var(--u));
+    background:
+        repeating-linear-gradient(90deg, rgb(0 0 0 / 0.08) 0 calc(3 * var(--u)), transparent 0 calc(11 * var(--u))),
+        linear-gradient(90deg, rgb(0 0 0 / 0.2), transparent 40%, rgb(0 0 0 / 0.25)),
+        #7a5236;
+}
+.fx-v-poste[data-lado='esq'] {
+    left: calc(200 * var(--u));
+}
+.fx-v-poste[data-lado='dir'] {
+    right: calc(200 * var(--u));
+}
+.fx-v-placa-nome,
+.fx-v-placa-destino {
+    position: relative;
+    border-radius: calc(26 * var(--u));
+    background: var(--p-pontos-quente);
+    box-shadow:
+        inset 0 0 0 calc(8 * var(--u)) var(--p-pontos-quente),
+        inset 0 0 0 calc(11 * var(--u)) var(--p-papel),
+        0 calc(14 * var(--u)) calc(20 * var(--u)) rgb(0 0 0 / 0.25);
+}
+.fx-v-placa-nome {
+    width: 100%;
+    padding: calc(34 * var(--u)) calc(50 * var(--u)) calc(40 * var(--u));
+    text-align: center;
+}
+.fx-v-placa-nome p {
+    margin: 0;
+}
+.fx-v-placa-miudo {
+    font-size: calc(24 * var(--u));
+    letter-spacing: 0.12em;
+}
+.fx-v-placa-titulo {
+    margin-top: calc(6 * var(--u)) !important;
+    font-size: calc(86 * var(--u));
+    line-height: 1;
+}
+.fx-v-placa-destino {
+    display: flex;
+    align-items: center;
+    gap: calc(26 * var(--u));
+    width: 86%;
+    padding: calc(16 * var(--u)) calc(40 * var(--u));
+    font-size: calc(50 * var(--u));
+    line-height: 1.1;
+}
+.fx-v-placa-destino[data-i='0'] {
+    transform: rotate(-1.2deg);
+}
+.fx-v-placa-destino[data-i='2'] {
+    transform: rotate(0.8deg);
+}
+.fx-v-placa-seta {
+    width: 1.1em;
+    text-align: center;
+}
+.fx-v-placa-distancia {
+    margin-left: auto;
+    opacity: 0.8;
+}
+
+/* o painel do parque: o texto e as três idades da pedra (o "o" do Cut, do Polished e do Worn) */
+.fx-v-painel {
+    position: absolute;
+    left: calc(59 * var(--u));
+    right: calc(59 * var(--u));
+    top: calc(30 * var(--u));
+    bottom: calc(84 * var(--u));
+    display: grid;
+    grid-template-columns: 1fr calc(620 * var(--u));
+    gap: calc(50 * var(--u));
+    padding: calc(30 * var(--u)) calc(46 * var(--u));
+    border-radius: calc(20 * var(--u));
+    background: var(--p-pontos-quente);
+    color: var(--p-papel);
+    box-shadow:
+        inset 0 0 0 calc(8 * var(--u)) var(--p-pontos-quente),
+        inset 0 0 0 calc(11 * var(--u)) var(--p-papel),
+        0 calc(6 * var(--u)) calc(14 * var(--u)) rgb(0 0 0 / 0.25);
+}
+.fx-v-painel p {
+    margin: 0;
+}
+.fx-v-painel-texto {
+    display: flex;
+    flex-direction: column;
+    gap: calc(12 * var(--u));
+}
+.fx-v-painel-titulo {
+    font-size: calc(40 * var(--u));
+    line-height: 1;
+}
+.fx-v-painel-corpo {
+    font-size: calc(17 * var(--u));
+    line-height: 1.4;
+}
+.fx-v-painel-idades {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+.fx-v-painel-idade {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(8 * var(--u));
+}
+.fx-v-painel-o {
+    font-size: calc(170 * var(--u));
+    line-height: 0.8;
+}
+.fx-v-painel-rotulo {
+    font-size: calc(14 * var(--u));
+    letter-spacing: 0.04em;
+}
+
+/* Worn: os patches bordados da puído (soltos na faixa, um pouco tortos) e as etiquetas da camiseta */
+.fx-patch {
+    position: absolute;
+    overflow: visible;
+    filter: drop-shadow(0 calc(10 * var(--u)) calc(14 * var(--u)) rgb(0 0 0 / 0.28));
+}
+.fx-patch[data-patch='oval'] {
+    left: calc(120 * var(--u));
+    top: calc(150 * var(--u));
+    width: calc(860 * var(--u));
+    transform: rotate(-5deg);
+}
+.fx-patch[data-patch='redondo'] {
+    left: calc(1150 * var(--u));
+    top: calc(60 * var(--u));
+    width: calc(440 * var(--u));
+    transform: rotate(9deg);
+}
+.fx-patch[data-patch='fita'] {
+    left: calc(980 * var(--u));
+    top: calc(540 * var(--u));
+    width: calc(780 * var(--u));
+    transform: rotate(-3deg);
+}
+
+.fx-etiquetas {
+    position: absolute;
+    left: calc(59 * var(--u));
+    right: calc(59 * var(--u));
+    top: calc(36 * var(--u));
+    bottom: calc(84 * var(--u));
+    display: flex;
+    align-items: center;
+    gap: calc(70 * var(--u));
+}
+.fx-etiquetas p {
+    margin: 0;
+}
+/* a etiqueta de papel: o cartão com os cantos cortados, o furo do cordão à esquerda e o cordão saindo dele */
+.fx-tag {
+    position: relative;
+    flex: 1;
+    align-self: center;
+    min-height: calc(230 * var(--u));
+    display: grid;
+    grid-template-columns: calc(330 * var(--u)) 1fr;
+    grid-template-rows: 1fr auto;
+    column-gap: calc(44 * var(--u));
+    padding: calc(30 * var(--u)) calc(44 * var(--u)) calc(28 * var(--u)) calc(130 * var(--u));
+    background: var(--p-worn-escuro);
+    color: var(--p-papel);
+    clip-path: polygon(calc(70 * var(--u)) 0, 100% 0, 100% 100%, calc(70 * var(--u)) 100%, 0 calc(100% - 70 * var(--u)), 0 calc(70 * var(--u)));
+    -webkit-mask: radial-gradient(circle at calc(62 * var(--u)) 50%, #0000 calc(14 * var(--u)), #000 calc(14 * var(--u) + 0.5px));
+    mask: radial-gradient(circle at calc(62 * var(--u)) 50%, #0000 calc(14 * var(--u)), #000 calc(14 * var(--u) + 0.5px));
+}
+.fx-tag::after {
+    content: '';
+    position: absolute;
+    left: calc(62 * var(--u) - 20 * var(--u));
+    top: calc(50% - 20 * var(--u));
+    width: calc(40 * var(--u));
+    height: calc(40 * var(--u));
+    border: calc(3 * var(--u)) solid color-mix(in srgb, var(--p-papel) 60%, transparent);
+    border-radius: 50%;
+}
+.fx-tag-cordao {
+    position: absolute;
+    left: calc(-60 * var(--u));
+    top: calc(50% - 70 * var(--u));
+    width: calc(130 * var(--u));
+    height: calc(130 * var(--u));
+    overflow: visible;
+}
+.fx-tag-marca {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+}
+.fx-tag-logo {
+    font-size: calc(64 * var(--u));
+    line-height: 0.9;
+}
+.fx-tag-sub {
+    margin-top: calc(8 * var(--u)) !important;
+    font-size: calc(18 * var(--u));
+    line-height: 1.2;
+}
+.fx-tag-texto {
+    grid-column: 2;
+    align-self: center;
+    max-width: calc(560 * var(--u));
+    font-size: calc(16 * var(--u));
+    line-height: 1.4;
+}
+.fx-tag-pe {
+    grid-column: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: calc(20 * var(--u));
+}
+.fx-tag-miudo {
+    font-size: calc(12 * var(--u));
+    letter-spacing: 0.08em;
+}
+.fx-tag-preco {
+    font-size: calc(40 * var(--u));
+    line-height: 1;
+}
+/* a etiqueta de lavagem: a fita de cetim branca, costurada em cima (a dobra faz sombra), com a trama fininha */
+.fx-lavagem {
+    flex: none;
+    width: calc(360 * var(--u));
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    padding: calc(34 * var(--u)) calc(26 * var(--u)) calc(24 * var(--u));
+    background:
+        linear-gradient(180deg, rgb(0 0 0 / 0.16), transparent calc(16 * var(--u))),
+        repeating-linear-gradient(0deg, rgb(0 0 0 / 0.04) 0 1px, transparent 1px 3px),
+        #f7f5f0;
+    color: #3a3a3a;
+    text-align: center;
+    box-shadow: 0 calc(4 * var(--u)) calc(10 * var(--u)) rgb(0 0 0 / 0.2);
+    transform: rotate(2deg);
+}
+.fx-lavagem-texto {
+    font-size: calc(12 * var(--u));
+    letter-spacing: 0.08em;
+    line-height: 1.5;
+}
+.fx-cuidados {
+    display: flex;
+    gap: calc(10 * var(--u));
+}
+.fx-cuidados svg {
+    width: calc(42 * var(--u));
+    height: calc(42 * var(--u));
+}
+@media (max-width: 899px) {
+    .fx-patch[data-patch='oval'] {
+        left: calc(30 * var(--u));
+        top: calc(80 * var(--u));
+        width: calc(820 * var(--u));
+    }
+    .fx-patch[data-patch='redondo'] {
+        left: calc(60 * var(--u));
+        top: calc(640 * var(--u));
+        width: calc(420 * var(--u));
+    }
+    .fx-patch[data-patch='fita'] {
+        left: calc(300 * var(--u));
+        top: calc(1040 * var(--u));
+        width: calc(560 * var(--u));
+    }
+    .fx-etiquetas {
+        left: calc(36 * var(--u));
+        right: calc(36 * var(--u));
+        top: calc(36 * var(--u));
+        bottom: calc(100 * var(--u));
+        flex-direction: column;
+        align-items: stretch;
+        gap: calc(36 * var(--u));
+    }
+    .fx-tag {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        row-gap: calc(16 * var(--u));
+        padding: calc(30 * var(--u)) calc(34 * var(--u)) calc(30 * var(--u)) calc(120 * var(--u));
+    }
+    .fx-tag-marca,
+    .fx-tag-texto,
+    .fx-tag-pe {
+        grid-column: 1;
+        grid-row: auto;
+    }
+    .fx-tag-logo {
+        font-size: calc(90 * var(--u));
+    }
+    .fx-tag-sub {
+        font-size: calc(24 * var(--u));
+    }
+    .fx-tag-texto {
+        font-size: calc(27 * var(--u));
+    }
+    .fx-tag-miudo {
+        font-size: calc(20 * var(--u));
+    }
+    .fx-tag-preco {
+        font-size: calc(54 * var(--u));
+    }
+    .fx-lavagem {
+        width: auto;
+        align-self: center;
+        flex-direction: row;
+        padding: calc(30 * var(--u)) calc(28 * var(--u)) calc(22 * var(--u));
+    }
+    .fx-lavagem-texto {
+        font-size: calc(18 * var(--u));
+    }
+    .fx-lavagem > .fx-lavagem-texto:last-child {
+        display: none;
+    }
+    .fx-cuidados svg {
+        width: calc(54 * var(--u));
+        height: calc(54 * var(--u));
+    }
+}
+
+/* o livro infantil no celular: uma capa só, maior, e a página dupla com o texto num corpo de ler na tela pequena */
+@media (max-width: 899px) {
+    .fx-v-estante > .fx-v-livro:not(:first-child) {
+        display: none;
+    }
+    .fx-v-livro {
+        width: calc(720 * var(--u));
+        height: calc(940 * var(--u));
+        padding: calc(56 * var(--u)) calc(50 * var(--u)) calc(46 * var(--u)) calc(86 * var(--u));
+    }
+    .fx-v-livro-colecao {
+        font-size: calc(24 * var(--u));
+    }
+    .fx-v-livro-titulo {
+        font-size: calc(96 * var(--u));
+    }
+    .fx-v-livro-seixo {
+        left: calc(300 * var(--u));
+        bottom: calc(260 * var(--u));
+        width: calc(210 * var(--u));
+        height: calc(140 * var(--u));
+    }
+    .fx-v-livro-ondas {
+        bottom: calc(96 * var(--u));
+        height: calc(160 * var(--u));
+    }
+    .fx-v-livro-pe {
+        font-size: calc(24 * var(--u));
+    }
+    .fx-v-paginas {
+        left: calc(36 * var(--u));
+        right: calc(36 * var(--u));
+        top: calc(36 * var(--u));
+        bottom: calc(100 * var(--u));
+    }
+    .fx-v-pagina {
+        gap: calc(18 * var(--u));
+        padding: calc(30 * var(--u)) calc(34 * var(--u));
+    }
+    .fx-v-pagina-cabeca,
+    .fx-v-pagina-numero {
+        font-size: calc(18 * var(--u));
+    }
+    .fx-v-pagina-texto {
+        font-size: calc(29 * var(--u));
+        line-height: 1.4;
+    }
+}
+
+/* a gaveta, 5: o bolo da vó (as duas montagens do SVG) e a ficha pautada da receita */
+.fx-festa {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 calc(12 * var(--u)) calc(16 * var(--u)) rgb(0 0 0 / 0.22));
+}
+.fx-festa[data-tela='celular'] {
+    display: none;
+}
+.fx-receita {
+    position: absolute;
+    left: calc(59 * var(--u));
+    right: calc(59 * var(--u));
+    top: calc(34 * var(--u));
+    bottom: calc(84 * var(--u));
+    display: grid;
+    grid-template-columns: calc(560 * var(--u)) 1fr;
+    grid-template-rows: auto 1fr;
+    column-gap: calc(60 * var(--u));
+    padding: calc(24 * var(--u)) calc(50 * var(--u)) calc(20 * var(--u)) calc(130 * var(--u));
+    border-radius: calc(22 * var(--u));
+    /* a mancha de café (o anel da xícara), a de gordura, a margem vermelha, as pautas azuis e o papel amarelado */
+    background:
+        radial-gradient(circle at 88% 30%, transparent calc(56 * var(--u)), rgb(120 70 30 / 0.18) calc(58 * var(--u)), rgb(120 70 30 / 0.08) calc(64 * var(--u)), transparent calc(68 * var(--u))),
+        radial-gradient(ellipse calc(60 * var(--u)) calc(44 * var(--u)) at 30% 78%, rgb(160 120 40 / 0.14), transparent),
+        linear-gradient(90deg, transparent calc(98 * var(--u)), rgb(205 70 70 / 0.55) calc(98 * var(--u)), rgb(205 70 70 / 0.55) calc(101 * var(--u)), transparent calc(101 * var(--u))),
+        repeating-linear-gradient(180deg, transparent 0 calc(25 * var(--u)), rgb(70 110 190 / 0.32) calc(25 * var(--u)) calc(26.5 * var(--u))) 0 calc(64 * var(--u)) / 100% 100% no-repeat,
+        #f1e6cc;
+    color: #3b2a22;
+    box-shadow:
+        inset 0 0 calc(30 * var(--u)) rgb(120 80 30 / 0.22),
+        0 calc(5 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.22);
+    transform: rotate(-0.8deg);
+}
+.fx-receita p {
+    margin: 0;
+}
+.fx-receita-cabeca {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    height: calc(52 * var(--u));
+}
+.fx-receita-titulo {
+    font-size: calc(36 * var(--u));
+    line-height: 1;
+}
+.fx-receita-rende {
+    font-size: calc(13 * var(--u));
+    letter-spacing: 0.04em;
+}
+.fx-receita-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: calc(16 * var(--u));
+    line-height: calc(26.5 * var(--u));
+}
+.fx-receita-lista li::before {
+    content: '★ ';
+    font-size: 0.7em;
+}
+.fx-receita-modo {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.fx-receita-texto {
+    font-size: calc(16 * var(--u));
+    line-height: calc(26.5 * var(--u));
+}
+.fx-receita-nota {
+    align-self: flex-end;
+    font-size: calc(13 * var(--u));
+    line-height: calc(26.5 * var(--u));
+    opacity: 0.8;
+}
+@media (max-width: 899px) {
+    .fx-festa[data-tela='largo'] {
+        display: none;
+    }
+    .fx-festa[data-tela='celular'] {
+        display: block;
+    }
+    .fx-receita {
+        left: calc(36 * var(--u));
+        right: calc(36 * var(--u));
+        top: calc(36 * var(--u));
+        bottom: calc(100 * var(--u));
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+        padding: calc(30 * var(--u)) calc(34 * var(--u)) calc(24 * var(--u)) calc(110 * var(--u));
+        row-gap: calc(39 * var(--u));
+        background:
+            radial-gradient(circle at 84% 20%, transparent calc(56 * var(--u)), rgb(120 70 30 / 0.18) calc(58 * var(--u)), rgb(120 70 30 / 0.08) calc(64 * var(--u)), transparent calc(68 * var(--u))),
+            linear-gradient(90deg, transparent calc(80 * var(--u)), rgb(205 70 70 / 0.55) calc(80 * var(--u)), rgb(205 70 70 / 0.55) calc(83 * var(--u)), transparent calc(83 * var(--u))),
+            repeating-linear-gradient(180deg, transparent 0 calc(37 * var(--u)), rgb(70 110 190 / 0.32) calc(37 * var(--u)) calc(39 * var(--u))) 0 calc(96 * var(--u)) / 100% 100% no-repeat,
+            #f1e6cc;
+    }
+    .fx-receita-cabeca {
+        height: calc(76 * var(--u));
+    }
+    .fx-receita-titulo {
+        font-size: calc(48 * var(--u));
+    }
+    .fx-receita-rende {
+        display: none;
+    }
+    .fx-receita-lista,
+    .fx-receita-texto,
+    .fx-receita-nota {
+        font-size: calc(24 * var(--u));
+        line-height: calc(39 * var(--u));
     }
 }

@@ -1,9 +1,8 @@
 import Alfabeto from './_comp/Alfabeto';
 import Digitada from './_comp/Digitada';
-import { Onomatopeias } from './_comp/Composicoes';
-import { Faixa, Manchete, Textos } from './_comp/Faixa';
+import { Faixa, Manchete } from './_comp/Faixa';
 import { Escura, LetrasRune, Recursos, TextoVariacoes } from './_comp/Livro';
-import { CartazCut, IngressoCut, RotuloPolished, SabonetePolished } from './_comp/Pratica';
+import { BordadosWorn, CartazCut, EtiquetaWorn, IngressoCut, LivroPolished, PaginaPolished } from './_comp/Pratica';
 import SecaoDesgaste from './_comp/SecaoDesgaste';
 import SecaoLivro from './_comp/SecaoLivro';
 import Testador from './_comp/Testador';
@@ -41,13 +40,13 @@ export default function Pagina() {
                     </Faixa>
                     <Faixa estilo="polished">
                         <Manchete estilo="polished" />
-                        <SabonetePolished />
-                        <RotuloPolished />
+                        <LivroPolished />
+                        <PaginaPolished />
                     </Faixa>
                     <Faixa estilo="worn">
                         <Manchete estilo="worn" />
-                        <Onomatopeias estilo="worn" />
-                        <Textos estilo="worn" ordem={[2, 3, 0, 1]} />
+                        <BordadosWorn />
+                        <EtiquetaWorn />
                     </Faixa>
                     <Escura>
                         <LetrasRune />
