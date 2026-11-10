@@ -4971,3 +4971,35 @@ html[data-paleta='azul'] [data-clone] {
     transform: translate(-50%, -50%);
     box-shadow: 0 0 0 calc(5 * var(--u)) rgb(0 0 0 / 0.07);
 }
+
+/* o cartaz da programação: a tabela de horários com os fios de metal da gráfica entre as linhas, o horário num corpo
+   fixo à esquerda e o nome da banda na largura que sobra (cada nome sai num corpo, como no tipo de madeira) */
+.fx-lambe-grade {
+    display: flex;
+    flex-direction: column;
+}
+.fx-lambe-grade-linha {
+    display: grid;
+    grid-template-columns: calc(118 * var(--u)) 1fr;
+    align-items: end;
+    column-gap: calc(12 * var(--u));
+    padding: calc(12 * var(--u)) 0;
+    border-top: calc(5 * var(--u)) solid currentColor;
+}
+.fx-lambe-grade-linha:last-child {
+    border-bottom: calc(5 * var(--u)) solid currentColor;
+}
+.fx-lambe-hora {
+    font-size: calc(34 * var(--u));
+    line-height: 1;
+    white-space: nowrap;
+    text-box: trim-both cap alphabetic;
+}
+.fx-lambe-banda {
+    min-width: 0;
+}
+
+/* o rasgo do cartaz da programação é menor, só no canto: a seta do pé fica inteira */
+.fx-cartaz-folha[data-rasgo] .fx-cartaz-papel {
+    clip-path: polygon(0 0, 100% 0, 100% 90%, 98.2% 91.4%, 99.2% 93.2%, 96.4% 94.6%, 97.4% 96.6%, 93.6% 97.8%, 94.4% 100%, 0 100%);
+}
