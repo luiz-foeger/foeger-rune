@@ -2,7 +2,7 @@ import Alfabeto from './_comp/Alfabeto';
 import Digitada from './_comp/Digitada';
 import { Faixa, Manchete } from './_comp/Faixa';
 import { Escura, LetrasRune, Recursos, TextoVariacoes } from './_comp/Livro';
-import { CaixinhasCut, CartazCut, DiscoWorn, EncarteWorn, LivroPolished, PaginaPolished } from './_comp/Pratica';
+import { CaixinhasCut, CaixinhasPolished, CaixinhasWorn, CartazCut, DiscoWorn, LivroPolished } from './_comp/Pratica';
 import SecaoDesgaste from './_comp/SecaoDesgaste';
 import SecaoLivro from './_comp/SecaoLivro';
 import Testador from './_comp/Testador';
@@ -41,12 +41,12 @@ export default function Pagina() {
                     <Faixa estilo="polished">
                         <Manchete estilo="polished" />
                         <LivroPolished />
-                        <PaginaPolished />
+                        <CaixinhasPolished />
                     </Faixa>
                     <Faixa estilo="worn">
                         <Manchete estilo="worn" />
                         <DiscoWorn />
-                        <EncarteWorn />
+                        <CaixinhasWorn />
                     </Faixa>
                     <Escura>
                         <LetrasRune />

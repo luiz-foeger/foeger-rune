@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import Painel from './Painel';
 import { familiaDe } from './Faixa';
 import type { Estilo } from '../_lib/conteudo';
@@ -11,7 +11,8 @@ import type { Estilo } from '../_lib/conteudo';
 // lambe-lambe de um festival colado na parede (cada linha na largura inteira, em corpos diferentes, como o tipo de
 // madeira da gráfica de cartaz de rua) e, embaixo, quatro caixinhas do mesmo festival em texto pequeno (o ingresso,
 // a pulseira, o crachá e a setlist). No Polished, o
-// livro infantil (as capas e uma página dupla da história); no Worn, o disco gasto (a capa, o disco e o encarte).
+// livro infantil (as capas e, nas caixinhas, a página, o marcador, a ficha da biblioteca e o ex-libris); no Worn, o
+// disco gasto (a capa e o disco e, nas caixinhas, a contracapa, o selo do lado B, a etiqueta do sebo e a ficha técnica).
 
 // uma linha que ocupa a largura inteira da caixa: mede a frase a 100 px e escala o corpo até a largura bater. Só refaz
 // a conta quando a largura da caixa muda (a altura muda junto com o corpo e não pode disparar outra conta)
@@ -123,7 +124,7 @@ export function CartazCut() {
     );
 }
 
-// ——— Cut: o ingresso, em texto pequeno ———
+// ——— as peças de apoio das caixinhas e da gaveta: o código de barras e a medida dos textos ———
 // as barras do número do ingresso, na codificação do EAN (o lado esquerdo, 7 módulos por algarismo, com as guardas)
 const EAN_L = ['0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'];
 export function Barras({ numero, classe = 'fx-ingresso-barras' }: { numero: string; classe?: string }) {
@@ -297,49 +298,78 @@ export function LivroPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
     );
 }
 
-// a página dupla da história, em texto pequeno: o texto corrido no tamanho de leitura, o cabeçalho e o número
-const PAGINAS = [
-    {
-        n: 12,
-        texto: 'Era uma vez uma pedra cheia de quinas. Ela morava no alto do morro e espetava tudo o que chegava perto: o vento, a chuva e até as formigas. Um dia a chuva veio mais forte, e a pedra desceu o morro rolando, tum, tum, tum, até cair no rio.',
-    },
-    {
-        n: 13,
-        texto: 'A água era fria e não parava nunca. Levava a pedra para baixo, para cima, para o lado, e a cada volta uma quina ia embora. Quando o rio ficou calmo, a pedra se olhou no fundo e quase não se reconheceu: estava lisinha, redonda, boa de segurar.',
-    },
+// ——— Polished: as quatro caixinhas do livro ———
+// uma página da história, o marcador com o cordão, a ficha de empréstimo da biblioteca (as datas carimbadas e os
+// nomes de quem levou) e o ex-libris colado na capa
+const EMPRESTIMOS: [string, string][] = [
+    ['12 MAR', 'Ana'],
+    ['02 ABR', 'Pedro'],
+    ['23 ABR', 'Lia'],
+    ['15 MAI', 'Caio'],
+    ['06 JUN', 'Bia'],
 ];
-export function PaginaPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
-    const familia = familiaDe(estilo);
-    const caixa = useRef<HTMLDivElement>(null);
-    const cabeca = useRef<HTMLParagraphElement>(null);
-    const texto = useRef<HTMLParagraphElement>(null);
-    const numero = useRef<HTMLParagraphElement>(null);
-    const { a, b, c } = usePx(caixa, [texto, cabeca, numero], { a: 20, b: 13, c: 13 });
+export function CaixinhasPolished() {
+    const id = `${useId().replace(/:/g, '')}-carimbo`;
     return (
-        <Painel colunas={4} linhas={1} rotulo="Uma página dupla do livro, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
-            <div ref={caixa} className="fx-ingresso-painel">
-                <div className="fx-v-paginas" style={{ fontFamily: familia }}>
-                    {PAGINAS.map((p, i) => (
-                        <div key={p.n} className="fx-v-pagina">
-                            <p ref={i === 0 ? cabeca : undefined} className="fx-v-pagina-cabeca">
-                                A PEDRINHA QUE ROLOU
-                            </p>
-                            <p ref={i === 0 ? texto : undefined} className="fx-v-pagina-texto">
-                                {p.texto}
-                            </p>
-                            <p ref={i === 0 ? numero : undefined} className="fx-v-pagina-numero">
-                                {p.n}
-                            </p>
-                        </div>
-                    ))}
+        <div className="fx-grade" style={{ fontFamily: familiaDe('polished') }}>
+            <Caixinha rotulo="Uma página do livro A pedrinha que rolou">
+                <div className="fx-mini-pagina">
+                    <p className="fx-mini-miudo">A PEDRINHA QUE ROLOU</p>
+                    <p data-medida className="fx-mini-pagina-texto">
+                        Era uma vez uma pedra cheia de quinas. Ela morava no alto do morro e espetava tudo o que chegava perto: o vento, a chuva e até as
+                        formigas.
+                    </p>
+                    <p className="fx-mini-miudo fx-mini-pagina-numero">12</p>
                 </div>
-                <p className="fx-ingresso-legenda">
-                    Na página: texto a {a} px, cabeçalho e número a {b} px
-                </p>
-            </div>
-        </Painel>
+            </Caixinha>
+            <Caixinha rotulo="O marcador de página da coleção">
+                <div className="fx-marcador">
+                    <span className="fx-marcador-cordao" />
+                    <i className="fx-marcador-furo" />
+                    <p className="fx-marcador-titulo">leia devagar</p>
+                    <p data-medida className="fx-marcador-texto">
+                        a pedra também levou tempo para ficar lisa
+                    </p>
+                    <span className="fx-marcador-seixo" />
+                    <p className="fx-mini-miudo">COLEÇÃO CORRENTEZA</p>
+                </div>
+            </Caixinha>
+            <Caixinha rotulo="A ficha de empréstimo da biblioteca, com as datas carimbadas">
+                <div className="fx-ficha">
+                    <FiltroTinta id={id} semente={7} />
+                    <p className="fx-mini-miudo">BIBLIOTECA DA ESCOLA</p>
+                    <p className="fx-ficha-livro">A pedrinha que rolou</p>
+                    <div className="fx-ficha-tabela">
+                        <p className="fx-mini-miudo">DEVOLVER ATÉ</p>
+                        <p className="fx-mini-miudo">NOME</p>
+                        {EMPRESTIMOS.map(([data, nome], i) => (
+                            <Fragment key={data}>
+                                <p className="fx-ficha-carimbo" style={{ filter: `url(#${id})`, rotate: `${[-4, 3, -2, 5, -3][i]}deg` }}>
+                                    {data}
+                                </p>
+                                <p data-medida={i === 0 || undefined} className="fx-ficha-nome">
+                                    {nome}
+                                </p>
+                            </Fragment>
+                        ))}
+                    </div>
+                </div>
+            </Caixinha>
+            <Caixinha rotulo="O ex-libris colado na capa: este livro pertence a Lia">
+                <div className="fx-exlibris">
+                    <p className="fx-mini-miudo">EX-LIBRIS</p>
+                    <span className="fx-exlibris-seixo" />
+                    <p className="fx-mini-miudo">ESTE LIVRO PERTENCE A</p>
+                    <p className="fx-exlibris-nome">Lia</p>
+                    <p data-medida className="fx-exlibris-texto">
+                        se encontrar, devolva: ele sempre rola de volta para casa
+                    </p>
+                </div>
+            </Caixinha>
+        </div>
     );
 }
+
 
 // ——— Worn: o disco gasto ———
 // o LP "foz", dos Rolados: a capa desbotada com a marca redonda que o disco deixou de tanto entrar e sair da estante e
@@ -368,7 +398,7 @@ export function DiscoWorn() {
 
 // o encarte, em texto pequeno: as faixas dos dois lados com a duração, o tempo de cada lado (somado das faixas), o
 // texto do disco e os créditos
-const LADOS: [string, [string, string][]][] = [
+export const LADOS: [string, [string, string][]][] = [
     [
         'LADO A',
         [
@@ -390,48 +420,87 @@ const LADOS: [string, [string, string][]][] = [
         ],
     ],
 ];
-const somaTempo = (faixas: [string, string][]) => {
+export const somaTempo = (faixas: [string, string][]) => {
     const s = faixas.reduce((t, [, d]) => t + Number(d.split(':')[0]) * 60 + Number(d.split(':')[1]), 0);
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
-export function EncarteWorn() {
-    const caixa = useRef<HTMLDivElement>(null);
-    const titulo = useRef<HTMLParagraphElement>(null);
-    const faixa = useRef<HTMLLIElement>(null);
-    const texto = useRef<HTMLParagraphElement>(null);
-    const { a, b, c } = usePx(caixa, [titulo, faixa, texto], { a: 22, b: 16, c: 15 });
+
+// ——— Worn: as quatro caixinhas do disco ———
+// a contracapa com as faixas, o selo do lado B, a etiqueta de preço do sebo no canto da capa e a ficha técnica
+const FICHA: [string, string][] = [
+    ['voz e violão', 'Ana Seixas'],
+    ['baixo', 'Beto Lajes'],
+    ['bateria', 'Caio Rocha'],
+    ['gravação', 'Estúdio Correnteza'],
+    ['capa', 'Os Rolados'],
+];
+export function CaixinhasWorn() {
+    const [ladoA, ladoB] = [LADOS[0][1], LADOS[1][1]];
     return (
-        <Painel colunas={4} linhas={1} rotulo="O encarte do disco: as faixas, o texto e os créditos, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
-            <div ref={caixa} className="fx-ingresso-painel">
-                <div className="fx-encarte" style={{ fontFamily: familiaDe('worn') }}>
-                    {LADOS.map(([lado, faixas], i) => (
-                        <div key={lado} className="fx-encarte-lado">
-                            <p ref={i === 0 ? titulo : undefined} className="fx-encarte-titulo">
-                                {lado} <span>{somaTempo(faixas)}</span>
-                            </p>
-                            <ol>
-                                {faixas.map(([nome, tempo], k) => (
-                                    <li key={nome} ref={i === 0 && k === 0 ? faixa : undefined}>
-                                        <span>{nome}</span>
-                                        <i />
-                                        <span>{tempo}</span>
+        <div className="fx-grade" style={{ fontFamily: familiaDe('worn') }}>
+            <Caixinha rotulo="A contracapa do disco foz, com as faixas">
+                <div className="fx-contracapa">
+                    <p className="fx-mini-miudo">OS ROLADOS ★ FOZ</p>
+                    <div className="fx-contracapa-lados">
+                        {[ladoA, ladoB].map((faixas, i) => (
+                            <ol key={i}>
+                                {faixas.map(([nome], k) => (
+                                    <li key={nome} data-medida={(i === 0 && k === 0) || undefined}>
+                                        {nome}
                                     </li>
                                 ))}
                             </ol>
-                        </div>
-                    ))}
-                    <div className="fx-encarte-notas">
-                        <p ref={texto} className="fx-encarte-texto">
-                            Gravado quase sem cortes, este disco tem o som de um rio que passa por cima das pedras há muito tempo: nada aqui é novo, tudo foi
-                            gasto até ficar macio. Ouça do começo ao fim, com o volume baixo e a janela aberta.
-                        </p>
-                        <p className="fx-encarte-creditos">Discos Correnteza ★ LP-026 ★ 33 rpm ★ estéreo</p>
+                        ))}
+                    </div>
+                    <div className="fx-contracapa-pe">
+                        <p className="fx-mini-miudo">DISCOS CORRENTEZA ★ LP-026</p>
+                        <Barras numero="000026" classe="fx-contracapa-barras" />
                     </div>
                 </div>
-                <p className="fx-ingresso-legenda">
-                    No encarte: lados a {a} px, faixas a {b} px e texto a {c} px
-                </p>
-            </div>
-        </Painel>
+            </Caixinha>
+            <Caixinha rotulo="O selo do lado B do disco">
+                <div className="fx-selo-b">
+                    <div className="fx-selo-b-papel">
+                        <p className="fx-mini-miudo">OS ROLADOS</p>
+                        <p className="fx-selo-b-titulo">foz</p>
+                        <i className="fx-selo-b-furo" />
+                        <ol>
+                            {ladoB.map(([nome, tempo], k) => (
+                                <li key={nome} data-medida={k === 0 || undefined}>
+                                    {nome} <span>{tempo}</span>
+                                </li>
+                            ))}
+                        </ol>
+                        <p className="fx-mini-miudo">LADO B ★ 33 RPM</p>
+                    </div>
+                </div>
+            </Caixinha>
+            <Caixinha rotulo="A etiqueta de preço do sebo, colada no canto da capa">
+                <div className="fx-sebo">
+                    <span className="fx-sebo-capa" />
+                    <div className="fx-sebo-etiqueta">
+                        <p className="fx-mini-miudo">SEBO BEIRA-RIO</p>
+                        <p className="fx-sebo-preco">R$ 35</p>
+                        <p data-medida className="fx-sebo-texto">
+                            LP usado, capa com marcas. Chia um pouco no lado B, faixa 2.
+                        </p>
+                    </div>
+                </div>
+            </Caixinha>
+            <Caixinha rotulo="A ficha técnica do disco">
+                <div className="fx-ficha-tecnica">
+                    <p className="fx-ficha-tecnica-titulo">ficha técnica</p>
+                    <dl>
+                        {FICHA.map(([papel, nome], i) => (
+                            <Fragment key={papel}>
+                                <dt>{papel}</dt>
+                                <dd data-medida={i === 0 || undefined}>{nome}</dd>
+                            </Fragment>
+                        ))}
+                    </dl>
+                    <p className="fx-mini-miudo">© DISCOS CORRENTEZA</p>
+                </div>
+            </Caixinha>
+        </div>
     );
 }

@@ -3652,3 +3652,326 @@ html[data-paleta='azul'] [data-clone] {
         font-size: max(11px, calc(100cqw / 945 * 24));
     }
 }
+
+/* Polished, 1: uma página do livro (o papel com a sombra da dobra do lado da lombada) */
+.fx-mini-pagina {
+    width: calc(270 * var(--u));
+    height: calc(320 * var(--u));
+    margin-top: calc(30 * var(--u));
+    display: flex;
+    flex-direction: column;
+    gap: calc(12 * var(--u));
+    padding: calc(24 * var(--u)) calc(26 * var(--u)) calc(18 * var(--u)) calc(34 * var(--u));
+    background:
+        linear-gradient(90deg, rgb(0 0 0 / 0.14), transparent calc(26 * var(--u))),
+        var(--p-papel);
+    color: var(--p-frio);
+    box-shadow: 0 calc(6 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.22);
+    transform: rotate(-3deg);
+}
+.fx-mini-pagina-texto {
+    font-size: calc(17 * var(--u));
+    line-height: 1.45;
+}
+.fx-mini-pagina-numero {
+    margin-top: auto !important;
+    text-align: right;
+}
+
+/* Polished, 2: o marcador de página (a tira com o furo, o cordão saindo por cima e a pedrinha) */
+.fx-marcador {
+    position: relative;
+    width: calc(130 * var(--u));
+    height: calc(330 * var(--u));
+    margin-top: calc(40 * var(--u));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(12 * var(--u));
+    padding: calc(46 * var(--u)) calc(14 * var(--u)) calc(18 * var(--u));
+    border-radius: calc(8 * var(--u));
+    background: var(--p-quente-claro);
+    color: var(--p-papel);
+    text-align: center;
+    box-shadow: 0 calc(6 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.22);
+    transform: rotate(6deg);
+}
+.fx-marcador-furo {
+    position: absolute;
+    top: calc(14 * var(--u));
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+    border-radius: 50%;
+    background: var(--cor-faixa);
+}
+.fx-marcador-cordao {
+    position: absolute;
+    top: calc(-44 * var(--u));
+    left: calc(50% - 2 * var(--u));
+    width: calc(4 * var(--u));
+    height: calc(66 * var(--u));
+    border-radius: calc(2 * var(--u));
+    background: var(--p-frio);
+}
+.fx-marcador-titulo {
+    font-size: calc(22 * var(--u));
+    line-height: 1;
+}
+.fx-marcador-texto {
+    font-size: calc(14 * var(--u));
+    line-height: 1.35;
+}
+.fx-marcador-seixo {
+    margin-top: auto;
+    width: calc(64 * var(--u));
+    height: calc(42 * var(--u));
+    border-radius: 48% 52% 44% 56% / 58% 50% 50% 42%;
+    background: radial-gradient(ellipse 60% 55% at 35% 30%, rgb(255 255 255 / 0.45), transparent 70%), var(--p-frio);
+}
+
+/* Polished, 3: a ficha de empréstimo da biblioteca (a tabela pautada, as datas carimbadas e os nomes) */
+.fx-ficha {
+    width: calc(290 * var(--u));
+    margin-top: calc(30 * var(--u));
+    padding: calc(20 * var(--u)) calc(22 * var(--u));
+    background: #f6f0dd;
+    color: var(--p-frio);
+    box-shadow: 0 calc(6 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.22);
+    transform: rotate(2deg);
+}
+.fx-ficha-livro {
+    margin: calc(4 * var(--u)) 0 calc(12 * var(--u)) !important;
+    font-size: calc(22 * var(--u));
+    line-height: 1;
+}
+.fx-ficha-tabela {
+    display: grid;
+    grid-template-columns: calc(110 * var(--u)) 1fr;
+    border-top: max(1px, calc(1.5 * var(--u))) solid currentColor;
+}
+.fx-ficha-tabela > p {
+    display: flex;
+    align-items: center;
+    min-height: calc(32 * var(--u));
+    padding: 0 calc(8 * var(--u));
+    border-bottom: max(1px, calc(1 * var(--u))) solid color-mix(in srgb, currentColor 40%, transparent);
+}
+.fx-ficha-tabela > p:nth-child(odd) {
+    border-right: max(1px, calc(1 * var(--u))) solid color-mix(in srgb, currentColor 40%, transparent);
+}
+.fx-ficha-carimbo {
+    color: var(--p-quente);
+    font-size: calc(15 * var(--u));
+    letter-spacing: 0.06em;
+}
+.fx-ficha-nome {
+    font-size: calc(16 * var(--u));
+}
+
+/* Polished, 4: o ex-libris (a etiqueta colada na capa, com a moldura dupla e a pedrinha) */
+.fx-exlibris {
+    width: calc(270 * var(--u));
+    margin-top: calc(30 * var(--u));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    padding: calc(26 * var(--u)) calc(24 * var(--u));
+    border-radius: calc(18 * var(--u));
+    background: var(--p-papel);
+    color: var(--p-frio);
+    text-align: center;
+    box-shadow:
+        inset 0 0 0 calc(8 * var(--u)) var(--p-papel),
+        inset 0 0 0 calc(10 * var(--u)) var(--p-frio),
+        inset 0 0 0 calc(13 * var(--u)) var(--p-papel),
+        inset 0 0 0 calc(14 * var(--u)) var(--p-frio),
+        0 calc(6 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.22);
+    transform: rotate(-2deg);
+}
+.fx-exlibris-seixo {
+    width: calc(70 * var(--u));
+    height: calc(46 * var(--u));
+    border-radius: 48% 52% 44% 56% / 58% 50% 50% 42%;
+    background: radial-gradient(ellipse 60% 55% at 35% 30%, rgb(255 255 255 / 0.45), transparent 70%), var(--p-quente-claro);
+}
+.fx-exlibris-nome {
+    width: 80%;
+    padding-bottom: calc(4 * var(--u));
+    border-bottom: max(1px, calc(1.5 * var(--u))) solid currentColor;
+    font-size: calc(44 * var(--u));
+    line-height: 1;
+}
+.fx-exlibris-texto {
+    font-size: calc(14 * var(--u));
+    line-height: 1.35;
+}
+
+/* Worn, 1: a contracapa (a capa desbotada com as faixas dos dois lados e o código de barras) */
+.fx-contracapa {
+    position: relative;
+    width: calc(310 * var(--u));
+    height: calc(310 * var(--u));
+    margin-top: calc(30 * var(--u));
+    display: flex;
+    flex-direction: column;
+    gap: calc(12 * var(--u));
+    padding: calc(22 * var(--u));
+    border-radius: calc(6 * var(--u));
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.02) 40%, rgb(255 255 255 / 0.12)), var(--p-quente);
+    color: var(--p-papel);
+    box-shadow:
+        inset 0 0 calc(12 * var(--u)) calc(3 * var(--u)) rgb(255 255 255 / 0.2),
+        0 calc(8 * var(--u)) calc(14 * var(--u)) rgb(0 0 0 / 0.25);
+    transform: rotate(3deg);
+}
+.fx-contracapa-lados {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: calc(10 * var(--u));
+}
+.fx-contracapa ol {
+    margin: 0;
+    padding: 0 0 0 1.1em;
+    font-size: calc(13 * var(--u));
+    line-height: 1.45;
+}
+.fx-contracapa-pe {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: calc(10 * var(--u));
+}
+.fx-contracapa-barras {
+    flex: none;
+    width: calc(90 * var(--u));
+    height: calc(36 * var(--u));
+    padding: calc(4 * var(--u));
+    background: #fff;
+    color: #111;
+}
+
+/* Worn, 2: o selo do lado B (o papel azul no meio do disco, com o furo e as faixas) */
+.fx-selo-b {
+    width: calc(340 * var(--u));
+    height: calc(340 * var(--u));
+    margin-top: calc(30 * var(--u));
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, #141414 0 calc(2 * var(--u)), #1d1d1d calc(2 * var(--u)) calc(4 * var(--u)));
+    box-shadow: 0 calc(8 * var(--u)) calc(14 * var(--u)) rgb(0 0 0 / 0.28);
+}
+.fx-selo-b-papel {
+    position: relative;
+    width: calc(280 * var(--u));
+    height: calc(280 * var(--u));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(4 * var(--u));
+    border-radius: 50%;
+    background: var(--p-polished);
+    color: #1c2a4d;
+    text-align: center;
+}
+.fx-selo-b-titulo {
+    font-size: calc(34 * var(--u));
+    line-height: 1;
+}
+.fx-selo-b-furo {
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+    margin: calc(6 * var(--u)) 0;
+    border-radius: 50%;
+    background: #111;
+}
+.fx-selo-b ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: calc(12 * var(--u));
+    line-height: 1.35;
+}
+.fx-selo-b li span {
+    opacity: 0.7;
+}
+
+/* Worn, 3: a etiqueta do sebo (o canto da capa e a etiqueta de preço colada nele, meio torta) */
+.fx-sebo {
+    position: relative;
+    width: calc(330 * var(--u));
+    height: calc(320 * var(--u));
+    margin-top: calc(30 * var(--u));
+}
+.fx-sebo-capa {
+    position: absolute;
+    inset: 0;
+    border-radius: calc(6 * var(--u));
+    background:
+        radial-gradient(circle at 100% 100%, transparent 70%, rgb(255 255 255 / 0.2) 72%, transparent 76%),
+        var(--p-quente);
+    box-shadow: 0 calc(8 * var(--u)) calc(14 * var(--u)) rgb(0 0 0 / 0.25);
+    transform: rotate(-5deg);
+}
+.fx-sebo-etiqueta {
+    position: absolute;
+    left: calc(40 * var(--u));
+    top: calc(56 * var(--u));
+    width: calc(230 * var(--u));
+    display: flex;
+    flex-direction: column;
+    gap: calc(6 * var(--u));
+    padding: calc(18 * var(--u)) calc(20 * var(--u));
+    border-radius: calc(6 * var(--u));
+    background: #fff4b8;
+    color: #3b2a22;
+    box-shadow: 0 calc(3 * var(--u)) calc(6 * var(--u)) rgb(0 0 0 / 0.2);
+    transform: rotate(4deg);
+}
+.fx-sebo-preco {
+    font-size: calc(60 * var(--u));
+    line-height: 1;
+}
+.fx-sebo-texto {
+    font-size: calc(14 * var(--u));
+    line-height: 1.35;
+}
+
+/* Worn, 4: a ficha técnica (a folha do encarte com quem tocou e quem fez o disco) */
+.fx-ficha-tecnica {
+    width: calc(300 * var(--u));
+    margin-top: calc(30 * var(--u));
+    display: flex;
+    flex-direction: column;
+    gap: calc(12 * var(--u));
+    padding: calc(24 * var(--u));
+    background: #eee4cf;
+    color: #3b2a22;
+    box-shadow:
+        inset 0 0 calc(16 * var(--u)) rgb(120 80 30 / 0.18),
+        0 calc(6 * var(--u)) calc(12 * var(--u)) rgb(0 0 0 / 0.22);
+    transform: rotate(-2deg);
+}
+.fx-ficha-tecnica-titulo {
+    padding-bottom: calc(8 * var(--u));
+    border-bottom: max(1px, calc(2 * var(--u))) solid currentColor;
+    font-size: calc(26 * var(--u));
+    line-height: 1;
+}
+.fx-ficha-tecnica dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: calc(6 * var(--u)) calc(14 * var(--u));
+    margin: 0;
+    font-size: calc(15 * var(--u));
+    line-height: 1.3;
+}
+.fx-ficha-tecnica dt {
+    opacity: 0.7;
+}
+.fx-ficha-tecnica dd {
+    margin: 0;
+}

@@ -3,7 +3,7 @@
 import { useId, useRef, type CSSProperties } from 'react';
 import Painel from './Painel';
 import { familiaDe } from './Faixa';
-import { Barras, FiltroTinta, LinhaCheia, usePx } from './Pratica';
+import { Barras, FiltroTinta, LADOS, LinhaCheia, somaTempo, usePx } from './Pratica';
 import type { Estilo } from '../_lib/conteudo';
 
 // a gaveta: as peças das faixas que não estão na home, guardadas para o "escreva aqui" (onde a pessoa vai poder ver o
@@ -895,6 +895,94 @@ export function IngressoCut() {
                 </div>
                 <p className="fx-ingresso-legenda">
                     No ingresso: título a {px.titulo} px, texto a {px.texto} px e detalhes a {px.miudo} px
+                </p>
+            </div>
+        </Painel>
+    );
+}
+
+// ——— 11. a página dupla do livro (era o texto pequeno da Polished, antes das caixinhas) ———
+// a página dupla da história, em texto pequeno: o texto corrido no tamanho de leitura, o cabeçalho e o número
+const PAGINAS = [
+    {
+        n: 12,
+        texto: 'Era uma vez uma pedra cheia de quinas. Ela morava no alto do morro e espetava tudo o que chegava perto: o vento, a chuva e até as formigas. Um dia a chuva veio mais forte, e a pedra desceu o morro rolando, tum, tum, tum, até cair no rio.',
+    },
+    {
+        n: 13,
+        texto: 'A água era fria e não parava nunca. Levava a pedra para baixo, para cima, para o lado, e a cada volta uma quina ia embora. Quando o rio ficou calmo, a pedra se olhou no fundo e quase não se reconheceu: estava lisinha, redonda, boa de segurar.',
+    },
+];
+export function PaginaPolished({ estilo = 'polished' }: { estilo?: Estilo }) {
+    const familia = familiaDe(estilo);
+    const caixa = useRef<HTMLDivElement>(null);
+    const cabeca = useRef<HTMLParagraphElement>(null);
+    const texto = useRef<HTMLParagraphElement>(null);
+    const numero = useRef<HTMLParagraphElement>(null);
+    const { a, b, c } = usePx(caixa, [texto, cabeca, numero], { a: 20, b: 13, c: 13 });
+    return (
+        <Painel colunas={4} linhas={1} rotulo="Uma página dupla do livro, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
+            <div ref={caixa} className="fx-ingresso-painel">
+                <div className="fx-v-paginas" style={{ fontFamily: familia }}>
+                    {PAGINAS.map((p, i) => (
+                        <div key={p.n} className="fx-v-pagina">
+                            <p ref={i === 0 ? cabeca : undefined} className="fx-v-pagina-cabeca">
+                                A PEDRINHA QUE ROLOU
+                            </p>
+                            <p ref={i === 0 ? texto : undefined} className="fx-v-pagina-texto">
+                                {p.texto}
+                            </p>
+                            <p ref={i === 0 ? numero : undefined} className="fx-v-pagina-numero">
+                                {p.n}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+                <p className="fx-ingresso-legenda">
+                    Na página: texto a {a} px, cabeçalho e número a {b} px
+                </p>
+            </div>
+        </Painel>
+    );
+}
+
+// ——— 12. o encarte do disco (era o texto pequeno da Worn, antes das caixinhas) ———
+export function EncarteWorn() {
+    const caixa = useRef<HTMLDivElement>(null);
+    const titulo = useRef<HTMLParagraphElement>(null);
+    const faixa = useRef<HTMLLIElement>(null);
+    const texto = useRef<HTMLParagraphElement>(null);
+    const { a, b, c } = usePx(caixa, [titulo, faixa, texto], { a: 22, b: 16, c: 15 });
+    return (
+        <Painel colunas={4} linhas={1} rotulo="O encarte do disco: as faixas, o texto e os créditos, em texto pequeno" celular={{ colunas: 2, linhas: 2 }} nu>
+            <div ref={caixa} className="fx-ingresso-painel">
+                <div className="fx-encarte" style={{ fontFamily: familiaDe('worn') }}>
+                    {LADOS.map(([lado, faixas], i) => (
+                        <div key={lado} className="fx-encarte-lado">
+                            <p ref={i === 0 ? titulo : undefined} className="fx-encarte-titulo">
+                                {lado} <span>{somaTempo(faixas)}</span>
+                            </p>
+                            <ol>
+                                {faixas.map(([nome, tempo], k) => (
+                                    <li key={nome} ref={i === 0 && k === 0 ? faixa : undefined}>
+                                        <span>{nome}</span>
+                                        <i />
+                                        <span>{tempo}</span>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                    ))}
+                    <div className="fx-encarte-notas">
+                        <p ref={texto} className="fx-encarte-texto">
+                            Gravado quase sem cortes, este disco tem o som de um rio que passa por cima das pedras há muito tempo: nada aqui é novo, tudo foi
+                            gasto até ficar macio. Ouça do começo ao fim, com o volume baixo e a janela aberta.
+                        </p>
+                        <p className="fx-encarte-creditos">Discos Correnteza ★ LP-026 ★ 33 rpm ★ estéreo</p>
+                    </div>
+                </div>
+                <p className="fx-ingresso-legenda">
+                    No encarte: lados a {a} px, faixas a {b} px e texto a {c} px
                 </p>
             </div>
         </Painel>
