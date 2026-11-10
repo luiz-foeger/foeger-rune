@@ -11,12 +11,12 @@ import { LINHAS } from '../_lib/glifos';
 import { ESTILOS as ESTILOS_SIGMA } from '../_lib/medidas';
 import { useLaco, vaiEVolta } from '../_lib/movimento';
 
-// as composições de cada faixa, no lugar das da Ease (palavras soltas, contador, cartaz, citação, onomatopeias,
-// letra grande com seleção). Os controles que se mexem sozinhos: "QUINAS DE FORA" gasta as pontas das letras (o mesmo
-// filtro dos cartões, aplicado no texto, com o σ de agora na janela), "DESGASTE" gasta o n do Cut até virar o Worn, e
-// "ALTERNATIVAS" liga e desliga o calt, trocando as letras repetidas pelas variações da fonte (toda palavra que passa
-// por ele tem uma minúscula repetida a até duas letras de distância, a regra do calt, para a troca aparecer). Os números
-// são da fonte: os glifos contados na prévia, o σ de cada estilo e as réguas em unidades da fonte.
+// as composições das faixas Polished e Worn que ainda não passaram para o padrão novo (o Cut já está em Pratica.tsx):
+// cartaz, citação, onomatopeias, letra grande com seleção. Os controles que se mexem sozinhos: "DESGASTE" gasta o n do
+// Cut até virar o Worn (com o σ de agora na janela), e "ALTERNATIVAS" liga e desliga o calt, trocando as letras
+// repetidas pelas variações da fonte (toda palavra que passa por ele tem uma minúscula repetida a até duas letras de
+// distância, a regra do calt, para a troca aparecer). Os números são da fonte: o σ de cada estilo e as réguas em
+// unidades da fonte.
 const u = (n: number) => `calc(${n} * var(--u))`;
 const SIGMA_WORN = 50;
 
@@ -44,136 +44,7 @@ function useAlternativas(ref: RefObject<HTMLDivElement | null>, atraso = 0) {
     return { pegadores, ligado };
 }
 
-// ——— Cut (marrom): quatro colunas de palavras soltas ———
-// os 311 glifos de cada estilo por tipo, contados na prévia da fonte: uma amostra e quantos são. O "ss" mostra uma
-// variante de verdade (o segundo s já sai trocado pelo calt), e o ␣ conta os três glifos vazios (o espaço, o espaço
-// fixo e o .notdef, que nesta fonte não tem desenho)
-const GRUPOS: [string, number, string][] = [
-    ['A', 26, 'maiúsculas'],
-    ['a', 26, 'minúsculas'],
-    ['Á', 74, 'acentuadas e especiais'],
-    ['1', 16, 'números'],
-    ['?', 45, 'pontuação'],
-    ['★', 43, 'símbolos'],
-    ['ss', 78, 'variantes'],
-    ['␣', 3, 'vazios'],
-];
-const TOTAL_GLIFOS = GRUPOS.reduce((s, g) => s + g[1], 0);
-const TAMANHOS: [string, number][] = [
-    ['Rocha', 118],
-    ['Cinzel', 94],
-    ['G&Lasca', 74],
-    ['Lapidar 311', 54],
-    ['Quina & Seixo', 42],
-];
-
-export function GradePalavras({ estilo }: { estilo: Estilo }) {
-    const id = useId().replace(/:/g, '');
-    const familia = familiaDe(estilo);
-    const contador = useRef<HTMLDivElement>(null);
-    const numero = useRef<HTMLSpanElement>(null);
-    const inicio = useRef<number | null>(null);
-    const fora = useRef<HTMLDivElement>(null);
-    const pilhaFora = useRef<HTMLDivElement>(null);
-    const pegFora = useRef<(HTMLSpanElement | null)[]>([]);
-    const valFora = useRef<(HTMLSpanElement | null)[]>([]);
-    const alt = useRef<HTMLDivElement>(null);
-    const { pegadores: pegAlt, ligado } = useAlternativas(alt, 0.7);
-
-    // o contador: quando o painel sobe na tela, conta até o total de glifos em ~1,6 s e para nele; abaixo da tela de
-    // novo, volta a zero para contar outra vez
-    useLaco(contador, t => {
-        const el = contador.current;
-        if (!el || !numero.current) return;
-        if (el.getBoundingClientRect().top > window.innerHeight * 0.85) {
-            inicio.current = null;
-            numero.current.textContent = '0';
-            return;
-        }
-        inicio.current ??= t;
-        const k = Math.min(1, (t - inicio.current) / 1.6);
-        numero.current.textContent = String(Math.round(TOTAL_GLIFOS * (1 - (1 - k) ** 3)));
-    });
-    // as quinas de fora das palavras da terceira coluna, do Cut (σ 0) até o σ do Worn
-    useLaco(
-        fora,
-        t => {
-            const k = vaiEVolta(t, { parado0: 0.8, sobe: 1.1, parado1: 1.2, desce: 1.1 });
-            const px = (SIGMA_WORN * k * pxDaLetra(pilhaFora.current)) / 1000;
-            ajustarDesgaste(fora.current, px, 0);
-            if (pegFora.current[0]) pegFora.current[0].style.left = `${(k * 100).toFixed(1)}%`;
-            if (valFora.current[0]) valFora.current[0].textContent = `σ ${Math.round(SIGMA_WORN * k)}`;
-        },
-        30,
-    );
-
-    return (
-        <div className="fx-grade">
-            <Painel colunas={1} linhas={1} solto rotulo="Contador de glifos">
-                <div ref={contador} className="fx-solto" style={{ fontFamily: familia }}>
-                    <div className="fx-pilha" style={{ fontSize: u(120), lineHeight: 0.84 }}>
-                        <div>RUNE</div>
-                        <div>R</div>
-                        <div>RU</div>
-                        <div>RUN</div>
-                        <div style={{ fontSize: u(36), lineHeight: 1.2 }}>FÖEGER RUNE CUT</div>
-                    </div>
-                    <div className="fx-contador" aria-hidden>
-                        <span className="fx-contador-letra">R</span>
-                        <span ref={numero} className="fx-contador-numero">
-                            0
-                        </span>
-                    </div>
-                    <ul className="fx-codigos" aria-label={GRUPOS.map(([, n, nome]) => `${n} ${nome}`).join(', ')}>
-                        {GRUPOS.map(([a, n, nome]) => (
-                            <li key={nome} aria-hidden>
-                                <span>{a}</span>
-                                <span>{n}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </Painel>
-            <Painel colunas={1} linhas={1} solto rotulo="Tamanhos">
-                <div className="fx-solto" style={{ fontFamily: familia }}>
-                    <div className="fx-pilha">
-                        {TAMANHOS.map(([p, t]) => (
-                            <div key={p} style={{ fontSize: u(t), lineHeight: 1.02 }}>
-                                {p}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </Painel>
-            <Painel colunas={1} linhas={1} solto rotulo="Quinas de fora">
-                <div ref={fora} className="fx-solto">
-                    <DefsDesgaste id={`${id}-fora`} modo="fora" />
-                    <div ref={pilhaFora} className="fx-pilha" style={{ fontFamily: familia, fontSize: u(80), lineHeight: 1.08, filter: `url(#${id}-fora)` }}>
-                        <div>Granito</div>
-                        <div>Basalto</div>
-                        <div>Ardósia</div>
-                        <div>Mármore</div>
-                    </div>
-                    <Ferramentas estilo={{ left: u(-58), top: u(-4) }} />
-                    <Janela itens={[{ nome: 'QUINAS DE FORA', cor: 'var(--p-quente)' }]} pegadores={pegFora} valores={valFora} seta={0} estilo={{ left: u(150), top: u(352) }} />
-                </div>
-            </Painel>
-            <Painel colunas={1} linhas={1} solto rotulo="Letras alternativas">
-                <div ref={alt} className="fx-solto">
-                    <div className="fx-pilha" style={{ fontFamily: familia, fontSize: u(80), lineHeight: 1.08, fontFeatureSettings: `"calt" ${ligado ? 1 : 0}` }}>
-                        <div>Terra</div>
-                        <div>Barro</div>
-                        <div>Cascalho</div>
-                        <div>Massapê</div>
-                    </div>
-                    <Janela itens={[{ nome: 'ALTERNATIVAS', cor: 'var(--tinta)' }]} pegadores={pegAlt} seta={0} estilo={{ left: u(250), top: u(70) }} />
-                </div>
-            </Painel>
-        </div>
-    );
-}
-
-// ——— Cut (marrom): os símbolos da fonte se gastando, no lugar dos pictogramas da Ease ———
+// ——— os símbolos da fonte se gastando (saíram da faixa Cut; ficam para a seção dos números, símbolos e acentos) ———
 // (o & ficou de fora: no desgaste máximo, os miolos pequenos dele fecham)
 const SIMBOLOS = ['★', '♥', '→', '✓'];
 export function Simbolos({ estilo }: { estilo: Estilo }) {

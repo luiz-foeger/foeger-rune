@@ -1,8 +1,9 @@
 import Alfabeto from './_comp/Alfabeto';
 import Digitada from './_comp/Digitada';
-import { CartazPolido, GradePalavras, Onomatopeias, Simbolos } from './_comp/Composicoes';
+import { CartazPolido, Onomatopeias } from './_comp/Composicoes';
 import { Faixa, Manchete, Textos } from './_comp/Faixa';
 import { Escura, LetrasRune, Recursos, TextoVariacoes } from './_comp/Livro';
+import { CartazCut, IngressoCut } from './_comp/Pratica';
 import SecaoDesgaste from './_comp/SecaoDesgaste';
 import SecaoLivro from './_comp/SecaoLivro';
 import Testador from './_comp/Testador';
@@ -32,11 +33,11 @@ export default function Pagina() {
                 <Testador />
                 {/* as faixas coloridas, uma por estilo, coladas umas nas outras */}
                 <div className="fx-faixas">
+                    {/* cada faixa no padrão novo: a frase que corre, a peça grande e a de texto pequeno (Pratica.tsx) */}
                     <Faixa estilo="cut">
                         <Manchete estilo="cut" />
-                        <GradePalavras estilo="cut" />
-                        <Textos estilo="cut" />
-                        <Simbolos estilo="cut" />
+                        <CartazCut />
+                        <IngressoCut />
                     </Faixa>
                     <Faixa estilo="polished">
                         <Manchete estilo="polished" />

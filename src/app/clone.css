@@ -1978,3 +1978,195 @@ html[data-paleta='azul'] [data-clone] {
 .fx-sigma-amostra {
     font-size: 190px;
 }
+
+/* 15. as faixas na prática: em cada estilo, uma peça grande e uma de texto pequeno onde ele seria usado de verdade.
+   No Cut, o cartaz lambe-lambe de um festival (cada linha na largura inteira, a conta é do LinhaCheia, em
+   Pratica.tsx) e o ingresso do mesmo festival */
+.fx-linha-cheia {
+    display: block;
+    width: max-content;
+    white-space: nowrap;
+    line-height: 1;
+    text-box: trim-both cap alphabetic;
+}
+.fx-lambe-papel {
+    position: absolute;
+    inset: 0;
+    color: var(--tinta);
+}
+.fx-lambe {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: calc(46 * var(--u)) calc(48 * var(--u));
+}
+.fx-lambe[data-tela='celular'] {
+    display: none;
+}
+.fx-lambe-bloco {
+    display: flex;
+    flex-direction: column;
+    gap: calc(18 * var(--u));
+}
+.fx-lambe-bloco[data-faixa] {
+    padding: calc(22 * var(--u)) calc(26 * var(--u));
+    background: var(--tinta);
+    color: var(--cor-faixa);
+}
+
+.fx-ingresso-painel {
+    position: absolute;
+    inset: 0;
+}
+.fx-ingresso {
+    /* onde fica o picote, e o raio dos furos de meia-lua em cima e embaixo dele */
+    --corte: calc(1290 * var(--u));
+    --furo: calc(22 * var(--u));
+    position: absolute;
+    left: calc(59 * var(--u));
+    right: calc(59 * var(--u));
+    top: calc(40 * var(--u));
+    bottom: calc(84 * var(--u));
+    display: grid;
+    grid-template-columns: var(--corte) 1fr;
+    border-radius: calc(10 * var(--u));
+    background: var(--tinta);
+    color: var(--cor-faixa);
+    mask:
+        radial-gradient(circle at var(--corte) 0, #0000 var(--furo), #000 calc(var(--furo) + 0.5px)) top / 100% 51% no-repeat,
+        radial-gradient(circle at var(--corte) 100%, #0000 var(--furo), #000 calc(var(--furo) + 0.5px)) bottom / 100% 51% no-repeat;
+}
+.fx-ingresso::after {
+    content: '';
+    position: absolute;
+    left: var(--corte);
+    top: calc(var(--furo) + 10 * var(--u));
+    bottom: calc(var(--furo) + 10 * var(--u));
+    border-left: max(1px, calc(2 * var(--u))) dashed var(--cor-faixa);
+    opacity: 0.55;
+}
+.fx-ingresso p {
+    margin: 0;
+}
+.fx-ingresso-corpo {
+    display: flex;
+    flex-direction: column;
+    padding: calc(28 * var(--u)) calc(40 * var(--u));
+}
+.fx-ingresso-miudo {
+    display: flex;
+    justify-content: space-between;
+    gap: calc(20 * var(--u));
+    font-size: calc(14 * var(--u));
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+}
+.fx-ingresso-titulo {
+    margin-top: calc(16 * var(--u)) !important;
+    font-size: calc(84 * var(--u));
+    line-height: 1;
+    white-space: nowrap;
+}
+.fx-ingresso-sub {
+    margin-top: calc(6 * var(--u)) !important;
+    font-size: calc(26 * var(--u));
+    line-height: 1.2;
+}
+.fx-ingresso-texto {
+    margin-top: auto !important;
+    padding-top: calc(14 * var(--u));
+    max-width: calc(880 * var(--u));
+    font-size: calc(17 * var(--u));
+    line-height: 1.35;
+}
+.fx-ingresso-canhoto {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: calc(12 * var(--u));
+    padding: calc(28 * var(--u)) calc(34 * var(--u)) calc(28 * var(--u)) calc(44 * var(--u));
+}
+.fx-ingresso-setor {
+    display: flex;
+    justify-content: space-between;
+    gap: calc(24 * var(--u));
+    font-size: calc(44 * var(--u));
+    line-height: 1;
+}
+.fx-ingresso-barras {
+    display: block;
+    width: 100%;
+    height: calc(56 * var(--u));
+}
+.fx-ingresso-legenda {
+    position: absolute;
+    left: calc(59 * var(--u));
+    bottom: calc(30 * var(--u));
+    margin: 0;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sec);
+    font-weight: 500;
+    line-height: 1;
+}
+@media (max-width: 899px) {
+    .fx-lambe {
+        padding: calc(36 * var(--u));
+    }
+    .fx-lambe[data-tela='largo'] {
+        display: none;
+    }
+    .fx-lambe[data-tela='celular'] {
+        display: flex;
+    }
+    /* o ingresso fica em pé: o corpo em cima, o picote deitado e o canhoto embaixo */
+    .fx-ingresso {
+        --corte: calc(540 * var(--u));
+        left: calc(36 * var(--u));
+        right: calc(36 * var(--u));
+        top: calc(36 * var(--u));
+        bottom: calc(100 * var(--u));
+        grid-template-columns: none;
+        grid-template-rows: var(--corte) 1fr;
+        mask:
+            radial-gradient(circle at 0 var(--corte), #0000 var(--furo), #000 calc(var(--furo) + 0.5px)) left / 51% 100% no-repeat,
+            radial-gradient(circle at 100% var(--corte), #0000 var(--furo), #000 calc(var(--furo) + 0.5px)) right / 51% 100% no-repeat;
+    }
+    .fx-ingresso::after {
+        left: calc(var(--furo) + 10 * var(--u));
+        right: calc(var(--furo) + 10 * var(--u));
+        top: var(--corte);
+        bottom: auto;
+        border-left: 0;
+        border-top: max(1px, calc(2 * var(--u))) dashed var(--cor-faixa);
+    }
+    .fx-ingresso-corpo {
+        padding: calc(30 * var(--u));
+    }
+    .fx-ingresso-miudo {
+        font-size: calc(24 * var(--u));
+    }
+    .fx-ingresso-titulo {
+        font-size: calc(96 * var(--u));
+    }
+    .fx-ingresso-sub {
+        font-size: calc(32 * var(--u));
+    }
+    .fx-ingresso-texto {
+        font-size: calc(30 * var(--u));
+    }
+    .fx-ingresso-canhoto {
+        padding: calc(26 * var(--u)) calc(30 * var(--u));
+    }
+    .fx-ingresso-setor {
+        font-size: calc(60 * var(--u));
+    }
+    .fx-ingresso-barras {
+        height: calc(50 * var(--u));
+    }
+    .fx-ingresso-legenda {
+        left: calc(36 * var(--u));
+        bottom: calc(40 * var(--u));
+    }
+}
