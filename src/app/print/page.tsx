@@ -2,8 +2,8 @@
 
 // o espécime para imprimir: as mesmas páginas do livro da página, uma por folha de cerca de 14 × 21 cm (a proporção
 // 2:3 das folhas do livro), desenhadas pelo pincel de SVG, com o texto de verdade. É daqui que sai o PDF para baixar
-// (public/foeger-rune-especime.pdf), gerado pelo Chromium com as fontes embutidas.
-// Uso: abrir http://localhost:3700/livro e imprimir (ou gerar com o puppeteer, page.pdf, depois
+// (public/foeger-rune-specimen.pdf), gerado pelo Chromium com as fontes embutidas.
+// Uso: abrir http://localhost:3700/print e imprimir (ou gerar com o puppeteer, page.pdf, depois
 // que a <main> ganhar data-pronto)
 import { useEffect, useState } from 'react';
 import { CAPITULOS, lerCores, montarFolhas, paginasDoPdf } from '../_lib/especime/conteudo';

@@ -22,7 +22,7 @@ export default function NaPratica() {
         <>
             <Cabecalho />
             <main className="fx-corpo fx-corpo-pagina">
-                <TituloEstilos texto={PAGINA_PRATICA.titulo} asteriscoDepois={null} nota={null} ancora="pratica" livre />
+                <TituloEstilos texto={PAGINA_PRATICA.titulo} asteriscoDepois={null} nota={null} livre />
                 <div className="fx-faixas">
                     <Faixa estilo="cut">
                         <p className="fx-faixa-rotulo">{nomeDe('cut')}</p>
@@ -43,7 +43,7 @@ export default function NaPratica() {
                 {/* passando o mouse num texto das faixas: a fonte e o tamanho dele */}
                 <Inspetor escopo=".fx-faixas" />
                 {/* o playground: o editor para testar a fonte (os estilos, os tamanhos, as cores, os efeitos e o desgaste) */}
-                <TituloEstilos texto={TITULO_ESCREVA.texto} asteriscoDepois={null} nota={TITULO_ESCREVA.nota} ancora="escreva" livre />
+                <TituloEstilos texto={TITULO_ESCREVA.texto} asteriscoDepois={null} nota={TITULO_ESCREVA.nota} ancora="playground" livre />
                 <Editor />
                 <Chamada href="/" texto={CHAMADA_HOME.texto} legenda={CHAMADA_HOME.legenda} />
             </main>

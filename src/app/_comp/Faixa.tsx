@@ -11,7 +11,7 @@ import { useLaco } from '../_lib/movimento';
 export function Faixa({ estilo, children }: { estilo: Estilo; children: ReactNode }) {
     const nome = ESTILOS.find(e => e.id === estilo)!.nome;
     return (
-        <section id={`faixa-${estilo}`} className="fx-faixa" aria-label={`Faixa ${nome}`} style={{ '--cor-faixa': COR_FAIXA[estilo] } as CSSProperties}>
+        <section id={`band-${estilo}`} className="fx-faixa" aria-label={`Faixa ${nome}`} style={{ '--cor-faixa': COR_FAIXA[estilo] } as CSSProperties}>
             <div className="fx-faixa-miolo">{children}</div>
         </section>
     );

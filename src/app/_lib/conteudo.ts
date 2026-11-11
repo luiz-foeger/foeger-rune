@@ -49,8 +49,9 @@ export const TITULO_CARACTERES = { texto: 'Caracteres', nota: 'Números, acentos
 // o título do livro, digitado como o dos estilos, com a nota no pé do painel
 export const TITULO_LIVRO = { texto: 'O Livro', asteriscoDepois: 7, nota: '* O espécime da Föeger Rune, para folhear aqui ou baixar em PDF' };
 
-// a segunda página: a fonte em uso (as peças das faixas) e o playground
-export const PAGINA_PRATICA = { caminho: '/na-pratica', titulo: 'Na prática' };
+// a segunda página: a fonte em uso (as peças das faixas) e o playground. Os endereços (as páginas, as âncoras e o PDF)
+// ficam sempre em inglês, numa palavra só: sem acento e curtos
+export const PAGINA_PRATICA = { caminho: '/showcase', titulo: 'Na prática' };
 // a chamada no fim das faixas da home, que leva à página da prática
 export const CHAMADA_PRATICA = { texto: 'Veja a Rune na prática', legenda: 'Os cartazes, os livros, o disco e o playground para testar a fonte' };
 // e a do pé da página da prática, que volta para a home
@@ -67,15 +68,15 @@ export const CABECALHO: {
     menu: 'Menu',
     fechar: 'Fechar',
     itens: [
-        { texto: 'Alfabeto', alvo: 'alfabeto' },
-        { texto: 'Estilos', alvo: 'estilos' },
-        { texto: 'Testar', alvo: 'testador' },
-        { texto: 'Caracteres', alvo: 'caracteres' },
-        { texto: 'Recursos', alvo: 'recursos' },
-        { texto: 'O Livro', alvo: 'livro' },
+        { texto: 'Alfabeto', alvo: 'alphabet' },
+        { texto: 'Estilos', alvo: 'styles' },
+        { texto: 'Testar', alvo: 'tester' },
+        { texto: 'Caracteres', alvo: 'characters' },
+        { texto: 'Recursos', alvo: 'features' },
+        { texto: 'O Livro', alvo: 'book' },
         { texto: 'Na prática', alvo: '', pagina: PAGINA_PRATICA.caminho },
-        { texto: 'Playground', alvo: 'escreva', pagina: PAGINA_PRATICA.caminho },
+        { texto: 'Playground', alvo: 'playground', pagina: PAGINA_PRATICA.caminho },
     ],
-    acao: { texto: 'Baixar', href: '/foeger-rune-especime.pdf' },
+    acao: { texto: 'Baixar', href: '/foeger-rune-specimen.pdf' },
 };
 export const HERO = { legenda: ['Föeger Rune', 'Desenhada por Luiz Föeger'] };

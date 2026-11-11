@@ -86,7 +86,7 @@ function Mostruario({ estilo, setEstilo }: { estilo: Estilo; setEstilo: (e: Esti
     const chars = GRUPOS.find(g => g.id === grupo)!.chars;
     const linhas = LINHAS[estilo];
     return (
-        <Painel colunas={4} linhas={2} rotulo="Mostruário dos caracteres" ancora="mostruario" celular={{ colunas: 2, linhas: 4 }}>
+        <Painel colunas={4} linhas={2} rotulo="Mostruário dos caracteres" ancora="glyphs" celular={{ colunas: 2, linhas: 4 }}>
             <div className="fx-car">
                 {/* o caractere grande, com as linhas da fonte, o nome e o código */}
                 <div className="fx-car-vista">

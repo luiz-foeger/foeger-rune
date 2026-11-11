@@ -28,9 +28,9 @@ export default function Pagina() {
                 <Digitada />
                 {/* a seção do desgaste: os cartões de perto, todos movidos pelo mesmo σ */}
                 <SecaoDesgaste />
-                <TituloEstilos ancora="estilos" livre />
+                <TituloEstilos ancora="styles" livre />
                 {/* a âncora do "Testar" do menu */}
-                <div id="testador" />
+                <div id="tester" />
                 <Testador />
                 {/* as faixas coloridas, uma por estilo, coladas umas nas outras, com a frase que corre; as peças de cada
                     estilo em uso ficam na página "Na prática" */}
@@ -51,12 +51,12 @@ export default function Pagina() {
                 </div>
                 <Chamada href={PAGINA_PRATICA.caminho} texto={CHAMADA_PRATICA.texto} legenda={CHAMADA_PRATICA.legenda} />
                 {/* os caracteres além do alfabeto: os números, o mostruário (acentos, pontuação e símbolos) e os símbolos se gastando */}
-                <TituloEstilos texto={TITULO_CARACTERES.texto} asteriscoDepois={null} nota={TITULO_CARACTERES.nota} ancora="caracteres" livre />
+                <TituloEstilos texto={TITULO_CARACTERES.texto} asteriscoDepois={null} nota={TITULO_CARACTERES.nota} ancora="characters" livre />
                 <Caracteres />
-                <TituloEstilos texto={TITULO_RECURSOS} asteriscoDepois={null} nota={null} ancora="recursos" />
+                <TituloEstilos texto={TITULO_RECURSOS} asteriscoDepois={null} nota={null} ancora="features" />
                 <Recursos />
                 {/* o livro: o espécime para folhear (o livro realista do clone-tantan) e o PDF para baixar */}
-                <TituloEstilos texto={TITULO_LIVRO.texto} asteriscoDepois={TITULO_LIVRO.asteriscoDepois} nota={TITULO_LIVRO.nota} ancora="livro" />
+                <TituloEstilos texto={TITULO_LIVRO.texto} asteriscoDepois={TITULO_LIVRO.asteriscoDepois} nota={TITULO_LIVRO.nota} ancora="book" />
                 <SecaoLivro />
             </main>
         </>

@@ -8,7 +8,7 @@ import { iniciarLivro, type Controle, type Estado } from '../_lib/livro3d/motor'
 // é o realista do clone-tantan, solto direto no fundo da página (sem painel, réguas nem moldura), sobre um pedaço de
 // trama que o motor desenha no chão e que some em volta dele, numa área do tamanho de um painel de 4 × 2 (2 × 2 no
 // celular). O motor só começa quando a seção chega perto da tela e só desenha enquanto ela está nela.
-export const PDF = '/foeger-rune-especime.pdf';
+export const PDF = '/foeger-rune-specimen.pdf';
 
 export default function SecaoLivro() {
     const tela = useRef<HTMLCanvasElement>(null);

@@ -433,7 +433,7 @@ export function HeroPedras() {
         let paredes: Matter.Body[] = [];
         const ps = pedras.current;
         const pagina = document.querySelector('.fx-corpo');
-        const alfabeto = document.getElementById('alfabeto');
+        const alfabeto = document.getElementById('alphabet');
         // os cacos na física: o corpo, a letra, o caco e de onde ele sai na volta
         const cacos = new Map<string, { corpo: Matter.Body; letra: number; caco: Caco; de: Pose; atraso: number }>();
         let sPx = 0;
