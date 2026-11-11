@@ -1,7 +1,7 @@
 // o conteúdo do livro da página: o espécime da Föeger Rune no lugar do "O livro da Föeger" do clone-tantan, na ordem
 // dos livros de verdade: a capa com a guarda lisa por dentro; as páginas de abertura (a falsa folha de rosto, o
-// frontispício, a folha de rosto, os créditos no verso dela, o sumário em duas páginas, começando numa da direita, e a
-// epígrafe); a dupla que apresenta os três estilos; os capítulos com abertura e matéria, com papel vegetal entre algumas páginas; os caracteres; o
+// frontispício, a folha de rosto, os créditos no verso dela e o sumário, numa página da direita); a dupla que apresenta
+// os três estilos; os capítulos com abertura e matéria, com papel vegetal entre algumas páginas; os caracteres; o
 // colofão; e a contracapa, também com a guarda por dentro. Os números e os fatos são os da prévia de 05/11 (311 glifos em cada estilo,
 // as larguras de cada estilo, o revezamento das minúsculas, o L do meio e o f do começo).
 import type { Familia } from './pincel';
@@ -245,8 +245,6 @@ export type Pagina =
     | { tipo: 'rosto' }
     | { tipo: 'creditos' }
     | { tipo: 'sumario' }
-    | { tipo: 'sumario-cont' }
-    | { tipo: 'epigrafe' }
     | { tipo: 'estilos-esq' }
     | { tipo: 'estilos-dir' }
     | { tipo: 'abertura-imagem'; cap: number }
@@ -269,8 +267,7 @@ export function montarFolhas(): Folha[] {
     f.push({ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'guarda' } });
     f.push({ tipo: 'papel', frente: { tipo: 'falsa-rosto' }, verso: { tipo: 'frontispicio' } });
     f.push({ tipo: 'papel', frente: { tipo: 'rosto' }, verso: { tipo: 'creditos' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'sumario' }, verso: { tipo: 'sumario-cont' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'epigrafe' }, verso: { tipo: 'estilos-esq' } });
+    f.push({ tipo: 'papel', frente: { tipo: 'sumario' }, verso: { tipo: 'estilos-esq' } });
     let direita: Pagina = { tipo: 'estilos-dir' };
     CAPITULOS.forEach((c, i) => {
         f.push({ tipo: 'papel', frente: direita, verso: { tipo: 'abertura-imagem', cap: i } });
