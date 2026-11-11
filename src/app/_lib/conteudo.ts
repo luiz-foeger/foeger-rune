@@ -42,8 +42,8 @@ export const VARIACOES = [
     { estilo: 'worn' as Estilo, titulo: 'Worn, com as variações', linhas: ['Nossa, essssa', 'correnteeeeza', 'tá me deixando', 'tooooda lisa.'] },
 ];
 export const TITULO_RECURSOS = 'Recursos';
-// o título do editor, solto, com a nota embaixo
-export const TITULO_ESCREVA = { texto: 'Escreva aqui', nota: 'Teste a Föeger Rune do seu jeito: o estilo, o tamanho, o espaçamento, as cores, os efeitos e o desgaste' };
+// o título do playground, solto e sem nota
+export const TITULO_ESCREVA = { texto: 'Playground', nota: null };
 // o título da seção dos caracteres, solto (na fonte de texto, como o dos estilos), com a nota embaixo
 export const TITULO_CARACTERES = { texto: 'Caracteres', nota: 'Números, acentos, pontuação e símbolos: 177 em cada estilo' };
 // o título do livro, digitado como o dos estilos, com a nota no pé do painel
@@ -58,7 +58,7 @@ export const CABECALHO = {
         { texto: 'Alfabeto', alvo: 'alfabeto' },
         { texto: 'Estilos', alvo: 'estilos' },
         { texto: 'Testar', alvo: 'testador' },
-        { texto: 'Escrever', alvo: 'escreva' },
+        { texto: 'Playground', alvo: 'escreva' },
         { texto: 'Caracteres', alvo: 'caracteres' },
         { texto: 'Recursos', alvo: 'recursos' },
         { texto: 'O Livro', alvo: 'livro' },

@@ -16,7 +16,7 @@ import { TITULO_CARACTERES, TITULO_ESCREVA, TITULO_LIVRO, TITULO_RECURSOS } from
 
 // a página da Föeger Rune: o cabeçalho preso no alto e o hero da palavra Rune; o alfabeto com os três desgastes e a
 // frase digitada; a seção do desgaste (os cartões de perto, movidos pelo mesmo σ); o "Três* Estilos" e o testador; as faixas coloridas de cada estilo e a seção
-// escura; o escreva aqui (o editor para brincar com a fonte); os caracteres (os números, o mostruário e os símbolos); os recursos; e, no fim, o livro do espécime e o PDF para baixar. Parte do clone da Studio Feixen Fonts
+// escura; o playground (o editor para testar a fonte); os caracteres (os números, o mostruário e os símbolos); os recursos; e, no fim, o livro do espécime e o PDF para baixar. Parte do clone da Studio Feixen Fonts
 // (guardado em C:\pessoal\clone-feixen), sem as seções que mais tinham a cara dela: os cartões das quinas de fora e
 // de dentro, a troca de palavra e as letras soltas com o botão.
 export default function Pagina() {
@@ -58,7 +58,7 @@ export default function Pagina() {
                 </div>
                 {/* passando o mouse num texto das faixas: a fonte e o tamanho dele */}
                 <Inspetor escopo=".fx-faixas" />
-                {/* o escreva aqui: o editor para brincar com a fonte (os estilos, os tamanhos, as cores, os efeitos e o desgaste) */}
+                {/* o playground: o editor para testar a fonte (os estilos, os tamanhos, as cores, os efeitos e o desgaste) */}
                 <TituloEstilos texto={TITULO_ESCREVA.texto} asteriscoDepois={null} nota={TITULO_ESCREVA.nota} ancora="escreva" livre />
                 <Editor />
                 {/* os caracteres além do alfabeto: os números, o mostruário (acentos, pontuação e símbolos) e os símbolos se gastando */}

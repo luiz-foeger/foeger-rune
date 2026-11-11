@@ -5,14 +5,15 @@ import Painel from './Painel';
 import { corte } from './Desgaste';
 import { ESTILOS, type Estilo } from '../_lib/conteudo';
 
-// o "escreva aqui": um editor para quem gostou da fonte testar o uso dela do seu jeito. Na arte (3 × 2 módulos), um
-// título e um texto corrido, escritos direto na tela; ao lado, o inspetor (1 × 2), como o de um programa de desenho:
-// o bloco que está sendo mexido e, para ele, o estilo, o tamanho, a entrelinha, o espaço entre as letras, o desgaste,
-// a caixa, o alinhamento, as variações do calt, o efeito e as cores; depois o fundo da arte (a cor e o grão do papel)
-// e os modelos prontos, o sorteio e o recomeçar. Os controles seguem o resto do site: segmentos retos com a borda fina,
-// réguas finas com o valor na DM Mono e amostras quadradas só com as cores da paleta. O desgaste é a conta da própria
-// fonte (o desfoque e o corte no meio-tom do Desgaste.tsx), em unidades da fonte: com 26 a letra fica perto da
-// Polished, com 50 perto da Worn. No celular, a arte vem antes e fica presa no alto enquanto o inspetor passa por baixo.
+// o playground: um editor para quem gostou da fonte testar o uso dela do seu jeito. Na arte (3 × 2 módulos), começa
+// uma linha só, "Escreva aqui", escrita direto na tela; o "+" do inspetor acrescenta mais textos (até cinco), cada um
+// com os seus ajustes. Ao lado, o inspetor (1 × 2), como o de um programa de desenho: o texto que está sendo mexido e,
+// para ele, o estilo, o tamanho, a entrelinha, o espaço entre as letras, o desgaste, a caixa, o alinhamento, as
+// variações do calt, o efeito e as cores; depois o fundo da arte (a cor e o grão do papel) e os modelos prontos, o
+// sorteio e o recomeçar. Os controles seguem o resto do site: segmentos retos com a borda fina, réguas finas com o
+// valor na DM Mono e amostras quadradas só com as cores da paleta. O desgaste é a conta da própria fonte (o desfoque e
+// o corte no meio-tom do Desgaste.tsx), em unidades da fonte: com 26 a letra fica perto da Polished, com 50 perto da
+// Worn. No celular, a arte vem antes e fica presa no alto enquanto o inspetor passa por baixo.
 
 type Caixa = 'normal' | 'maiusculas' | 'minusculas';
 type Alinhamento = 'left' | 'center' | 'right';
@@ -30,16 +31,13 @@ type Ajustes = {
     desgaste: number; // σ em unidades da fonte
     calt: boolean;
 };
-type Id = 'titulo' | 'texto';
-type Arte = { fundo: string; papel: boolean; blocos: Record<Id, Ajustes> };
+// um texto da arte: a chave (para o React e para escolher), o texto com que ele nasce e os ajustes
+type Texto = { chave: number; inicial: string; ajustes: Ajustes };
 
-const TEXTOS: Record<Id, string> = {
-    titulo: 'Toda pedra começa bruta',
-    texto: 'Rolando no rio, a pedra perde as quinas e fica lisa. Tanto bate até que fura: com o tempo, ela se gasta e ganha outra cara. Clique aqui e escreva o seu texto.',
-};
-const NOMES_BLOCO: Record<Id, string> = { titulo: 'Título', texto: 'Texto' };
+const MAXIMO = 5;
+const FUNDO = '#ffffff';
 // só as cores da paleta do site
-const CORES = ['#111111', '#f8f8f8', '#f1ece1', '#e3b55a', '#c95a40', '#8aa4da', '#2d4ca3', '#62b08d'];
+const CORES = ['#111111', '#ffffff', '#f1ece1', '#e3b55a', '#c95a40', '#8aa4da', '#2d4ca3', '#62b08d'];
 const EFEITOS: { id: Efeito; nome: string }[] = [
     { id: 'nenhum', nome: 'Nenhum' },
     { id: 'sombra', nome: 'Sombra' },
@@ -48,7 +46,8 @@ const EFEITOS: { id: Efeito; nome: string }[] = [
     { id: 'relevo', nome: 'Relevo' },
 ];
 
-const BASE: Ajustes = {
+// o primeiro texto (a linha grande) e os que entram depois (menores, de texto corrido)
+const PRIMEIRO: Ajustes = {
     estilo: 'cut',
     tamanho: 150,
     entrelinha: 0.95,
@@ -61,48 +60,43 @@ const BASE: Ajustes = {
     desgaste: 0,
     calt: true,
 };
-const arte = (fundo: string, papel: boolean, titulo: Partial<Ajustes>, texto: Partial<Ajustes>): Arte => ({
-    fundo,
-    papel,
-    blocos: {
-        titulo: { ...BASE, ...titulo },
-        texto: { ...BASE, estilo: 'polished', tamanho: 34, entrelinha: 1.35, ...texto },
-    },
-});
-// os modelos: combinações prontas, cada uma puxando a fonte para um uso
-const MODELOS: { nome: string; arte: Arte }[] = [
-    { nome: 'Editorial', arte: arte('#f1ece1', true, {}, {}) },
+const DEMAIS: Ajustes = { ...PRIMEIRO, estilo: 'polished', tamanho: 40, entrelinha: 1.3 };
+const base = (i: number) => (i === 0 ? PRIMEIRO : DEMAIS);
+const TEXTO_INICIAL = 'Escreva aqui';
+const TEXTO_NOVO = 'Mais um texto: clique e escreva o que quiser.';
+const comecar = (): Texto[] => [{ chave: 1, inicial: TEXTO_INICIAL, ajustes: PRIMEIRO }];
+
+// os modelos: o fundo, o grão e os ajustes do primeiro texto e dos demais, cada um puxando a fonte para um uso
+type Modelo = { nome: string; fundo: string; papel: boolean; primeiro: Partial<Ajustes>; demais: Partial<Ajustes> };
+const MODELOS: Modelo[] = [
+    { nome: 'Editorial', fundo: '#f1ece1', papel: true, primeiro: {}, demais: {} },
     {
         nome: 'Cartaz',
-        arte: arte(
-            '#c95a40',
-            true,
-            { estilo: 'worn', tamanho: 180, entrelinha: 0.9, caixa: 'maiusculas', cor: '#f1ece1', efeito: 'longa', corEfeito: '#111111' },
-            { estilo: 'worn', cor: '#f1ece1' },
-        ),
+        fundo: '#c95a40',
+        papel: true,
+        primeiro: { estilo: 'worn', tamanho: 180, entrelinha: 0.9, caixa: 'maiusculas', cor: '#f1ece1', efeito: 'longa', corEfeito: '#111111' },
+        demais: { estilo: 'worn', cor: '#f1ece1' },
     },
-    {
-        nome: 'Negativo',
-        arte: arte('#111111', false, { estilo: 'polished', tamanho: 165, alinhamento: 'center', cor: '#f1ece1' }, { alinhamento: 'center', cor: '#8aa4da' }),
-    },
+    { nome: 'Negativo', fundo: '#111111', papel: false, primeiro: { estilo: 'polished', tamanho: 165, cor: '#f1ece1' }, demais: { cor: '#8aa4da' } },
     {
         nome: 'Capa',
-        arte: arte(
-            '#2d4ca3',
-            true,
-            { estilo: 'cut', tamanho: 160, caixa: 'maiusculas', espaco: 0.02, cor: '#f1ece1', efeito: 'contorno', corEfeito: '#e3b55a' },
-            { estilo: 'cut', cor: '#f1ece1' },
-        ),
+        fundo: '#2d4ca3',
+        papel: true,
+        primeiro: { estilo: 'cut', tamanho: 160, caixa: 'maiusculas', espaco: 0.02, cor: '#f1ece1', efeito: 'contorno', corEfeito: '#e3b55a' },
+        demais: { estilo: 'cut', cor: '#f1ece1' },
     },
     {
         nome: 'Gasta',
-        arte: arte('#62b08d', true, { estilo: 'worn', tamanho: 190, entrelinha: 0.88, desgaste: 40, efeito: 'sombra', corEfeito: '#f1ece1' }, { estilo: 'worn', desgaste: 12 }),
+        fundo: '#62b08d',
+        papel: true,
+        primeiro: { estilo: 'worn', tamanho: 190, entrelinha: 0.88, desgaste: 40, efeito: 'sombra', corEfeito: '#f1ece1' },
+        demais: { estilo: 'worn', desgaste: 12 },
     },
 ];
-const INICIAL = MODELOS[0].arte;
 
 // as combinações de cor que funcionam juntas, para o sorteio: [fundo, texto, efeito]
 const PARES: [string, string, string][] = [
+    ['#ffffff', '#111111', '#c95a40'],
     ['#f1ece1', '#111111', '#c95a40'],
     ['#e3b55a', '#111111', '#f1ece1'],
     ['#c95a40', '#f1ece1', '#111111'],
@@ -110,16 +104,16 @@ const PARES: [string, string, string][] = [
     ['#2d4ca3', '#f1ece1', '#e3b55a'],
     ['#8aa4da', '#111111', '#f1ece1'],
     ['#62b08d', '#111111', '#f1ece1'],
-    ['#f8f8f8', '#2d4ca3', '#e3b55a'],
 ];
 const sortear = <T,>(lista: readonly T[]) => lista[Math.floor(Math.random() * lista.length)];
-function sorteio(): Arte {
+function sorteio(): Modelo {
     const [fundo, cor, corEfeito] = sortear(PARES);
     const alinhamento = sortear<Alinhamento>(['left', 'left', 'center', 'right']);
-    return arte(
+    return {
+        nome: '',
         fundo,
-        Math.random() < 0.6,
-        {
+        papel: Math.random() < 0.6,
+        primeiro: {
             estilo: sortear(ESTILOS).id,
             tamanho: 140 + Math.round(Math.random() * 60),
             entrelinha: 0.85 + Math.round(Math.random() * 3) * 0.05,
@@ -131,8 +125,8 @@ function sorteio(): Arte {
             corEfeito,
             desgaste: sortear([0, 0, 0, 18, 34]),
         },
-        { estilo: sortear(ESTILOS).id, alinhamento, cor },
-    );
+        demais: { estilo: sortear(ESTILOS).id, alinhamento, cor },
+    };
 }
 
 // o efeito: as sombras (em em, crescem com a letra) e, no contorno, o traço do WebKit com o recheio vazado. As sombras
@@ -160,16 +154,16 @@ function efeitoDe(a: Ajustes, gasto: boolean): { sombras: string[]; extra: CSSPr
     }
 }
 
-// um bloco da arte: o texto escrito direto nele (só texto, sem formatação colada) e o filtro do desgaste, com o σ
-// passado para px pelo corpo de verdade do bloco. O escolhido ganha a moldura de seleção, com as alças nos cantos
-function Bloco({ id, filtro, ajustes, ativo, versao, uPx, onEscolher }: { id: Id; filtro: string; ajustes: Ajustes; ativo: boolean; versao: number; uPx: number; onEscolher: () => void }) {
-    const a = ajustes;
+// um texto da arte: escrito direto nele (só texto, sem formatação colada) e o filtro do desgaste, com o σ passado para
+// px pelo corpo de verdade do texto. O escolhido ganha a moldura de seleção, com as alças nos cantos
+function Bloco({ nome, filtro, texto, ativo, uPx, onEscolher }: { nome: string; filtro: string; texto: Texto; ativo: boolean; uPx: number; onEscolher: () => void }) {
+    const a = texto.ajustes;
     const familia = ESTILOS.find(e => e.id === a.estilo)!.familia;
     const pxPorUnidade = (a.tamanho * uPx) / 1000;
     const gasto = a.desgaste > 0 && uPx > 0;
     const { sombras, extra } = efeitoDe(a, gasto);
     return (
-        <div className="fx-editor-bloco" data-bloco={id} data-ativo={ativo}>
+        <div className="fx-editor-bloco" data-ativo={ativo}>
             {gasto && (
                 <svg className="fx-defs" width="0" height="0" aria-hidden>
                     <filter id={filtro} x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
@@ -183,17 +177,16 @@ function Bloco({ id, filtro, ajustes, ativo, versao, uPx, onEscolher }: { id: Id
                 <i />
                 <i />
                 <i />
-                <b>{NOMES_BLOCO[id]}</b>
+                <b>{nome}</b>
             </span>
             <div
-                key={versao}
                 className="fx-editor-texto"
                 contentEditable="plaintext-only"
                 suppressContentEditableWarning
                 spellCheck={false}
                 role="textbox"
                 aria-multiline
-                aria-label={`${NOMES_BLOCO[id]} da arte`}
+                aria-label={`${nome} da arte`}
                 onFocus={onEscolher}
                 onPointerDown={onEscolher}
                 style={{
@@ -211,7 +204,7 @@ function Bloco({ id, filtro, ajustes, ativo, versao, uPx, onEscolher }: { id: Id
                     ...extra,
                 }}
             >
-                {TEXTOS[id]}
+                {texto.inicial}
             </div>
         </div>
     );
@@ -228,7 +221,7 @@ function Linha({ nome, children, embaixo = false }: { nome: string; children: Re
     );
 }
 // os segmentos: as opções lado a lado numa caixa de borda fina, a escolhida cheia
-function Segmentos<T extends string>({ nome, opcoes, valor, onChange }: { nome: string; opcoes: { id: T; rotulo: ReactNode; titulo?: string }[]; valor: T; onChange: (v: T) => void }) {
+function Segmentos<T extends string | number>({ nome, opcoes, valor, onChange }: { nome: string; opcoes: { id: T; rotulo: ReactNode; titulo?: string }[]; valor: T; onChange: (v: T) => void }) {
     return (
         <div className="fx-segmentos" role="radiogroup" aria-label={nome}>
             {opcoes.map(o => (
@@ -290,9 +283,13 @@ function Icone({ alinhar }: { alinhar: Alinhamento }) {
 
 export default function Editor() {
     const id = useId().replace(/:/g, '');
-    const [estado, setEstado] = useState<Arte>(INICIAL);
-    const [ativo, setAtivo] = useState<Id>('titulo');
+    const [textos, setTextos] = useState<Texto[]>(comecar);
+    const [ativo, setAtivo] = useState(1);
+    const [fundo, setFundo] = useState(FUNDO);
+    const [papel, setPapel] = useState(false);
+    // a geração da arte: o recomeçar troca a chave, e os textos voltam ao que eram
     const [versao, setVersao] = useState(0);
+    const proxima = useRef(2);
     const [uPx, setUPx] = useState(0);
     const sonda = useRef<HTMLElement>(null);
     // o tamanho de 1 u em px (para passar o σ do desgaste para px)
@@ -305,24 +302,54 @@ export default function Editor() {
         obs.observe(el);
         return () => obs.disconnect();
     }, []);
-    const a = estado.blocos[ativo];
-    const mudar = (parte: Partial<Ajustes>) => setEstado(s => ({ ...s, blocos: { ...s.blocos, [ativo]: { ...s.blocos[ativo], ...parte } } }));
+    const indice = Math.max(0, textos.findIndex(t => t.chave === ativo));
+    const a = textos[indice].ajustes;
+    const nomeDe = (i: number) => `Texto ${i + 1}`;
+    const mudar = (parte: Partial<Ajustes>) => setTextos(ts => ts.map((t, i) => (i === indice ? { ...t, ajustes: { ...t.ajustes, ...parte } } : t)));
+    const aplicar = (m: Modelo) => {
+        setFundo(m.fundo);
+        setPapel(m.papel);
+        setTextos(ts => ts.map((t, i) => ({ ...t, ajustes: { ...base(i), ...(i === 0 ? m.primeiro : m.demais) } })));
+    };
+    const acrescentar = () => {
+        if (textos.length >= MAXIMO) return;
+        const chave = proxima.current++;
+        setTextos(ts => [...ts, { chave, inicial: TEXTO_NOVO, ajustes: { ...DEMAIS, cor: ts[0].ajustes.cor } }]);
+        setAtivo(chave);
+    };
+    const remover = () => {
+        if (textos.length < 2) return;
+        const resto = textos.filter(t => t.chave !== ativo);
+        setTextos(resto);
+        setAtivo(resto[Math.max(0, indice - 1)].chave);
+    };
     const fmt = (n: number, casas = 2) => n.toFixed(casas).replace('.', ',');
     return (
         <div className="fx-editor">
             <i ref={sonda} className="fx-editor-sonda" aria-hidden />
             {/* a arte (no celular, ela vem antes do inspetor e fica presa no alto enquanto ele passa por baixo) */}
-            <Painel colunas={3} linhas={2} rotulo="A arte do editor, com o título e o texto" celular={{ colunas: 2, linhas: 2 }}>
-                <div className="fx-editor-arte" data-papel={estado.papel || undefined} style={{ background: estado.fundo }}>
-                    {(['titulo', 'texto'] as Id[]).map(b => (
-                        <Bloco key={b} id={b} filtro={`${id}-${b}`} ajustes={estado.blocos[b]} ativo={b === ativo} versao={versao} uPx={uPx} onEscolher={() => setAtivo(b)} />
+            <Painel colunas={3} linhas={2} rotulo="A arte do playground" celular={{ colunas: 2, linhas: 2 }}>
+                <div key={versao} className="fx-editor-arte" data-papel={papel || undefined} style={{ background: fundo }}>
+                    {textos.map((t, i) => (
+                        <Bloco key={t.chave} nome={nomeDe(i)} filtro={`${id}-${t.chave}`} texto={t} ativo={t.chave === ativo} uPx={uPx} onEscolher={() => setAtivo(t.chave)} />
                     ))}
                 </div>
             </Painel>
             {/* o inspetor */}
-            <Painel colunas={1} linhas={2} rotulo="Os ajustes do editor" celular={{ colunas: 2, linhas: 4 }}>
+            <Painel colunas={1} linhas={2} rotulo="Os ajustes do playground" celular={{ colunas: 2, linhas: 4 }}>
                 <div className="fx-inspetor-editor">
-                    <Segmentos nome="Bloco" valor={ativo} onChange={setAtivo} opcoes={(['titulo', 'texto'] as Id[]).map(b => ({ id: b, rotulo: NOMES_BLOCO[b] }))} />
+                    {/* os textos da arte, o "+" que acrescenta mais um e o remover (só com mais de um) */}
+                    <div className="fx-inspetor-textos">
+                        <Segmentos nome="Texto" valor={ativo} onChange={setAtivo} opcoes={textos.map((t, i) => ({ id: t.chave, rotulo: textos.length > 3 ? `${i + 1}` : nomeDe(i), titulo: nomeDe(i) }))} />
+                        <button type="button" className="fx-inspetor-mais" onClick={acrescentar} disabled={textos.length >= MAXIMO} aria-label="Acrescentar um texto" title="Acrescentar um texto">
+                            +
+                        </button>
+                    </div>
+                    {textos.length > 1 && (
+                        <button type="button" className="fx-inspetor-link fx-inspetor-remover" onClick={remover}>
+                            Remover o {nomeDe(indice).toLowerCase()}
+                        </button>
+                    )}
                     <div className="fx-inspetor-grupo">
                         <Linha nome="Estilo">
                             <Segmentos nome="Estilo" valor={a.estilo} onChange={e => mudar({ estilo: e })} opcoes={ESTILOS.map(e => ({ id: e.id, rotulo: e.nome }))} />
@@ -361,29 +388,32 @@ export default function Editor() {
                         <Amostras nome="Do efeito" valor={a.corEfeito} onChange={c => mudar({ corEfeito: c })} />
                     </div>
                     <div className="fx-inspetor-grupo">
-                        <Amostras nome="Fundo" valor={estado.fundo} onChange={c => setEstado(s => ({ ...s, fundo: c }))} />
-                        <Chave nome="Grão" ligada={estado.papel} onChange={() => setEstado(s => ({ ...s, papel: !s.papel }))} />
+                        <Amostras nome="Fundo" valor={fundo} onChange={setFundo} />
+                        <Chave nome="Grão" ligada={papel} onChange={() => setPapel(p => !p)} />
                     </div>
                     <div className="fx-inspetor-grupo">
                         <Linha nome="Modelos" embaixo>
                             <div className="fx-inspetor-modelos">
                                 {MODELOS.map(m => (
-                                    <button key={m.nome} type="button" className="fx-inspetor-link" onClick={() => setEstado(m.arte)}>
+                                    <button key={m.nome} type="button" className="fx-inspetor-link" onClick={() => aplicar(m)}>
                                         {m.nome}
                                     </button>
                                 ))}
                             </div>
                         </Linha>
                         <div className="fx-inspetor-acoes">
-                            <button type="button" className="fx-inspetor-acao" onClick={() => setEstado(sorteio())}>
+                            <button type="button" className="fx-inspetor-acao" onClick={() => aplicar(sorteio())}>
                                 Sortear
                             </button>
                             <button
                                 type="button"
                                 className="fx-inspetor-acao"
                                 onClick={() => {
-                                    setEstado(INICIAL);
-                                    setAtivo('titulo');
+                                    setTextos(comecar());
+                                    setAtivo(1);
+                                    setFundo(FUNDO);
+                                    setPapel(false);
+                                    proxima.current = 2;
                                     setVersao(v => v + 1);
                                 }}
                             >
