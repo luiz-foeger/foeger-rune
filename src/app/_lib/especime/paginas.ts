@@ -694,7 +694,8 @@ function rosto(c: Ctx) {
 // (o motor redesenha a página): a de um capítulo leva à abertura dele, a dos caracteres às tabelas e as outras (as
 // seções, os estilos e o colofão) direto à página delas
 const SUMARIO_PARTE = 88;
-const SUMARIO_SECAO = 44;
+// as seções quase do tamanho das partes: a diferença fica no recuo e no cinza
+const SUMARIO_SECAO = 66;
 type Destino = Omit<Alvo, 'x' | 'y' | 'l' | 'a'>;
 
 // uma linha do sumário; devolve onde começa a seguinte
@@ -704,8 +705,8 @@ function linhaDoSumario(c: Ctx, y: number, o: LinhaSumario) {
     const cor = aceso ? COR.laranja : o.secao ? CINZA : TINTA;
     const pg = o.pagina ? pagina2(o.pagina) : '';
     if (o.secao) {
-        linha(c, o.titulo, 142, y + 30, { tam: 21, peso: 400, cor });
-        linha(c, pg, 973, y + 30, { tam: 21, peso: 400, alinhar: 'right', cor });
+        linha(c, o.titulo, 142, y + 46, { tam: 38, peso: 300, cor });
+        linha(c, pg, 973, y + 46, { tam: 34, peso: 300, alinhar: 'right', cor });
         fio(c, 142, y + alto, 973, y + alto);
     } else {
         if (o.n) rotulo(c, o.n, 29, y + 56, { cor: aceso ? COR.laranja : CINZA });
