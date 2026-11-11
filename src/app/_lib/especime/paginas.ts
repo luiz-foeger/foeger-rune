@@ -6,6 +6,7 @@
 import { CAPITULOS, COR, EXTRAS, LIVRO, type Pagina } from './conteudo';
 import { medir, TINTA, type Estilo, type Familia, type Pincel } from './pincel';
 import { PALAVRAS, type Glifo } from '../glifos';
+import { ESTILO_MEDIDAS } from '../medidas';
 
 export type Alvo = { x: number; y: number; l: number; a: number; cap?: number; caracteres?: boolean };
 type Ctx = { p: Pincel; alvos: Alvo[] };
@@ -358,12 +359,6 @@ const PRANCHAS_CAP: { abertura: Prancha; esq: Prancha; dir: Prancha; pe: Prancha
 const FUNDO_ABERTURA = [() => COR.cut, () => COR.polished, () => COR.roxo, () => COR.laranja];
 const tintaDaAbertura = (cap: number) => tintaSobre(FUNDO_ABERTURA[cap]());
 
-const faixa = (cap: number) => {
-    const p = CAPITULOS[cap].paginas;
-    if (!p) return '';
-    const d = (n: number) => String(n).padStart(2, '0');
-    return `(${d(p[0])}-${d(p[1])})`;
-};
 const tituloDe = (cap: number) => CAPITULOS[cap].sumario.join(' ');
 const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
 
@@ -409,82 +404,113 @@ function rosto(c: Ctx) {
     rotulo(c, LIVRO.pe, 973, 1468, { alinhar: 'right' });
 }
 
-// o sumário em duas páginas, como o da referência do tantan: os títulos grandes trocam de lado, a primeira linha na
-// grotesca leve e a segunda na Rune do capítulo, com as seções em corpo pequeno, a faixa de páginas entre parênteses
-// e um cartão com uma prancha
-const TOC_SANS: Linha = { tam: 92, peso: 300 };
-const TOC_RUNE: Linha = { tam: 88, peso: 400 };
-const TOC_FAIXA: Linha = { tam: 46, peso: 300 };
-const TOC_SUB: Linha = { tam: 16.5, peso: 400 };
+// o sumário em lista, no verso da capa (a primeira página que aparece ao abrir o livro), como o da versão antiga: o
+// título na grotesca leve, como "Letras" e "Sinais", e uma linha por capítulo com fio embaixo, o número em mono, o tema
+// na Rune do capítulo, as seções em corpo pequeno e a página onde ele começa, à direita. Cada linha leva ao capítulo
+// (a dos caracteres, às tabelas do fim)
+const SUMARIO_LINHA = 150;
 
-function entrada(c: Ctx, cap: number, y1: number, y2: number, desenho: 'a' | 'b') {
-    const ch = CAPITULOS[cap];
-    const rune = { ...TOC_RUNE, fam: ch.estilo };
-    const [t1, t2] = ch.sumario;
-    const [s1, s2] = ch.secoes;
-    let x0 = 1000;
-    let x1 = 0;
-    const junta = (r: { x0: number; x1: number }) => {
-        x0 = Math.min(x0, r.x0);
-        x1 = Math.max(x1, r.x1);
-    };
-    if (desenho === 'a') {
-        // à esquerda; as seções e a faixa depois da segunda linha
-        junta(linha(c, t1, 10, y1, TOC_SANS));
-        const r2 = linha(c, t2, 14, y2, rune);
-        junta(r2);
-        const xs = r2.x1 + 36;
-        linha(c, s1, xs, y2 - 34, TOC_SUB);
-        linha(c, s2, xs, y2 - 14, TOC_SUB);
-        junta(linha(c, faixa(cap), 982, y1, { ...TOC_FAIXA, alinhar: 'right' }));
-    } else {
-        // à direita, com a faixa antes da primeira linha; as seções no canto esquerdo
-        const r1 = linha(c, t1, 990, y1, { ...TOC_SANS, alinhar: 'right' });
-        junta(r1);
-        junta(linha(c, faixa(cap), r1.x0 - 22, y1, { ...TOC_FAIXA, alinhar: 'right' }));
-        junta(linha(c, t2, 986, y2, { ...rune, alinhar: 'right' }));
-        linha(c, s1, 16, y1 - 64, TOC_SUB);
-        linha(c, s2, 16, y1 - 44, TOC_SUB);
-    }
-    alvo(c, x0 - 6, y1 - 86, x1 + 6, y2 + 22, { cap });
+function linhaDoSumario(c: Ctx, y: number, n: string, tema: string, fam: Familia, secoes: string, pagina: string, extra: Omit<Alvo, 'x' | 'y' | 'l' | 'a'>) {
+    rotulo(c, n, 29, y + 78, { cor: CINZA });
+    linha(c, tema, 112, y + 84, { tam: 64, fam, peso: 400 });
+    linha(c, secoes, 114, y + 120, { tam: 16.5, peso: 400, cor: CINZA });
+    linha(c, pagina, 973, y + 84, { tam: 46, peso: 300, alinhar: 'right' });
+    fio(c, 29, y + SUMARIO_LINHA, 973, y + SUMARIO_LINHA);
+    alvo(c, 20, y + 4, 980, y + SUMARIO_LINHA - 4, extra);
 }
 
-function cartao(c: Ctx, cap: number, k: Prancha, x: number, y: number, legenda: [string, string, string, string]) {
-    const l = 387;
-    const a = 454;
-    c.p.ret(x, y, l, a, PAPEL);
-    prancha(c, k, x + 34, y + 34, l - 68, a - 140);
-    c.p.borda(x, y, l, a, { cor: FIO, esp: 1.3 });
-    fio(c, x, y + a - 66, x + l, y + a - 66);
-    rotulo(c, legenda[0], x + 18, y + a - 38, { tam: 10.5, cor: CINZA });
-    rotulo(c, legenda[1], x + 18, y + a - 21, { tam: 10.5, cor: CINZA });
-    rotulo(c, legenda[2], x + l - 18, y + a - 38, { tam: 10.5, alinhar: 'right' });
-    rotulo(c, legenda[3], x + l - 18, y + a - 21, { tam: 10.5, cor: CINZA, alinhar: 'right' });
-    alvo(c, x, y, x + l, y + a, { cap });
-}
-
-function sumarioEsq(c: Ctx, num?: number) {
+function sumario(c: Ctx) {
     fundo(c, PAPEL);
-    entrada(c, 0, 110, 206, 'a');
-    entrada(c, 1, 400, 494, 'b');
-    cartao(c, 0, 'aa', 258, 655, ['Föeger Rune', 'Capítulo', 'Cut', '1']);
-    rotulo(c, 'Sumário', 29, 1468);
-    if (num) rotulo(c, pagina2(num), 973, 1468, { alinhar: 'right', cor: CINZA });
+    rotulo(c, 'Sumário', 29, 47);
+    rotulo(c, LIVRO.cabeca, 973, 47, { alinhar: 'right', cor: CINZA });
+    linha(c, 'Sumário', 22, 190, { tam: 92 });
+    const y0 = 290;
+    fio(c, 29, y0, 973, y0);
+    CAPITULOS.forEach((ch, i) => {
+        const p = ch.paginas;
+        linhaDoSumario(c, y0 + i * SUMARIO_LINHA, pagina2(ch.n), ch.tema, ch.estilo, ch.secoes.join(' · '), p ? pagina2(p[0]) : '', { cap: i });
+    });
+    const car = EXTRAS.caracteres;
+    linhaDoSumario(c, y0 + CAPITULOS.length * SUMARIO_LINHA, pagina2(CAPITULOS.length + 1), 'Caracteres', 'cut', 'Letras, sinais e variações', car ? pagina2(car[0]) : '', { caracteres: true });
+    rotulo(c, LIVRO.pe, 29, 1468, { cor: CINZA });
+    rotulo(c, LIVRO.edicao, 973, 1468, { alinhar: 'right', cor: CINZA });
 }
 
-function sumarioDir(c: Ctx, num?: number) {
+// a dupla depois do rosto apresenta os três estilos: à esquerda, o título e a abertura, e o cartão da Cut; à direita, os
+// da Polished e da Worn. Os três cartões têm o mesmo tamanho: a cor do estilo, o nome e uma frase no próprio estilo, o
+// Aa grande e, no pé, as medidas de verdade do alfabeto inteiro (as de medidas.ts, as mesmas da página)
+const ESTILOS: { fam: Familia; nome: string; cor: () => string; apelido: string; frase: string }[] = [
+    { fam: 'cut', nome: 'Cut', cor: () => COR.cut, apelido: 'Quinas vivas', frase: 'Toda pedra começa bruta.' },
+    { fam: 'polished', nome: 'Polished', cor: () => COR.polished, apelido: 'Rolada no rio', frase: 'Pedra que rola não cria limo!' },
+    { fam: 'worn', nome: 'Worn', cor: () => COR.worn, apelido: 'Anos na correnteza', frase: 'Tanto bate até que fura!' },
+];
+const CARTAO_L = 944;
+const CARTAO_A = 600;
+const medida = (nome: string, i: number) => {
+    const m = ESTILO_MEDIDAS.find(x => x.nome === nome)!;
+    const v = m.valores[i];
+    if (!m.unidade) return String(v);
+    return m.antes ? `${m.unidade} ${v}` : `${v} ${m.unidade}`;
+};
+
+function cartaoEstilo(c: Ctx, i: number, x: number, y: number) {
+    const e = ESTILOS[i];
+    const fundoCor = e.cor();
+    const tinta = tintaSobre(fundoCor);
+    const l = CARTAO_L;
+    const a = CARTAO_A;
+    c.p.ret(x, y, l, a, fundoCor);
+    rotulo(c, `${pagina2(i + 1)} — ${e.apelido}`, x + 30, y + 48, { cor: tinta });
+    // o σ fica minúsculo (o rótulo passa tudo para caixa-alta, e Σ é outro símbolo)
+    linha(c, `DESFOQUE ${medida('Desfoque', i)}`, x + l - 30, y + 48, { tam: 12.5, fam: 'mono', peso: 400, cor: tinta, alinhar: 'right', espaco: 0.05 });
+    // o nome e a frase na coluna da esquerda, no mesmo corpo nos três cartões (o da Polished, o mais largo, manda)
+    const tamNome = ajustar(c, 'Polished', { fam: 'polished' }, 520);
+    linha(c, e.nome, x + 26, y + 236, { tam: tamNome, fam: e.fam, peso: 400, cor: tinta });
+    const tamFrase = Math.min(...ESTILOS.map(s => ajustar(c, s.frase, { fam: s.fam }, 500)));
+    linha(c, e.frase, x + 30, y + 318, { tam: tamFrase, fam: e.fam, peso: 400, cor: tinta });
+    // o Aa grande na coluna da direita
+    linha(c, 'Aa', x + l - 30, y + 452, { tam: 260, fam: e.fam, peso: 400, cor: tinta, alinhar: 'right' });
+    // as medidas no pé, em quatro casas
+    const pe = y + a - 96;
+    fio(c, x + 30, pe, x + l - 30, pe, tinta, 1.1);
+    const casas: [string, string][] = [
+        ['Recuo das quinas', medida('Recuo das quinas', i)],
+        ['Largura média', medida('Largura média', i)],
+        ['Entre letras', medida('Entre letras', i)],
+        ['Pontos por letra', medida('Pontos por letra', i)],
+    ];
+    const casa = (l - 60) / casas.length;
+    casas.forEach(([nome, valor], k) => {
+        const xc = x + 30 + k * casa;
+        rotulo(c, nome, xc, pe + 34, { cor: tinta, tam: 10.5 });
+        linha(c, valor, xc, pe + 72, { tam: 26, peso: 400, cor: tinta });
+    });
+}
+
+function estilosEsq(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    entrada(c, 2, 110, 206, 'a');
-    entrada(c, 3, 400, 494, 'b');
-    cartao(c, 2, 'ssss', 511, 655, ['Föeger Rune', 'Capítulo', 'Worn', '3']);
-    // os caracteres, no fim do livro
-    const r = linha(c, 'Caracteres', 16, 1262, TOC_SANS);
-    const pg = EXTRAS.caracteres;
-    if (pg) linha(c, `(${pagina2(pg[0])}-${pagina2(pg[1])})`, r.x1 + 22, 1262, TOC_FAIXA);
-    rotulo(c, 'Todos os glifos', 16, 1180, { cor: CINZA });
-    alvo(c, 10, 1176, r.x1 + 140, 1284, { caracteres: true });
-    rotulo(c, `${LIVRO.pe} — Edição 01`, 973, 1468, { alinhar: 'right', cor: CINZA });
+    rotulo(c, 'Os três estilos', 29, 47);
+    rotulo(c, '311 glifos em cada estilo', 973, 47, { alinhar: 'right', cor: CINZA });
+    linha(c, 'Uma pedra,', 22, 190, { tam: 92 });
+    linha(c, 'três desgastes.', 26, 292, { tam: 88, fam: 'polished', peso: 400 });
+    paragrafo(
+        c,
+        'A Föeger Rune vem em três estilos, que são três momentos da mesma pedra. O desenho e os glifos são os mesmos; o que muda é quanto a água gastou as quinas. Cada estilo é uma fonte inteira, refeita letra por letra.',
+        29,
+        420,
+        560,
+        { tam: 21, entre: 25.5 },
+    );
+    cartaoEstilo(c, 0, 29, 770);
     if (num) rotulo(c, pagina2(num), 29, 1468, { cor: CINZA });
+}
+
+function estilosDir(c: Ctx, num?: number) {
+    fundo(c, PAPEL);
+    cartaoEstilo(c, 1, 29, 110);
+    cartaoEstilo(c, 2, 29, 770);
+    rotulo(c, 'Cut · Polished · Worn', 29, 1468, { cor: CINZA });
+    if (num) rotulo(c, pagina2(num), 973, 1468, { alinhar: 'right', cor: CINZA });
 }
 function legendaDe(c: Ctx, l: [string, string], cor: string) {
     rotulo(c, l[0], 29, 1440, { cor });
@@ -753,11 +779,14 @@ export function desenharPagina(p: Pincel, pg: Pagina, num?: number): Alvo[] {
         case 'rosto':
             rosto(c);
             break;
-        case 'sumario-esq':
-            sumarioEsq(c, num);
+        case 'sumario':
+            sumario(c);
             break;
-        case 'sumario-dir':
-            sumarioDir(c, num);
+        case 'estilos-esq':
+            estilosEsq(c, num);
+            break;
+        case 'estilos-dir':
+            estilosDir(c, num);
             break;
         case 'abertura-imagem':
             aberturaImagem(c, pg.cap);

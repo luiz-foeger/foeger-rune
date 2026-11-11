@@ -1,6 +1,7 @@
 // o conteúdo do livro da página: o espécime da Föeger Rune no lugar do "O livro da Föeger" do clone-tantan, com a
-// mesma ordem de folhas (capa, rosto, sumário em duas páginas, capítulos com abertura e matéria, papel vegetal entre
-// algumas páginas, colofão e contracapa). Os números e os fatos são os da prévia de 05/11 (311 glifos em cada estilo,
+// mesma ordem de folhas (capa, rosto, capítulos com abertura e matéria, papel vegetal entre algumas páginas, colofão e
+// contracapa). O sumário fica em lista no verso da capa, a primeira página que aparece ao abrir o livro, como o da
+// versão antiga, e a dupla depois do rosto apresenta os três estilos. Os números e os fatos são os da prévia de 05/11 (311 glifos em cada estilo,
 // as larguras de cada estilo, o revezamento das minúsculas, o L do meio e o f do começo).
 import type { Familia } from './pincel';
 
@@ -169,8 +170,9 @@ export type Pagina =
     | { tipo: 'guarda' }
     | { tipo: 'contracapa' }
     | { tipo: 'rosto' }
-    | { tipo: 'sumario-esq' }
-    | { tipo: 'sumario-dir' }
+    | { tipo: 'sumario' }
+    | { tipo: 'estilos-esq' }
+    | { tipo: 'estilos-dir' }
     | { tipo: 'abertura-imagem'; cap: number }
     | { tipo: 'abertura-titulo'; cap: number }
     | { tipo: 'artigo-esq'; cap: number }
@@ -187,9 +189,9 @@ export const EXTRAS: { caracteres?: [number, number] } = {};
 
 export function montarFolhas(): Folha[] {
     const f: Folha[] = [];
-    f.push({ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'guarda' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'rosto' }, verso: { tipo: 'sumario-esq' } });
-    let direita: Pagina = { tipo: 'sumario-dir' };
+    f.push({ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'sumario' } });
+    f.push({ tipo: 'papel', frente: { tipo: 'rosto' }, verso: { tipo: 'estilos-esq' } });
+    let direita: Pagina = { tipo: 'estilos-dir' };
     CAPITULOS.forEach((c, i) => {
         f.push({ tipo: 'papel', frente: direita, verso: { tipo: 'abertura-imagem', cap: i } });
         f.push({ tipo: 'papel', frente: { tipo: 'abertura-titulo', cap: i }, verso: { tipo: 'artigo-esq', cap: i } });
@@ -226,9 +228,10 @@ export function folhaDosCaracteres(folhas: Folha[]) {
     return folhas.findIndex(x => x.verso.tipo === 'caracteres-esq') + 1;
 }
 
-// a ordem do PDF: capa, as páginas numeradas (com o papel vegetal no lugar dele) e a contracapa
+// a ordem do PDF: capa, o sumário do verso dela, as páginas numeradas (com o papel vegetal no lugar dele) e a contracapa
 export function paginasDoPdf(folhas: Folha[]): { pagina: Pagina; num?: number }[] {
     const lista: { pagina: Pagina; num?: number }[] = [{ pagina: { tipo: 'capa' } }];
+    if (folhas[0]?.verso.tipo === 'sumario') lista.push({ pagina: folhas[0].verso });
     folhas.forEach((f, i) => {
         if (f.tipo === 'papel') {
             // a frente vem antes do verso; o verso da folha anterior já entrou
