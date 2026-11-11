@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Chamada from '../_comp/Chamada';
 import Editor from '../_comp/Editor';
 import { Faixa, Manchete } from '../_comp/Faixa';
 import Inspetor from '../_comp/Inspetor';
@@ -7,15 +6,15 @@ import { Escura, LetrasRune, TextoVariacoes } from '../_comp/Livro';
 import { CaixinhasCut, CaixinhasPolished, CaixinhasWorn, CartazCut, DiscoWorn, LivroPolished } from '../_comp/Pratica';
 import TituloEstilos from '../_comp/TituloEstilos';
 import { Cabecalho } from '../_comp/Topo';
-import { CHAMADA_HOME, PAGINA_PRATICA, TITULO_ESCREVA } from '../_lib/conteudo';
+import { PAGINA_PRATICA, TITULO_ESCREVA } from '../_lib/conteudo';
 
 export const metadata: Metadata = { title: `${PAGINA_PRATICA.titulo} · Föeger Rune` };
 
 // a página "Na prática": a Föeger Rune onde ela seria usada, uma faixa colorida por estilo, aberta pela frase que corre
 // e com as peças de verdade (no Cut, os cartazes colados na parede e as caixinhas do festival; no Polished, as capas
 // dos livros e as do livro infantil; no Worn, o disco e as do LP), fechada pela seção escura (o RUNE e as variações);
-// o inspetor de fonte e tamanho por cima das faixas; e, no fim, o playground para testar a fonte do seu jeito. No pé,
-// a volta para a home, onde estão a ideia, os caracteres, os recursos e o livro para baixar
+// o inspetor de fonte e tamanho por cima das faixas; e, no fim, o playground para testar a fonte do seu jeito. A volta
+// para a home fica no cabeçalho (o "A fonte") e na logo
 export default function NaPratica() {
     return (
         <>
@@ -50,7 +49,6 @@ export default function NaPratica() {
                 {/* o playground: o editor para testar a fonte (os estilos, os tamanhos, as cores, os efeitos e o desgaste) */}
                 <TituloEstilos texto={TITULO_ESCREVA.texto} asteriscoDepois={null} nota={TITULO_ESCREVA.nota} ancora="playground" livre />
                 <Editor />
-                <Chamada href="/" texto={CHAMADA_HOME.texto} legenda={CHAMADA_HOME.legenda} />
             </main>
         </>
     );

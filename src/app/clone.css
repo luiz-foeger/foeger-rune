@@ -5693,50 +5693,34 @@ html[data-paleta='azul'] [data-clone] {
     }
 }
 
-/* 24. as duas páginas: a da prática começa abaixo do cabeçalho (sem o hero); e a chamada que leva de uma página à outra (o painel inteiro é o link, com a frase
-   grande na Rune Cut e a seta que anda no hover) */
+/* 24. as duas páginas: a da prática começa abaixo do cabeçalho (sem o hero) */
 .fx-corpo-pagina {
     padding-top: calc(150 * var(--u));
-}
-.fx-chamada {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: calc(34 * var(--u));
-    padding: 0 calc(59 * var(--u));
-    color: var(--tinta);
-    text-align: center;
-    text-decoration: none;
-}
-.fx-chamada-texto {
-    font-family: var(--ff-cut), sans-serif;
-    font-size: calc(120 * var(--u));
-    line-height: 1;
-    text-box: trim-both cap alphabetic;
-}
-.fx-chamada-seta {
-    display: inline-block;
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.fx-chamada:hover .fx-chamada-seta,
-.fx-chamada:focus-visible .fx-chamada-seta {
-    transform: translateX(calc(24 * var(--u)));
-}
-.fx-chamada-legenda {
-    font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-sec);
-    font-weight: 500;
-    opacity: 0.6;
 }
 @media (max-width: 899px) {
     .fx-corpo-pagina {
         padding-top: calc(240 * var(--u));
     }
-    .fx-chamada-texto {
-        font-size: calc(96 * var(--u));
-        line-height: 1.05;
+}
+
+/* as duas páginas no cabeçalho, antes do "Baixar": a atual apagada; no celular ficam só no menu */
+.fx-cab-direita {
+    justify-self: end;
+    display: flex;
+    gap: calc(3.2 * var(--fa-r));
+}
+.fx-cab-paginas {
+    display: flex;
+    gap: calc(2.4 * var(--fa-r));
+}
+.fx-cab-direita .fx-cab-acao {
+    justify-self: auto;
+}
+.fx-cab-acao[data-atual] {
+    opacity: 0.45;
+}
+@media (max-width: 899px) {
+    .fx-cab-paginas {
+        display: none;
     }
 }

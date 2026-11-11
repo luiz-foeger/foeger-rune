@@ -52,17 +52,14 @@ export const TITULO_LIVRO = { texto: 'O Livro', asteriscoDepois: 7, nota: '* O e
 // a segunda página: a fonte em uso (as peças das faixas) e o playground. Os endereços (as páginas, as âncoras e o PDF)
 // ficam sempre em inglês, numa palavra só: sem acento e curtos
 export const PAGINA_PRATICA = { caminho: '/showcase', titulo: 'Na prática' };
-// a chamada no fim das faixas da home, que leva à página da prática
-export const CHAMADA_PRATICA = { texto: 'Veja a Rune na prática', legenda: 'Os cartazes, os livros, o disco e o playground para testar a fonte' };
-// e a do pé da página da prática, que volta para a home
-export const CHAMADA_HOME = { texto: 'Conheça a Föeger Rune', legenda: 'A ideia, os três estilos, os caracteres, os recursos e o livro para baixar' };
 
 // o cabeçalho, igual ao do site principal: o menu (as seções das duas páginas, pelas âncoras; sem página, é a home),
-// a logo da Föeger no meio e, no lugar do PT/EN de lá, o PDF à direita
+// a logo da Föeger no meio e, à direita, as duas páginas (a atual marcada) e o PDF, no lugar do PT/EN de lá
 export const CABECALHO: {
     menu: string;
     fechar: string;
     itens: { texto: string; alvo: string; pagina?: string }[];
+    paginas: { texto: string; href: string }[];
     acao: { texto: string; href: string };
 } = {
     menu: 'Menu',
@@ -76,6 +73,10 @@ export const CABECALHO: {
         { texto: 'O Livro', alvo: 'book' },
         { texto: 'Na prática', alvo: '', pagina: PAGINA_PRATICA.caminho },
         { texto: 'Playground', alvo: 'playground', pagina: PAGINA_PRATICA.caminho },
+    ],
+    paginas: [
+        { texto: 'A fonte', href: '/' },
+        { texto: PAGINA_PRATICA.titulo, href: PAGINA_PRATICA.caminho },
     ],
     acao: { texto: 'Baixar', href: '/foeger-rune-specimen.pdf' },
 };

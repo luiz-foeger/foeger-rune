@@ -1,6 +1,5 @@
 import Alfabeto from './_comp/Alfabeto';
 import Caracteres from './_comp/Caracteres';
-import Chamada from './_comp/Chamada';
 import Digitada from './_comp/Digitada';
 import { Recursos } from './_comp/Livro';
 import SecaoDesgaste from './_comp/SecaoDesgaste';
@@ -9,12 +8,12 @@ import Testador from './_comp/Testador';
 import { Cabecalho } from './_comp/Topo';
 import { HeroPedras } from './_comp/HeroPedras';
 import TituloEstilos from './_comp/TituloEstilos';
-import { CHAMADA_PRATICA, PAGINA_PRATICA, TITULO_CARACTERES, TITULO_LIVRO, TITULO_RECURSOS } from './_lib/conteudo';
+import { TITULO_CARACTERES, TITULO_LIVRO, TITULO_RECURSOS } from './_lib/conteudo';
 
 // a home da Föeger Rune, a fonte e a ideia: o cabeçalho preso no alto e o hero da palavra Rune; o alfabeto com os três
 // desgastes e a frase digitada; a seção do desgaste (os cartões de perto, movidos pelo mesmo σ); o "Três Estilos" e o
-// testador; a chamada para a página "Na prática" (as faixas de cada estilo com as peças em uso, a seção escura e o
-// playground); os caracteres; os recursos; e, no fim, o livro do espécime e o PDF
+// testador (as faixas de cada estilo com as peças em uso, a seção escura e o playground ficam na página "Na prática",
+// com o link no cabeçalho); os caracteres; os recursos; e, no fim, o livro do espécime e o PDF
 // para baixar. Parte do clone da Studio Feixen Fonts (guardado em C:\pessoal\clone-feixen), sem as seções que mais
 // tinham a cara dela: os cartões das quinas de fora e de dentro, a troca de palavra e as letras soltas com o botão.
 export default function Pagina() {
@@ -31,8 +30,6 @@ export default function Pagina() {
                 {/* a âncora do "Testar" do menu */}
                 <div id="tester" />
                 <Testador />
-                {/* as faixas de cada estilo, com a frase que corre e as peças em uso, e a seção escura ficam na "Na prática" */}
-                <Chamada href={PAGINA_PRATICA.caminho} texto={CHAMADA_PRATICA.texto} legenda={CHAMADA_PRATICA.legenda} />
                 {/* os caracteres além do alfabeto: os números, o mostruário (acentos, pontuação e símbolos) e os símbolos se gastando */}
                 <TituloEstilos texto={TITULO_CARACTERES.texto} asteriscoDepois={null} nota={TITULO_CARACTERES.nota} ancora="characters" livre />
                 <Caracteres />

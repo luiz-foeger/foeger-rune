@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLenis } from 'lenis/react';
 import { Logo } from './LogoFoeger';
@@ -12,7 +13,8 @@ import { CABECALHO } from '../_lib/conteudo';
 // ——— o cabeçalho, igual ao do site principal (luizfoeger.vercel.app; portfolio: rumo/_fa/Cabecalho.tsx) ———
 // Fixo e transparente, em modo diferença, com as três peças de lá: à esquerda o "Menu" com o hambúrguer (no hover, as
 // linhas correm e o texto rola; aberto, as linhas viram um X e o rótulo troca para "Fechar"), no meio a logo da
-// Föeger na versão escrita (leva ao topo) e à direita, no lugar do PT/EN de lá, o "Baixar" do PDF. O menu é a cortina
+// Föeger na versão escrita (leva ao topo da home) e à direita, no lugar do PT/EN de lá, as duas páginas ("A fonte" e
+// "Na prática", a atual apagada; no celular, só no menu) e o "Baixar" do PDF. O menu é a cortina
 // de lá, mas preta (lá é azul-marinho), com as seções das duas páginas (a home e a "Na prática"): os itens entram do
 // desfoque e, no hover de um, os outros apagam e desfocam e o sublinhado corre. Fica num portal no body: o [data-clone] tem container-type, que prenderia o fixed.
 function Rola({ texto }: { texto: string }) {
@@ -121,9 +123,18 @@ export function Cabecalho() {
                 >
                     <Logo />
                 </a>
-                <a className="fx-cab-acao" href={CABECALHO.acao.href} download>
-                    <Rola texto={`${CABECALHO.acao.texto} ↓`} />
-                </a>
+                <div className="fx-cab-direita">
+                    <nav className="fx-cab-paginas" aria-label="Páginas">
+                        {CABECALHO.paginas.map(p => (
+                            <Link key={p.href} href={p.href} className="fx-cab-acao" data-atual={p.href === caminho || undefined} aria-current={p.href === caminho ? 'page' : undefined}>
+                                <Rola texto={p.texto} />
+                            </Link>
+                        ))}
+                    </nav>
+                    <a className="fx-cab-acao" href={CABECALHO.acao.href} download>
+                        <Rola texto={`${CABECALHO.acao.texto} ↓`} />
+                    </a>
+                </div>
             </header>
         </>,
         document.body,
