@@ -188,9 +188,9 @@ export type Pagina =
 
 export type Folha = { frente: Pagina; verso: Pagina; tipo: 'capa' | 'papel' | 'vegetal' | 'contracapa'; numFrente?: number; numVerso?: number };
 
-// as páginas dos caracteres, para o sumário, e o total de páginas numeradas, para a ficha dos créditos (preenchidos
-// na montagem)
-export const EXTRAS: { caracteres?: [number, number]; paginas?: number } = {};
+// as páginas dos caracteres e a da dupla dos estilos, para o sumário, e o total de páginas numeradas, para a ficha
+// dos créditos (preenchidos na montagem)
+export const EXTRAS: { caracteres?: [number, number]; paginas?: number; estilos?: number } = {};
 
 export function montarFolhas(): Folha[] {
     const f: Folha[] = [];
@@ -223,6 +223,7 @@ export function montarFolhas(): Folha[] {
     const car = f.find(x => x.verso.tipo === 'caracteres-esq')!.numVerso!;
     EXTRAS.caracteres = [car, car + 1];
     EXTRAS.paginas = n - 1;
+    EXTRAS.estilos = f.find(x => x.verso.tipo === 'estilos-esq')!.numVerso!;
     return f;
 }
 

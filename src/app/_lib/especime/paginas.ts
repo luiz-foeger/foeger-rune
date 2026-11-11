@@ -55,6 +55,22 @@ function rotulo(c: Ctx, t: string, x: number, y: number, o: { alinhar?: 'left' |
 }
 
 const fio = (c: Ctx, x1: number, y1: number, x2: number, y2: number, cor = FIO, esp = 1.3) => c.p.fio(x1, y1, x2, y2, { cor, esp });
+
+// o rodapé das páginas de texto, igual em todas, como nos livros: o número no canto de fora e, junto dele, o nome do
+// livro nas páginas da esquerda e o do capítulo (ou da parte) nas da direita. As ímpares são as da direita. Nas
+// pranchas, a cor vem da tinta que se lê sobre elas
+function rodape(c: Ctx, num: number | undefined, texto: string, cor?: string) {
+    if (!num) return;
+    const numero = cor ?? TINTA;
+    const nome = cor ?? CINZA;
+    if (num % 2 === 1) {
+        const r = rotulo(c, String(num).padStart(2, '0'), 973, 1468, { alinhar: 'right', cor: numero });
+        rotulo(c, texto, r.x0 - 26, 1468, { alinhar: 'right', cor: nome });
+    } else {
+        const r = rotulo(c, String(num).padStart(2, '0'), 29, 1468, { cor: numero });
+        rotulo(c, texto, r.x1 + 26, 1468, { cor: nome });
+    }
+}
 const fundo = (c: Ctx, cor: string) => c.p.ret(0, 0, 1000, 1500, cor);
 
 type Paragrafo = { tam: number; entre: number; fam?: Familia; peso?: number; cor?: string; justificar?: boolean; recuo?: number; alinhar?: 'left' | 'right' | 'center' };
@@ -364,18 +380,23 @@ const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
 
 // ---------- as páginas ----------
 
+// a capa de pano, com tudo em relevo seco, como as capas duras sem sobrecapa: o título grande, o subtítulo, o autor e,
+// no pé, o selo da editora
 function capa(c: Ctx) {
     c.p.pano(CAPA);
     relevo(c, 'Föeger', 64, 340, { tam: 236, fam: 'cut', peso: 400 });
     relevo(c, 'Rune', 64, 560, { tam: 236, fam: 'cut', peso: 400 });
-    relevo(c, 'ESPÉCIME', 72, 1430, { tam: 15, fam: 'mono', peso: 400, espaco: 0.08 });
-    relevo(c, 'EDIÇÃO 01', 930, 1430, { tam: 15, fam: 'mono', peso: 400, espaco: 0.08, alinhar: 'right' });
+    relevo(c, 'Espécime tipográfico', 70, 690, { tam: 50, peso: 300 });
+    relevo(c, 'LUIZ FELIPE FÖEGER', 72, 1430, { tam: 15, fam: 'mono', peso: 400, espaco: 0.08 });
+    relevo(c, 'Föeger.', 930, 1436, { tam: 46, fam: 'cut', peso: 400, alinhar: 'right' });
 }
 
+// a contracapa de pano: o nome no meio, a frase do livro e o selo da editora no pé, tudo em relevo
 function contracapa(c: Ctx) {
     c.p.pano(CAPA);
     relevo(c, 'Föeger Rune', 500, 770, { tam: 76, fam: 'cut', peso: 400, alinhar: 'center' });
-    relevo(c, LIVRO.frase.toUpperCase(), 500, 1430, { tam: 12.5, fam: 'mono', peso: 400, espaco: 0.08, alinhar: 'center' });
+    relevo(c, LIVRO.frase, 500, 860, { tam: 34, fam: 'polished', peso: 400, alinhar: 'center' });
+    relevo(c, 'Föeger.', 500, 1436, { tam: 46, fam: 'cut', peso: 400, alinhar: 'center' });
 }
 
 // a guarda: o papel colado por dentro da capa e da contracapa, sem texto, como nos livros de verdade. Por enquanto ela
@@ -455,14 +476,14 @@ function creditos(c: Ctx) {
         ['Composto em', 'Föeger Rune Cut, Polished e Worn, com Inter Tight e DM Mono nos textos de apoio'],
         ['Versão da fonte', 'Prévia de 5 de novembro de 2026, com 311 glifos em cada estilo'],
     ];
-    let y = 760;
+    let y = 720;
     for (const [nome, valor] of itens) {
         rotulo(c, nome, 29, y, { tam: 11.5, cor: CINZA });
         y = paragrafo(c, valor, 29, y + 30, 560, { tam: 18.5, entre: 23.5 }) + 28;
     }
     // a ficha de catalogação, como a que vem no verso da folha de rosto, em mono numa caixa de fio fino
     const fx = 29;
-    const fy = 1146;
+    const fy = 1110;
     const fl = 620;
     const fa = 250;
     c.p.borda(fx, fy, fl, fa, { cor: FIO, esp: 1.3 });
@@ -474,7 +495,7 @@ function creditos(c: Ctx) {
     mono(`${EXTRAS.paginas ?? ''} p. : il. color.`, fx + 52, fy + 148);
     mono('1. Tipografia. 2. Fontes tipográficas.', fx + 52, fy + 192);
     mono('3. Design gráfico. I. Título.', fx + 52, fy + 214);
-    rotulo(c, LIVRO.pe, 29, 1468, { cor: CINZA });
+    linha(c, '© 2026 Luiz Felipe Föeger. Todos os direitos reservados.', 29, 1440, { tam: 16.5, peso: 400 });
 }
 
 // a folha de rosto, como a dos livros de verdade: só o título, o subtítulo, o autor e, no pé, o selo da editora com a
@@ -497,36 +518,36 @@ function rosto(c: Ctx) {
     rotulo(c, LIVRO.edicao, 973, 1460, { alinhar: 'right' });
 }
 
-// o sumário em lista, numa página da direita depois dos créditos (p. 5), como o da versão antiga: o
-// título na grotesca leve, como "Letras" e "Sinais", e uma linha por capítulo com fio embaixo, o número em mono, o tema
-// na Rune do capítulo, as seções em corpo pequeno e a página onde ele começa, à direita. Cada linha leva ao capítulo
-// (a dos caracteres, às tabelas do fim)
-const SUMARIO_LINHA = 150;
+// o sumário em lista, numa página da direita depois dos créditos (p. 5), como o da versão antiga e como nos livros de
+// verdade: o título na grotesca leve, como "Letras" e "Sinais", e uma linha por parte, com fio embaixo: o número do
+// capítulo em mono, o título como ele aparece na abertura (a primeira parte na grotesca leve, a segunda na Rune do
+// capítulo), as seções em corpo pequeno e a página onde a parte começa, à direita. As linhas dos capítulos e a dos
+// caracteres levam até eles; a dos três estilos é a dupla seguinte, e o clique nela só vira a página
+const SUMARIO_LINHA = 140;
 
-function linhaDoSumario(c: Ctx, y: number, n: string, tema: string, fam: Familia, secoes: string, pagina: string, extra: Omit<Alvo, 'x' | 'y' | 'l' | 'a'>) {
-    rotulo(c, n, 29, y + 78, { cor: CINZA });
-    linha(c, tema, 112, y + 84, { tam: 64, fam, peso: 400 });
-    linha(c, secoes, 114, y + 120, { tam: 16.5, peso: 400, cor: CINZA });
-    linha(c, pagina, 973, y + 84, { tam: 46, peso: 300, alinhar: 'right' });
+function linhaDoSumario(c: Ctx, y: number, n: string, titulo: [string, string], fam: Familia, secoes: string, pagina: string, extra?: Omit<Alvo, 'x' | 'y' | 'l' | 'a'>) {
+    if (n) rotulo(c, n, 29, y + 76, { cor: CINZA });
+    const x = 112;
+    const fim = titulo[0] ? linha(c, titulo[0], x, y + 80, { tam: 52, peso: 300 }).x1 + 16 : x;
+    linha(c, titulo[1], fim, y + 80, { tam: 52, fam, peso: 400 });
+    linha(c, secoes, x + 2, y + 114, { tam: 16.5, peso: 400, cor: CINZA });
+    linha(c, pagina, 973, y + 80, { tam: 44, peso: 300, alinhar: 'right' });
     fio(c, 29, y + SUMARIO_LINHA, 973, y + SUMARIO_LINHA);
-    alvo(c, 20, y + 4, 980, y + SUMARIO_LINHA - 4, extra);
+    if (extra) alvo(c, 20, y + 4, 980, y + SUMARIO_LINHA - 4, extra);
 }
 
 function sumario(c: Ctx) {
     fundo(c, PAPEL);
-    rotulo(c, 'Sumário', 29, 47);
-    rotulo(c, LIVRO.cabeca, 973, 47, { alinhar: 'right', cor: CINZA });
     linha(c, 'Sumário', 22, 190, { tam: 92 });
     const y0 = 290;
     fio(c, 29, y0, 973, y0);
+    linhaDoSumario(c, y0, '', ['Os três', 'estilos'], 'polished', 'Cut, Polished e Worn lado a lado', EXTRAS.estilos ? pagina2(EXTRAS.estilos) : '');
     CAPITULOS.forEach((ch, i) => {
         const p = ch.paginas;
-        linhaDoSumario(c, y0 + i * SUMARIO_LINHA, pagina2(ch.n), ch.tema, ch.estilo, ch.secoes.join(' · '), p ? pagina2(p[0]) : '', { cap: i });
+        linhaDoSumario(c, y0 + (i + 1) * SUMARIO_LINHA, pagina2(ch.n), ch.sumario, ch.estilo, ch.secoes.join(' · '), p ? pagina2(p[0]) : '', { cap: i });
     });
     const car = EXTRAS.caracteres;
-    linhaDoSumario(c, y0 + CAPITULOS.length * SUMARIO_LINHA, pagina2(CAPITULOS.length + 1), 'Caracteres', 'cut', 'Letras, sinais e variações', car ? pagina2(car[0]) : '', { caracteres: true });
-    rotulo(c, LIVRO.pe, 29, 1468, { cor: CINZA });
-    rotulo(c, LIVRO.edicao, 973, 1468, { alinhar: 'right', cor: CINZA });
+    linhaDoSumario(c, y0 + (CAPITULOS.length + 1) * SUMARIO_LINHA, '', ['', 'Caracteres'], 'cut', 'Letras, sinais e variações', car ? pagina2(car[0]) : '', { caracteres: true });
 }
 
 // a dupla depois do rosto apresenta os três estilos: à esquerda, o título e a abertura, e o cartão da Cut; à direita, os
@@ -582,8 +603,6 @@ function cartaoEstilo(c: Ctx, i: number, x: number, y: number) {
 
 function estilosEsq(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    rotulo(c, 'Os três estilos', 29, 47);
-    rotulo(c, '311 glifos em cada estilo', 973, 47, { alinhar: 'right', cor: CINZA });
     linha(c, 'Uma pedra,', 22, 190, { tam: 92 });
     linha(c, 'três desgastes.', 26, 292, { tam: 88, fam: 'polished', peso: 400 });
     paragrafo(
@@ -591,19 +610,18 @@ function estilosEsq(c: Ctx, num?: number) {
         'A Föeger Rune vem em três estilos, que são três momentos da mesma pedra. O desenho e os glifos são os mesmos; o que muda é quanto a água gastou as quinas. Cada estilo é uma fonte inteira, refeita letra por letra.',
         29,
         420,
-        560,
-        { tam: 21, entre: 25.5 },
+        620,
+        { tam: 24, entre: 30 },
     );
     cartaoEstilo(c, 0, 29, 770);
-    if (num) rotulo(c, pagina2(num), 29, 1468, { cor: CINZA });
+    rodape(c, num, LIVRO.titulo);
 }
 
 function estilosDir(c: Ctx, num?: number) {
     fundo(c, PAPEL);
     cartaoEstilo(c, 1, 29, 110);
     cartaoEstilo(c, 2, 29, 770);
-    rotulo(c, 'Cut · Polished · Worn', 29, 1468, { cor: CINZA });
-    if (num) rotulo(c, pagina2(num), 973, 1468, { alinhar: 'right', cor: CINZA });
+    rodape(c, num, 'Os três estilos');
 }
 function legendaDe(c: Ctx, l: [string, string], cor: string) {
     rotulo(c, l[0], 29, 1440, { cor });
@@ -625,14 +643,12 @@ function aberturaTitulo(c: Ctx, cap: number, num?: number) {
         rotulo(c, `Capítulo ${ch.n}`, 973, 70, { cor: tintaDaAbertura(cap), alinhar: 'right' });
         linha(c, ch.sumario[0], 973, 170, { tam: 76, cor: tintaDaAbertura(cap), alinhar: 'right' });
         linha(c, ch.sumario[1], 973, 250, { tam: 72, fam: ch.estilo, peso: 400, cor: tintaDaAbertura(cap), alinhar: 'right' });
-        rotulo(c, tituloDe(cap), 973, 1468, { cor: tintaDaAbertura(cap), alinhar: 'right' });
-        if (num) rotulo(c, pagina2(num), 29, 1468, { cor: tintaDaAbertura(cap) });
+        rodape(c, num, tituloDe(cap), tintaDaAbertura(cap));
         return;
     }
     fundo(c, PAPEL);
     fio(c, 29, 22, 973, 22);
     rotulo(c, `Capítulo ${ch.n}`, 150, 52);
-    rotulo(c, LIVRO.cabeca, 973, 52, { alinhar: 'right', cor: CINZA });
     // o título em escada, na Rune do capítulo
     const tam = 92;
     const y0 = ch.titulo.length === 4 ? 500 : 550;
@@ -652,7 +668,7 @@ function aberturaTitulo(c: Ctx, cap: number, num?: number) {
     });
     rotulo(c, 'Visão geral', 150, 1248);
     paragrafo(c, ch.visaoGeral, 400, 1248, 550, { tam: 21, entre: 25.5 });
-    if (num) rotulo(c, pagina2(num), 150, 1468, { cor: CINZA });
+    rodape(c, num, tituloDe(cap));
 }
 
 // a coluna da direita da página da esquerda da matéria: uma mostra da fonte, diferente em cada capítulo
@@ -727,9 +743,7 @@ function artigoEsq(c: Ctx, cap: number, num?: number) {
         rotulo(c, 'Visão geral', 548, 1150);
         paragrafo(c, ch.visaoGeral, 548, 1190, 425, { tam: 18.5, entre: 23.5 });
     } else mostra(c, cap);
-    rotulo(c, `Capítulo ${ch.n}`, 29, 1468);
-    if (num) rotulo(c, pagina2(num), 488, 1468, { alinhar: 'right', cor: CINZA });
-    rotulo(c, tituloDe(cap), 973, 1468, { alinhar: 'right' });
+    rodape(c, num, LIVRO.titulo);
 }
 
 function artigoDir(c: Ctx, cap: number, num?: number) {
@@ -746,8 +760,7 @@ function artigoDir(c: Ctx, cap: number, num?: number) {
     // a legenda do pé: clara nas pranchas escuras (os números, a correnteza) e nas da paleta que forem escuras
     const fundoPe: Record<string, string> = { numeros: ESCURA, correnteza: ESCURA, tanto: COR.worn, ploc: COR.polished };
     const cor = tintaSobre(fundoPe[pc.pe] ?? PAPEL);
-    rotulo(c, tituloDe(cap), 29, 1468, { cor });
-    if (num) rotulo(c, `PP. ${pagina2(num - 1)}-${pagina2(num)}`, 973, 1468, { cor, alinhar: 'right' });
+    rodape(c, num, tituloDe(cap), cor === ESCURA ? undefined : cor);
 }
 
 function vegetal(c: Ctx, cap: number) {
@@ -813,18 +826,15 @@ function tabela(c: Ctx, titulo: string, chars: string, y: number, o: { colunas?:
 
 function caracteresEsq(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    rotulo(c, 'Caracteres', 29, 47);
-    rotulo(c, LIVRO.cabeca, 973, 47, { alinhar: 'right', cor: CINZA });
     linha(c, 'Letras', 22, 190, { tam: 92 });
     let y = tabela(c, 'Maiúsculas', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 280);
     y = tabela(c, 'Minúsculas', 'abcdefghijklmnopqrstuvwxyz', y + 50);
     tabela(c, 'Acentuadas e outras', 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿıŒœŠšŸŽžƒªºµ', y + 50);
-    if (num) rotulo(c, pagina2(num), 29, 1468, { cor: CINZA });
+    rodape(c, num, LIVRO.titulo);
 }
 
 function caracteresDir(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    rotulo(c, '311 glifos em cada estilo', 973, 47, { alinhar: 'right', cor: CINZA });
     linha(c, 'Sinais', 22, 190, { tam: 92 });
     let y = tabela(c, 'Números e frações', '0123456789¹²³¼½¾', 280);
     y = tabela(c, 'Pontuação', '.,:;…!¡?¿\'"‘’‚“”„«»‹›()[]{}/\\|¦-–—_•·¶§†‡#&@*%‰', y + 50);
@@ -837,23 +847,24 @@ function caracteresDir(c: Ctx, num?: number) {
         const yy = y + 120 + Math.floor(i / 6) * 58;
         linha(c, t, x, yy, { tam: 34, fam: 'cut', peso: 400 });
     });
-    if (num) rotulo(c, pagina2(num), 973, 1468, { alinhar: 'right', cor: CINZA });
+    rodape(c, num, 'Caracteres');
 }
 
-function colofao(c: Ctx, num?: number) {
+// o colofão, a última página impressa, como nos livros: o selo da editora e, embaixo, como o livro foi feito, num
+// bloco curto centrado, sem número de página
+function colofao(c: Ctx) {
     fundo(c, PAPEL);
-    linha(c, 'Föeger Rune', 26, 150, { tam: 64, fam: 'worn', peso: 400 });
-    rotulo(c, 'Colofão', 29, 1170);
+    linha(c, 'Föeger.', 500, 1010, { tam: 56, fam: 'cut', peso: 400, alinhar: 'center' });
+    rotulo(c, 'Colofão', 500, 1080, { alinhar: 'center', cor: CINZA });
     paragrafo(
         c,
-        'Composto em Föeger Rune Cut, Polished e Worn, com Inter Tight e DM Mono nos textos de apoio. Prévia de 5 de novembro de 2026, com 311 glifos em cada estilo e ainda sem o ajuste fino dos pares de letras. Edição 01, 2026.',
-        29,
-        1210,
-        459,
-        { tam: 18.5, entre: 23.5 },
+        'Este espécime foi composto em Föeger Rune Cut, Polished e Worn, com Inter Tight e DM Mono nos textos de apoio. A fonte é a prévia de 5 de novembro de 2026, com 311 glifos em cada estilo e ainda sem o ajuste fino dos pares de letras.',
+        250,
+        1130,
+        500,
+        { tam: 18.5, entre: 25, alinhar: 'center' },
     );
-    rotulo(c, 'Desenhada por Luiz Felipe Föeger', 29, 1350, { cor: CINZA });
-    if (num) rotulo(c, pagina2(num), 29, 1468, { cor: CINZA });
+    rotulo(c, `${LIVRO.edicao} · Luiz Felipe Föeger`, 500, 1300, { alinhar: 'center', cor: CINZA });
 }
 
 // desenha uma página com o pincel e devolve as áreas clicáveis
@@ -912,7 +923,7 @@ export function desenharPagina(p: Pincel, pg: Pagina, num?: number): Alvo[] {
             caracteresDir(c, num);
             break;
         case 'colofao':
-            colofao(c, num);
+            colofao(c);
             break;
     }
     return c.alvos;
