@@ -470,7 +470,8 @@ void main() {
 
 // ---------- tipos ----------
 
-type Face = { pagina: Pagina; num?: number; tex: WebGLTexture | null; nivel: number; alvos: Alvo[]; transparente: boolean; escura: boolean };
+// destaque: a área clicável sob o mouse (o sumário acende a linha dela); −1 sem nenhuma
+type Face = { pagina: Pagina; num?: number; tex: WebGLTexture | null; nivel: number; alvos: Alvo[]; destaque: number; transparente: boolean; escura: boolean };
 // a dobra livre (nas contas da folha: X da lombada para dentro, Y do meio): o vértice do cone (a), a linha da dobra que
 // sai dele para dentro da folha (t), a normal dela para o lado que vira (n), o seno do meio-ângulo do cone (sb; 0 é a
 // dobra vincada), a altura extra da parte virada (e, para passar por cima da outra pilha) e o lado em que a folha está
@@ -606,6 +607,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         tex: null,
         nivel: 0,
         alvos: [],
+        destaque: -1,
         transparente: p.tipo === 'vegetal',
         escura: p.tipo === 'capa' || p.tipo === 'contracapa' || p.tipo === 'guarda',
     });
@@ -631,7 +633,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         }
         const g = tela.getContext('2d')!;
         g.clearRect(0, 0, tela.width, tela.height);
-        fc.alvos = desenharPagina(pincelCanvas(g, larg / 1000, fam), fc.pagina, fc.num);
+        fc.alvos = desenharPagina(pincelCanvas(g, larg / 1000, fam), fc.pagina, fc.num, fc.destaque);
         fc.tex = enviar(fc.tex, tela, fc.transparente, true);
         fc.nivel = nivel;
     }
@@ -1158,6 +1160,20 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         return { x, y, lado, fc, u, v: 0.5 - y / H };
     }
     const alvoEm = (fc: Face | null, u: number, vv: number) => fc?.alvos.find(a => u >= a.x && u <= a.x + a.l && vv >= a.y && vv <= a.y + a.a) ?? null;
+    // o hover: a face com a área sob o mouse acende ela (redesenhada só quando a área muda); a que tinha antes apaga
+    let destacada: Face | null = null;
+    function destacar(fc: Face | null, i: number) {
+        if (destacada === fc && (fc ? fc.destaque === i : true)) return;
+        if (destacada && destacada !== fc) {
+            destacada.destaque = -1;
+            if (destacada.tex) renderizar(destacada, destacada.nivel);
+        }
+        destacada = fc;
+        if (fc) {
+            fc.destaque = i;
+            if (fc.tex) renderizar(fc, fc.nivel);
+        }
+    }
 
     function irPara(cap: number) {
         alvoContagem = folhaDoCapitulo(defs, cap);
@@ -1215,6 +1231,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         // sem botão: o cursor e a página que levanta
         const s = sob(lx, ly);
         const alvoAqui = alvoEm(s.fc, s.u, s.v);
+        destacar(alvoAqui ? s.fc : null, alvoAqui && s.fc ? s.fc.alvos.indexOf(alvoAqui) : -1);
         cv.style.cursor = alvoAqui ? 'pointer' : s.lado !== null ? 'grab' : camAlvo.zoom > 1.25 ? 'grab' : 'default';
         const livre = !folhas.some(f => f.anim) && camAlvo.zoom < 1.35 && !alvoAqui;
         const c = contagem();
@@ -1471,6 +1488,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     function aoSair() {
         mouse.dentro = false;
         peel.proximo = -1;
+        destacar(null, -1);
     }
 
     cv.style.touchAction = 'pan-y';
