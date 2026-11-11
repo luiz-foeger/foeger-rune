@@ -151,6 +151,15 @@ type Pedra = {
 
 const palavra = PALAVRAS.Rune;
 const suave = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+// a entrada do nome, a do topo do clone da Studio Namma (portfolio-simulacao, nova/clone-namma/_comp/Topo.tsx, com a
+// Mascara de desde 0,9, segurar 0,3 e duração 1,2): cada letra começa abaixo da linha mais baixa da palavra, com só uma
+// fatia do topo à mostra (o "— — — —" que faz de carregamento), fica assim um pouco e sobe para casa (power3.out).
+// A camada das letras é cortada nessa linha enquanto isso. Na troca de página, espera a cortina subir (data-trocando);
+// com movimento reduzido, não há. Se alguém rolar e soltar uma letra no meio, a entrada acaba na hora
+const ENTRADA_FORA = 0.94; // quanto da altura da letra começa escondido
+const ENTRADA_SEGURA = 0.3;
+const ENTRADA_SOBE = 1.2;
+const power3Out = (x: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 4);
 const caminho = (pts: Ponto[], fechado = true) =>
     pts.map((p, k) => `${k ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join('') + (fechado ? 'Z' : '');
 // o voo de volta: um arco (curva de Bézier com o ponto de controle acima das duas pontas), não uma reta
@@ -411,6 +420,7 @@ export function HeroPedras() {
     const id = useId().replace(/:/g, '');
     const ref = useRef<HTMLElement>(null);
     const svg = useRef<SVGSVGElement>(null);
+    const camada = useRef<HTMLDivElement>(null); // a camada das letras (cortada durante a entrada do nome)
     const elementos = useRef<(SVGSVGElement | null)[]>([]);
     const peles = useRef<(SVGSVGElement | null)[]>([]);
     const filtros = useRef<(SVGGElement | null)[]>([]);
@@ -840,6 +850,8 @@ export function HeroPedras() {
             });
         };
 
+        // a entrada do nome: o instante em que começou (-1, ainda não; -2, acabou)
+        let entradaDesde = reduzido ? -2 : -1;
         const passo = () => {
             quadro = requestAnimationFrame(passo);
             const s = performance.now() / 1000;
@@ -966,6 +978,22 @@ export function HeroPedras() {
                 const achada = Matter.Query.point(vivas, ponteiro)[0];
                 if (achada) sob = ps.findIndex(p => p.corpo === achada);
             }
+            // a entrada do nome: começa quando não há troca de página em andamento; enquanto dura, a camada é cortada na
+            // linha mais baixa da palavra em casa
+            let subida = 1;
+            const cam = camada.current;
+            if (entradaDesde !== -2 && cam) {
+                if (entradaDesde === -1 && !document.documentElement.hasAttribute('data-trocando')) entradaDesde = s;
+                subida = entradaDesde < 0 ? 0 : power3Out((s - entradaDesde - ENTRADA_SEGURA) / ENTRADA_SOBE);
+                if (subida >= 1 || ps.some(p => p.estado !== 'casa')) {
+                    subida = 1;
+                    entradaDesde = -2;
+                    cam.style.clipPath = '';
+                } else {
+                    const linha = Math.max(...ps.map((p, i) => lista[i].y + p.baixo * sPx)) + 1;
+                    cam.style.clipPath = `inset(0 0 ${Math.max(0, o.height - linha).toFixed(1)}px 0)`;
+                }
+            }
             const sozinha = s - mexeu > 3 ? Math.floor(s / VEZ) % ps.length : -1;
             const naVez = sozinha >= 0 && s % VEZ < 0.35 ? sozinha : -1;
             const pu = sPx * (window.devicePixelRatio || 1);
@@ -1010,7 +1038,8 @@ export function HeroPedras() {
                 } else if (!p.racha) p.danoAplicado = -1;
                 const el = elementos.current[i];
                 if (!el || !p.corpo) return;
-                const { x, y } = p.corpo.position;
+                const { x } = p.corpo.position;
+                const y = p.corpo.position.y + (1 - subida) * ENTRADA_FORA * (p.baixo - p.cima) * sPx;
                 const pose = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${p.corpo.angle.toFixed(4)}rad)`;
                 const vis = p.estado === 'quebrada' || (p.estado === 'volta' && temCacos(i)) ? 'hidden' : 'visible';
                 el.style.transform = pose;
@@ -1134,7 +1163,7 @@ export function HeroPedras() {
                 ))}
             </svg>
             {/* as letras e os cacos, por baixo da página e por cima da cena */}
-            <div className="fx-pedras" aria-hidden>
+            <div ref={camada} className="fx-pedras" aria-hidden>
                 {palavra.glifos.map((g, i) => {
                     const p = pedras.current[i];
                     const r = rachas[i];
