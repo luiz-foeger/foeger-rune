@@ -49,9 +49,21 @@ export const TITULO_CARACTERES = { texto: 'Caracteres', nota: 'Números, acentos
 // o título do livro, digitado como o dos estilos, com a nota no pé do painel
 export const TITULO_LIVRO = { texto: 'O Livro', asteriscoDepois: 7, nota: '* O espécime da Föeger Rune, para folhear aqui ou baixar em PDF' };
 
-// o cabeçalho, igual ao do site principal: o menu (as seções da página, pelas âncoras), a logo da Föeger no meio e,
-// no lugar do PT/EN de lá, o PDF à direita
-export const CABECALHO = {
+// a segunda página: a fonte em uso (as peças das faixas) e o playground
+export const PAGINA_PRATICA = { caminho: '/na-pratica', titulo: 'Na prática' };
+// a chamada no fim das faixas da home, que leva à página da prática
+export const CHAMADA_PRATICA = { texto: 'Veja a Rune na prática', legenda: 'Os cartazes, os livros, o disco e o playground para testar a fonte' };
+// e a do pé da página da prática, que volta para a home
+export const CHAMADA_HOME = { texto: 'Conheça a Föeger Rune', legenda: 'A ideia, os três estilos, os caracteres, os recursos e o livro para baixar' };
+
+// o cabeçalho, igual ao do site principal: o menu (as seções das duas páginas, pelas âncoras; sem página, é a home),
+// a logo da Föeger no meio e, no lugar do PT/EN de lá, o PDF à direita
+export const CABECALHO: {
+    menu: string;
+    fechar: string;
+    itens: { texto: string; alvo: string; pagina?: string }[];
+    acao: { texto: string; href: string };
+} = {
     menu: 'Menu',
     fechar: 'Fechar',
     itens: [
@@ -60,8 +72,9 @@ export const CABECALHO = {
         { texto: 'Testar', alvo: 'testador' },
         { texto: 'Caracteres', alvo: 'caracteres' },
         { texto: 'Recursos', alvo: 'recursos' },
-        { texto: 'Playground', alvo: 'escreva' },
         { texto: 'O Livro', alvo: 'livro' },
+        { texto: 'Na prática', alvo: '', pagina: PAGINA_PRATICA.caminho },
+        { texto: 'Playground', alvo: 'escreva', pagina: PAGINA_PRATICA.caminho },
     ],
     acao: { texto: 'Baixar', href: '/foeger-rune-especime.pdf' },
 };

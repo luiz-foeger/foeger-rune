@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
+import { usePathname, useRouter } from 'next/navigation';
 import { useLenis } from 'lenis/react';
 import { Logo } from './LogoFoeger';
 import { CABECALHO } from '../_lib/conteudo';
@@ -12,8 +13,8 @@ import { CABECALHO } from '../_lib/conteudo';
 // Fixo e transparente, em modo diferença, com as três peças de lá: à esquerda o "Menu" com o hambúrguer (no hover, as
 // linhas correm e o texto rola; aberto, as linhas viram um X e o rótulo troca para "Fechar"), no meio a logo da
 // Föeger na versão escrita (leva ao topo) e à direita, no lugar do PT/EN de lá, o "Baixar" do PDF. O menu é a cortina
-// de lá, mas preta (lá é azul-marinho), com as seções da página: os itens entram do desfoque e, no hover de um, os outros apagam e
-// desfocam e o sublinhado corre. Fica num portal no body: o [data-clone] tem container-type, que prenderia o fixed.
+// de lá, mas preta (lá é azul-marinho), com as seções das duas páginas (a home e a "Na prática"): os itens entram do
+// desfoque e, no hover de um, os outros apagam e desfocam e o sublinhado corre. Fica num portal no body: o [data-clone] tem container-type, que prenderia o fixed.
 function Rola({ texto }: { texto: string }) {
     return (
         <span className="fx-rola">
@@ -25,6 +26,8 @@ function Rola({ texto }: { texto: string }) {
 
 export function Cabecalho() {
     const lenis = useLenis();
+    const caminho = usePathname();
+    const rotas = useRouter();
     const [aberto, setAberto] = useState(false);
     const [montado, setMontado] = useState(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- o portal só existe no navegador
@@ -60,11 +63,16 @@ export function Cabecalho() {
         if (lenis) lenis.scrollTo(y);
         else window.scrollTo({ top: y, behavior: 'smooth' });
     };
-    // fecha a cortina e rola depois que ela sobe
-    const ir = (alvo: string | number) => () => {
+    // fecha a cortina e rola depois que ela sobe; se o alvo é da outra página, abre a página já na seção (o alvo vazio
+    // é o topo)
+    const ir = (alvo: string | number, pagina = '/') => () => {
         const estava = aberto;
         setAberto(false);
-        window.setTimeout(() => rolarPara(alvo), estava ? 350 : 0);
+        if (pagina !== caminho) {
+            window.setTimeout(() => rotas.push(alvo ? `${pagina}#${alvo}` : pagina), estava ? 350 : 0);
+            return;
+        }
+        window.setTimeout(() => rolarPara(alvo || 0), estava ? 350 : 0);
     };
 
     if (!montado) return null;
@@ -73,7 +81,7 @@ export function Cabecalho() {
             <div className="fx-cortina" data-aberto={aberto || undefined} aria-hidden={!aberto}>
                 <nav className="fx-cortina-lista" aria-label="Seções">
                     {CABECALHO.itens.map((m, i) => (
-                        <button key={m.alvo} type="button" onClick={ir(m.alvo)} tabIndex={aberto ? 0 : -1} style={{ '--i': i } as CSSProperties}>
+                        <button key={m.texto} type="button" onClick={ir(m.alvo, m.pagina)} tabIndex={aberto ? 0 : -1} style={{ '--i': i } as CSSProperties}>
                             <span className="fx-sublinha">{m.texto}</span>
                         </button>
                     ))}
@@ -105,6 +113,7 @@ export function Cabecalho() {
                     aria-label="Föeger"
                     onClick={e => {
                         e.preventDefault();
+                        // na home, volta ao topo; na outra página, leva à home
                         ir(0)();
                         // o hero recolhe as letras soltas (e os cacos) para o lugar
                         window.dispatchEvent(new Event('fx-logo'));
