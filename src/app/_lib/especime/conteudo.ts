@@ -6,7 +6,7 @@
 // as larguras de cada estilo, o revezamento das minúsculas, o L do meio e o f do começo).
 import type { Familia } from './pincel';
 
-export type IdCapitulo = 'historia' | 'alfabeto' | 'estilos' | 'variacoes' | 'texto' | 'uso' | 'falta';
+export type IdCapitulo = 'historia' | 'alfabeto' | 'estilos' | 'variacoes' | 'texto' | 'uso';
 export type Capitulo = {
     // o id do capítulo (as pranchas e as mostras de cada um são achadas por ele, não pela posição)
     id: IdCapitulo;
@@ -202,27 +202,6 @@ export const CAPITULOS: Capitulo[] = [
         cor: COR.worn,
         tinta: '#1b1a18',
         legenda: ['Föeger Rune Cut', 'O cartaz do festival'],
-    },
-    {
-        id: 'falta',
-        n: 7,
-        tema: 'O que falta',
-        titulo: [['A Prévia', 0.02], ['&', 0.5], ['O Que Falta', 0.1]],
-        sumario: ['A Prévia', '& O Que Falta'],
-        estilo: 'worn',
-        secoes: ['Os pares de letras', 'Os arquivos finais'],
-        visaoGeral:
-            'Este espécime mostra uma prévia. Faltam o ajuste fino dos pares de letras em cada estilo, o þ minúsculo e os arquivos para instalar e para a web.',
-        corpo: [
-            'Cada letra já tem o seu espaço, mas alguns pares ainda ficam abertos demais, como AV, To e LT. O ajuste foi medido na Cut, com mais de 14 mil pares, e ainda precisa ser refeito para a Polished e a Worn, que perdem lascas e mudam de largura.',
-            'Os caracteres do português e do Latin-1 estão todos desenhados, menos o þ minúsculo, que ainda não tem desenho próprio. Em corpo grande, o desgaste também fecha algumas aberturas: na Polished, o s quase vira um 8.',
-            'Depois vêm os arquivos para instalar e para a web, com o nome de cada estilo, as trocas de contexto e o espaçamento gravados dentro da fonte.',
-        ],
-        citacao: 'Pedra que se gasta não fica pronta nunca.',
-        modo: 'pagina',
-        cor: '#1b1a18',
-        tinta: '#f2f4fb',
-        legenda: ['Föeger Rune Cut', 'O par AV'],
     },
 ];
 

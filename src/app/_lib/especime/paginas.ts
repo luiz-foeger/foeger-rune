@@ -195,11 +195,7 @@ type Prancha =
     | 'cartaz'
     | 'livro'
     | 'disco'
-    | 'esgotado'
-    | 'av'
-    | 'pares'
-    | 's8'
-    | 'arquivos';
+    | 'esgotado';
 
 // as linhas de uma prancha, cada uma ajustada à largura, centradas na altura
 function linhasNaCaixa(c: Ctx, linhas: string[], fam: Familia, cor: string, x: number, y: number, l: number, a: number, o: { frac?: number; entre?: number; semCalt?: boolean; alinhar?: 'left' | 'center' } = {}) {
@@ -455,53 +451,6 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
             linha(c, 'ESGOTADO', x + l * 0.73, y + a * 0.49 + (MAIUSCULA * te) / 2, { tam: te, fam: 'cut', peso: 400, cor: ESCURA, alinhar: 'center', semCalt: true });
         });
     },
-    // o par AV como está hoje, sem ajuste, e como vai ficar, com o ajuste de −100 medido na Cut
-    av(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, ESCURA);
-        const tam = Math.min(ajustar(c, 'AV', { fam: 'cut', semCalt: true }, l * 0.78), a * 0.3);
-        const tl = Math.max(9, a * 0.012);
-        const hoje = y + a * 0.44;
-        const w = largura(c, 'AV', { tam, fam: 'cut', semCalt: true });
-        const x0 = x + (l - w) / 2;
-        linha(c, 'AV', x0, hoje, { tam, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
-        rotulo(c, 'Hoje, sem ajuste', x0, hoje + tl * 4, { tam: tl * 1.3, cor: PAPEL });
-        const depois = y + a * 0.82;
-        const wa = largura(c, 'A', { tam, fam: 'cut', semCalt: true });
-        linha(c, 'A', x0, depois, { tam, fam: 'cut', peso: 400, cor: COR.laranja, semCalt: true });
-        linha(c, 'V', x0 + wa - tam * 0.1, depois, { tam, fam: 'cut', peso: 400, cor: COR.laranja, semCalt: true });
-        rotulo(c, 'Depois, com −100', x0, depois + tl * 4, { tam: tl * 1.3, cor: COR.laranja });
-    },
-    // os pares que mais pedem ajuste, com o valor medido na Cut
-    pares(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#e4e1da');
-        const pares: [string, string][] = [
-            ['To', '−113'],
-            ['AV', '−100'],
-            ['LT', '−110'],
-            ['r.', '−128'],
-        ];
-        const passo = a / (pares.length + 0.4);
-        const tam = passo * 0.62;
-        const tl = Math.max(9, a * 0.03);
-        pares.forEach(([par, valor], i) => {
-            const base = y + passo * (i + 0.95);
-            linha(c, par, x + l * 0.1, base, { tam, fam: 'cut', peso: 400, cor: ESCURA, semCalt: true });
-            rotulo(c, valor, x + l * 0.9, base, { tam: tl * 1.2, alinhar: 'right', cor: ESCURA });
-            if (i < pares.length - 1) c.p.fio(x + l * 0.1, base + passo * 0.2, x + l * 0.9, base + passo * 0.2, { cor: 'rgba(27,26,24,0.25)', esp: 1 });
-        });
-    },
-    // o s da Polished grande, com a abertura quase fechada
-    s8(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, COR.polished);
-        centrado(c, 's', 'polished', tintaSobre(COR.polished), x, y, l, a, { frac: 0.5, altura: ALTURA_X });
-    },
-    // os arquivos que faltam, claros no escuro (a prancha do pé)
-    arquivos(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, ESCURA);
-        const tam = ajustar(c, 'OTF ★ WOFF2', { fam: 'cut', semCalt: true }, l * 0.8);
-        linha(c, 'OTF ★ WOFF2', x + l * 0.07, y + a * 0.56, { tam, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
-        rotulo(c, 'Föeger Rune Cut · Polished · Worn', x + l * 0.07, y + a * 0.56 + Math.max(9, a * 0.03) * 2.6, { tam: Math.max(9, a * 0.03), cor: COR.cut });
-    },
 };
 
 // uma prancha numa caixa da página, cortada pela caixa e pela página
@@ -528,7 +477,6 @@ const PRANCHAS_ID: Record<IdCapitulo, PranchasDoCapitulo> = {
     variacoes: { abertura: 'ssss', esq: 'trocas', dir: 'l-f', pe: 'correnteza', legendaEsq: ['Worn', 'Sem e com as trocas'], legendaDir: ['L.alt e f.ini', 'Pelo lugar na palavra'] },
     texto: { abertura: 'acai', esq: 'acentos', dir: 'tamanhos', pe: 'ploc', legendaEsq: ['Acentos e frações', 'Cut'], legendaDir: ['Do cartaz ao texto', 'Cut'] },
     uso: { abertura: 'cartaz', esq: 'livro', dir: 'disco', pe: 'esgotado', legendaEsq: ['Livro', 'A Polished na capa'], legendaDir: ['Disco', 'A Worn no selo'] },
-    falta: { abertura: 'av', esq: 'pares', dir: 's8', pe: 'arquivos', legendaEsq: ['Pares de letras', 'O ajuste por fazer'], legendaDir: ['O s da Polished', 'A abertura que fecha'] },
 };
 const PRANCHAS_CAP = (cap: number) => PRANCHAS_ID[CAPITULOS[cap].id];
 
@@ -540,7 +488,6 @@ const FUNDO_ABERTURA: Record<IdCapitulo, () => string> = {
     variacoes: () => COR.roxo,
     texto: () => COR.laranja,
     uso: () => COR.worn,
-    falta: () => ESCURA,
 };
 const tintaDaAbertura = (cap: number) => tintaSobre(FUNDO_ABERTURA[CAPITULOS[cap].id]());
 
@@ -689,22 +636,34 @@ function rosto(c: Ctx) {
 
 // o sumário em lista, numa página da direita depois dos créditos (p. 5), como o da versão Föeger Sans e como nos livros
 // de verdade: o título na grotesca leve, como "Letras" e "Sinais", e uma linha por parte principal, em texto simples,
-// com fio embaixo: o número do capítulo em mono, o título e a página onde a parte começa, à direita. Toda linha é
-// clicável e acende em laranja com o mouse em cima (o motor redesenha a página): a de um capítulo leva à abertura
-// dele, a dos caracteres às tabelas e as outras (os estilos e o colofão) direto à página delas
-const SUMARIO_LINHA = 100;
+// com fio embaixo: o número do capítulo em mono, o título e a página onde a parte começa, à direita. Embaixo de alguns
+// capítulos, as seções mais importantes, recuadas, em cinza e um pouco menores. Toda linha é clicável e acende em
+// laranja com o mouse em cima (o motor redesenha a página): a de um capítulo leva à abertura dele, a dos caracteres às
+// tabelas e as outras (os estilos, as seções e o colofão) direto à página delas
+const SUMARIO_PARTE = 84;
+const SUMARIO_SECAO = 56;
+// as seções que aparecem no sumário, pelo índice delas no capítulo (0: a página da esquerda da matéria; 1: a da direita)
+const SECOES_NO_SUMARIO: Partial<Record<IdCapitulo, number[]>> = { alfabeto: [0, 1], estilos: [0], variacoes: [0], texto: [0] };
 type Destino = Omit<Alvo, 'x' | 'y' | 'l' | 'a'>;
 
 // uma linha do sumário; devolve onde começa a seguinte
-function linhaDoSumario(c: Ctx, y: number, o: { n?: string; titulo: string; pagina?: number; destino: Destino }) {
+function linhaDoSumario(c: Ctx, y: number, o: { n?: string; titulo: string; pagina?: number; destino: Destino; secao?: boolean }) {
     const aceso = c.destaque === c.alvos.length;
-    const cor = aceso ? COR.laranja : TINTA;
-    if (o.n) rotulo(c, o.n, 29, y + 64, { cor: aceso ? COR.laranja : CINZA });
-    linha(c, o.titulo, 112, y + 68, { tam: 50, peso: 300, cor });
-    linha(c, o.pagina ? pagina2(o.pagina) : '', 973, y + 68, { tam: 46, peso: 300, alinhar: 'right', cor });
-    fio(c, 29, y + SUMARIO_LINHA, 973, y + SUMARIO_LINHA);
-    alvo(c, 20, y + 3, 980, y + SUMARIO_LINHA - 3, o.destino);
-    return y + SUMARIO_LINHA;
+    const alto = o.secao ? SUMARIO_SECAO : SUMARIO_PARTE;
+    const cor = aceso ? COR.laranja : o.secao ? CINZA : TINTA;
+    const pg = o.pagina ? pagina2(o.pagina) : '';
+    if (o.secao) {
+        linha(c, o.titulo, 142, y + 40, { tam: 36, peso: 300, cor });
+        linha(c, pg, 973, y + 40, { tam: 34, peso: 300, alinhar: 'right', cor });
+        fio(c, 142, y + alto, 973, y + alto);
+    } else {
+        if (o.n) rotulo(c, o.n, 29, y + 54, { cor: aceso ? COR.laranja : CINZA });
+        linha(c, o.titulo, 112, y + 58, { tam: 46, peso: 300, cor });
+        linha(c, pg, 973, y + 58, { tam: 42, peso: 300, alinhar: 'right', cor });
+        fio(c, 29, y + alto, 973, y + alto);
+    }
+    alvo(c, 20, y + 3, 980, y + alto - 3, o.destino);
+    return y + alto;
 }
 
 function sumario(c: Ctx) {
@@ -714,9 +673,17 @@ function sumario(c: Ctx) {
     fio(c, 29, y, 973, y);
     y = linhaDoSumario(c, y, { titulo: 'Os três estilos', pagina: EXTRAS.estilos, destino: { pagina: EXTRAS.estilos } });
     CAPITULOS.forEach((ch, i) => {
-        y = linhaDoSumario(c, y, { n: pagina2(ch.n), titulo: ch.sumario.join(' '), pagina: ch.paginas?.[0], destino: { cap: i } });
+        const p = ch.paginas;
+        y = linhaDoSumario(c, y, { n: pagina2(ch.n), titulo: ch.sumario.join(' '), pagina: p?.[0], destino: { cap: i } });
+        for (const k of SECOES_NO_SUMARIO[ch.id] ?? []) {
+            const pagina = p ? (k === 0 ? p[0] + 2 : p[1]) : undefined;
+            y = linhaDoSumario(c, y, { titulo: ch.secoes[k], pagina, destino: { pagina }, secao: true });
+        }
     });
-    y = linhaDoSumario(c, y, { titulo: 'Caracteres', pagina: EXTRAS.caracteres?.[0], destino: { caracteres: true } });
+    const car = EXTRAS.caracteres;
+    y = linhaDoSumario(c, y, { titulo: 'Caracteres', pagina: car?.[0], destino: { caracteres: true } });
+    y = linhaDoSumario(c, y, { titulo: 'Letras', pagina: car?.[0], destino: { pagina: car?.[0] }, secao: true });
+    y = linhaDoSumario(c, y, { titulo: 'Sinais', pagina: car?.[1], destino: { pagina: car?.[1] }, secao: true });
     linhaDoSumario(c, y, { titulo: 'Colofão', pagina: EXTRAS.colofao, destino: { pagina: EXTRAS.colofao } });
 }
 
@@ -863,25 +830,6 @@ function mostra(c: Ctx, cap: number) {
             fio(c, x, y, x + l, y);
             y += 40;
         }
-    } else if (id === 'falta') {
-        // o que já está feito (✓, na Cut) e o que falta (um traço laranja)
-        rotulo(c, 'Feito e por fazer', x, 140, { cor: CINZA });
-        const itens: [boolean, string][] = [
-            [true, '311 glifos em cada estilo'],
-            [true, 'Acentos, sinais e símbolos'],
-            [true, 'Os quatro cortes das minúsculas'],
-            [true, 'Os três desgastes'],
-            [false, 'O ajuste dos pares em cada estilo'],
-            [false, 'O þ minúsculo'],
-            [false, 'Os arquivos para instalar e para a web'],
-        ];
-        itens.forEach(([feito, texto], i) => {
-            const y = 230 + i * 74;
-            if (feito) linha(c, '✓', x, y, { tam: 28, fam: 'cut', peso: 400, cor: COR.wornEscuro, semCalt: true });
-            else c.p.fio(x + 2, y - 9, x + 26, y - 9, { cor: COR.laranja, esp: 3 });
-            linha(c, texto, x + 48, y, { tam: 20, peso: feito ? 400 : 500, cor: feito ? TINTA : ESCURA });
-            fio(c, x, y + 26, x + l, y + 26);
-        });
     } else if (id === 'alfabeto') {
         // o a da Cut pelo contorno, com os pontos como estão no arquivo da fonte
         const g = glifoDe('Rolado', 'a');
@@ -980,7 +928,7 @@ function artigoDir(c: Ctx, cap: number, num?: number) {
     paragrafo(c, ch.citacao, 150, 770 - ((n - 1) * cit.entre) / 2, 700, cit);
     prancha(c, pc.pe, 0, 999, 1000, 501);
     // a legenda do pé: clara nas pranchas escuras (os números, a correnteza) e nas da paleta que forem escuras
-    const fundoPe: Record<string, string> = { numeros: ESCURA, correnteza: ESCURA, tanto: COR.worn, ploc: COR.polished, datas: ESCURA, arquivos: ESCURA, esgotado: '#efe7d6' };
+    const fundoPe: Record<string, string> = { numeros: ESCURA, correnteza: ESCURA, tanto: COR.worn, ploc: COR.polished, datas: ESCURA, esgotado: '#efe7d6' };
     const cor = tintaSobre(fundoPe[pc.pe] ?? PAPEL);
     rodape(c, num, tituloDe(cap), cor === ESCURA ? undefined : cor);
 }
