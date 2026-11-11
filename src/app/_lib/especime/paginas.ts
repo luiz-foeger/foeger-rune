@@ -8,7 +8,8 @@ import { medir, TINTA, type Estilo, type Familia, type Pincel } from './pincel';
 import { PALAVRAS, type Glifo } from '../glifos';
 import { ESTILO_MEDIDAS } from '../medidas';
 
-export type Alvo = { x: number; y: number; l: number; a: number; cap?: number; caracteres?: boolean };
+// o que o clique faz: ir ao capítulo (cap), às tabelas dos caracteres ou a uma página qualquer (pagina)
+export type Alvo = { x: number; y: number; l: number; a: number; cap?: number; caracteres?: boolean; pagina?: number };
 // destaque: a área clicável sob o mouse, pela ordem em que as áreas entram em alvos (−1 sem nenhuma)
 type Ctx = { p: Pincel; alvos: Alvo[]; destaque?: number };
 
@@ -521,34 +522,54 @@ function rosto(c: Ctx) {
 
 // o sumário em lista, numa página da direita depois dos créditos (p. 5), como o da versão Föeger Sans e como nos livros
 // de verdade: o título na grotesca leve, como "Letras" e "Sinais", e uma linha por parte, em texto simples, com fio
-// embaixo: o número do capítulo em mono, o título, as seções em corpo pequeno e a página onde a parte começa, à
-// direita. Toda linha é clicável e acende em laranja com o mouse em cima (o motor redesenha a página): as dos
-// capítulos e a dos caracteres levam até eles; a dos três estilos é a dupla seguinte, e o clique nela vira a página
-const SUMARIO_LINHA = 140;
+// embaixo: o número do capítulo em mono, o título e a página onde a parte começa, à direita; embaixo de cada parte, as
+// seções, recuadas e menores, cada uma com a sua página. Toda linha é clicável e acende em laranja com o mouse em cima
+// (o motor redesenha a página): a de um capítulo leva à abertura dele, a dos caracteres às tabelas e as outras (as
+// seções, os estilos e o colofão) direto à página delas
+const SUMARIO_PARTE = 88;
+const SUMARIO_SECAO = 44;
+type Destino = Omit<Alvo, 'x' | 'y' | 'l' | 'a'>;
 
-function linhaDoSumario(c: Ctx, y: number, n: string, titulo: string, secoes: string, pagina: string, extra: Omit<Alvo, 'x' | 'y' | 'l' | 'a'>) {
+// uma linha do sumário; devolve onde começa a seguinte
+function linhaDoSumario(c: Ctx, y: number, o: { n?: string; titulo: string; pagina?: number; destino: Destino; secao?: boolean }) {
     const aceso = c.destaque === c.alvos.length;
-    const cor = aceso ? COR.laranja : TINTA;
-    if (n) rotulo(c, n, 29, y + 76, { cor: aceso ? COR.laranja : CINZA });
-    linha(c, titulo, 112, y + 80, { tam: 52, peso: 300, cor });
-    linha(c, secoes, 114, y + 114, { tam: 16.5, peso: 400, cor: aceso ? COR.laranja : CINZA });
-    linha(c, pagina, 973, y + 80, { tam: 44, peso: 300, alinhar: 'right', cor });
-    fio(c, 29, y + SUMARIO_LINHA, 973, y + SUMARIO_LINHA);
-    alvo(c, 20, y + 4, 980, y + SUMARIO_LINHA - 4, extra);
+    const alto = o.secao ? SUMARIO_SECAO : SUMARIO_PARTE;
+    const cor = aceso ? COR.laranja : o.secao ? CINZA : TINTA;
+    const pg = o.pagina ? pagina2(o.pagina) : '';
+    if (o.secao) {
+        linha(c, o.titulo, 142, y + 30, { tam: 21, peso: 400, cor });
+        linha(c, pg, 973, y + 30, { tam: 21, peso: 400, alinhar: 'right', cor });
+        fio(c, 142, y + alto, 973, y + alto);
+    } else {
+        if (o.n) rotulo(c, o.n, 29, y + 56, { cor: aceso ? COR.laranja : CINZA });
+        linha(c, o.titulo, 112, y + 60, { tam: 44, peso: 300, cor });
+        linha(c, pg, 973, y + 60, { tam: 40, peso: 300, alinhar: 'right', cor });
+        fio(c, 29, y + alto, 973, y + alto);
+    }
+    alvo(c, 20, y + 3, 980, y + alto - 3, o.destino);
+    return y + alto;
 }
 
 function sumario(c: Ctx) {
     fundo(c, PAPEL);
     linha(c, 'Sumário', 22, 190, { tam: 92 });
-    const y0 = 290;
-    fio(c, 29, y0, 973, y0);
-    linhaDoSumario(c, y0, '', 'Os três estilos', 'Cut, Polished e Worn lado a lado', EXTRAS.estilos ? pagina2(EXTRAS.estilos) : '', {});
+    let y = 262;
+    fio(c, 29, y, 973, y);
+    y = linhaDoSumario(c, y, { titulo: 'Os três estilos', pagina: EXTRAS.estilos, destino: { pagina: EXTRAS.estilos } });
     CAPITULOS.forEach((ch, i) => {
         const p = ch.paginas;
-        linhaDoSumario(c, y0 + (i + 1) * SUMARIO_LINHA, pagina2(ch.n), ch.sumario.join(' '), ch.secoes.join(' · '), p ? pagina2(p[0]) : '', { cap: i });
+        y = linhaDoSumario(c, y, { n: pagina2(ch.n), titulo: ch.sumario.join(' '), pagina: p?.[0], destino: { cap: i } });
+        // as duas seções: a página da esquerda e a da direita da matéria, depois da abertura
+        const secoes = p ? [p[0] + 2, p[1]] : [];
+        ch.secoes.forEach((s, k) => {
+            y = linhaDoSumario(c, y, { titulo: s, pagina: secoes[k], destino: { pagina: secoes[k] }, secao: true });
+        });
     });
     const car = EXTRAS.caracteres;
-    linhaDoSumario(c, y0 + (CAPITULOS.length + 1) * SUMARIO_LINHA, '', 'Caracteres', 'Letras, sinais e variações', car ? pagina2(car[0]) : '', { caracteres: true });
+    y = linhaDoSumario(c, y, { titulo: 'Caracteres', pagina: car?.[0], destino: { caracteres: true } });
+    y = linhaDoSumario(c, y, { titulo: 'Letras', pagina: car?.[0], destino: { pagina: car?.[0] }, secao: true });
+    y = linhaDoSumario(c, y, { titulo: 'Sinais', pagina: car?.[1], destino: { pagina: car?.[1] }, secao: true });
+    linhaDoSumario(c, y, { titulo: 'Colofão', pagina: EXTRAS.colofao, destino: { pagina: EXTRAS.colofao } });
 }
 
 // a dupla depois do rosto apresenta os três estilos: à esquerda, o título e a abertura, e o cartão da Cut; à direita, os

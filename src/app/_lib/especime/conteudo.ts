@@ -188,9 +188,9 @@ export type Pagina =
 
 export type Folha = { frente: Pagina; verso: Pagina; tipo: 'capa' | 'papel' | 'vegetal' | 'contracapa'; numFrente?: number; numVerso?: number };
 
-// as páginas dos caracteres e a da dupla dos estilos, para o sumário, e o total de páginas numeradas, para a ficha
+// as páginas dos caracteres, a da dupla dos estilos e a do colofão, para o sumário, e o total de páginas numeradas, para a ficha
 // dos créditos (preenchidos na montagem)
-export const EXTRAS: { caracteres?: [number, number]; paginas?: number; estilos?: number } = {};
+export const EXTRAS: { caracteres?: [number, number]; paginas?: number; estilos?: number; colofao?: number } = {};
 
 export function montarFolhas(): Folha[] {
     const f: Folha[] = [];
@@ -224,12 +224,21 @@ export function montarFolhas(): Folha[] {
     EXTRAS.caracteres = [car, car + 1];
     EXTRAS.paginas = n - 1;
     EXTRAS.estilos = f.find(x => x.verso.tipo === 'estilos-esq')!.numVerso!;
+    EXTRAS.colofao = f.find(x => x.verso.tipo === 'colofao')!.numVerso!;
     return f;
 }
 
 // a folha a virar para chegar ao capítulo i (a abertura fica aberta: a folha da abertura-imagem já virada)
 export function folhaDoCapitulo(folhas: Folha[], i: number) {
     return folhas.findIndex(x => x.verso.tipo === 'abertura-imagem' && 'cap' in x.verso && x.verso.cap === i) + 1;
+}
+
+// quantas folhas virar para a página n ficar aberta (o sumário leva a qualquer página): se ela é o verso de uma folha
+// (à esquerda), essa folha já virou; se é a frente (à direita), só as de antes
+export function contagemDaPagina(folhas: Folha[], n: number) {
+    const i = folhas.findIndex(f => f.numFrente === n || f.numVerso === n);
+    if (i < 0) return 0;
+    return folhas[i].numVerso === n ? i + 1 : i;
 }
 
 // a página dos caracteres (o sumário também leva a ela)

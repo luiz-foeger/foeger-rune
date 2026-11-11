@@ -7,7 +7,7 @@
 // quando a seção sai da tela, o toque deixa a página rolar na vertical (pan-y) e dois dedos aproximam. As páginas
 // são as do espécime da Föeger Rune, desenhadas pelo pincel de canvas.
 import { malha, olhar, perspectiva, programa, quadroDeDesenho, liberarQuadro, mult, norm, cruz, type Quadro, type Prog } from './gl';
-import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, lerCores, CAPITULOS, type Pagina } from '../especime/conteudo';
+import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, contagemDaPagina, lerCores, CAPITULOS, type Pagina } from '../especime/conteudo';
 import { desenharPagina, type Alvo } from '../especime/paginas';
 import { carregarFontes, familiasDe, pincelCanvas, type Familias } from '../especime/pincel';
 
@@ -1411,6 +1411,11 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const s = sob(lx, ly);
         const a = alvoEm(s.fc, s.u, s.v);
         if (a?.cap !== undefined) return irPara(a.cap);
+        if (a?.pagina !== undefined) {
+            alvoContagem = contagemDaPagina(defs, a.pagina);
+            o.aoInteragir();
+            return;
+        }
         if (a?.caracteres) {
             alvoContagem = folhaDosCaracteres(defs);
             o.aoInteragir();
