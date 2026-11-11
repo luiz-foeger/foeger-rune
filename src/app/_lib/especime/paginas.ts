@@ -477,28 +477,27 @@ function creditos(c: Ctx) {
     rotulo(c, LIVRO.pe, 29, 1468, { cor: CINZA });
 }
 
+// a folha de rosto, como a dos livros de verdade: só o título, o subtítulo, o autor e, no pé, o selo da editora com a
+// edição e o ano. Sem cabeço nem frase (a frase do livro fica na contracapa). O título grande na Cut; o subtítulo na
+// grotesca leve, como os títulos das outras páginas; embaixo dele, os três estilos, cada nome no seu
 function rosto(c: Ctx) {
     fundo(c, PAPEL);
-    rotulo(c, LIVRO.cabeca, 29, 47);
-    rotulo(c, LIVRO.edicao, 973, 47, { alinhar: 'right' });
     linha(c, 'Föeger', 22, 340, { tam: 250, fam: 'cut', peso: 400 });
     linha(c, 'Rune', 22, 580, { tam: 250, fam: 'cut', peso: 400 });
-    // os três desgastes, cada nome no seu estilo
+    linha(c, 'Espécime tipográfico', 24, 730, { tam: 58 });
     const nomes: [Familia, string][] = [['cut', 'Cut'], ['polished', 'Polished'], ['worn', 'Worn']];
     let x = 29;
     nomes.forEach(([fam, nome]) => {
-        const r = linha(c, nome, x, 760, { tam: 58, fam, peso: 400 });
-        x = r.x1 + 34;
+        const r = linha(c, nome, x, 818, { tam: 44, fam, peso: 400 });
+        x = r.x1 + 28;
     });
-    fio(c, 29, 800, 973, 800);
-    linha(c, LIVRO.frase, 26, 960, { tam: 74, fam: 'polished', peso: 400 });
-    rotulo(c, '311 glifos em cada estilo', 29, 1120, { cor: CINZA });
-    rotulo(c, 'Desenhada por Luiz Felipe Föeger', 29, 1142, { cor: CINZA });
+    linha(c, 'Luiz Felipe Föeger', 27, 1180, { tam: 36, peso: 400 });
+    fio(c, 29, 1386, 973, 1386);
     linha(c, 'Föeger.', 29, 1462, { tam: 56, fam: 'cut', peso: 400 });
-    rotulo(c, LIVRO.pe, 973, 1468, { alinhar: 'right' });
+    rotulo(c, LIVRO.edicao, 973, 1460, { alinhar: 'right' });
 }
 
-// o sumário em lista, no verso da capa (a primeira página que aparece ao abrir o livro), como o da versão antiga: o
+// o sumário em lista, numa página da direita depois dos créditos (p. 5), como o da versão antiga: o
 // título na grotesca leve, como "Letras" e "Sinais", e uma linha por capítulo com fio embaixo, o número em mono, o tema
 // na Rune do capítulo, as seções em corpo pequeno e a página onde ele começa, à direita. Cada linha leva ao capítulo
 // (a dos caracteres, às tabelas do fim)
