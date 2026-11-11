@@ -378,9 +378,103 @@ function contracapa(c: Ctx) {
     relevo(c, LIVRO.frase.toUpperCase(), 500, 1430, { tam: 12.5, fam: 'mono', peso: 400, espaco: 0.08, alinhar: 'center' });
 }
 
-function guarda(c: Ctx) {
-    c.p.pano('#2c2925');
-    relevo(c, 'EX LIBRIS FÖEGER', 500, 760, { tam: 12.5, fam: 'mono', peso: 400, espaco: 0.12, alinhar: 'center' });
+// a guarda: o papel colado por dentro da capa e da contracapa, sem texto, como nos livros de verdade. Por enquanto ela
+// é lisa; as duas estampas ficam prontas para trocar em GUARDA (a página /versoes/guarda mostra as três lado a lado):
+// a de letras, fileiras de minúsculas da Cut tom sobre tom em grupos de quatro, que a própria fonte troca de corte a
+// cada vez (a, a.v2, a.v3, a.v4); e a de pedras, as letras soltas e tombadas como as do hero depois de rolar,
+// espalhadas numa grade com um sorteio fixo
+export type VersaoGuarda = 'lisa' | 'letras' | 'pedras';
+const GUARDA: VersaoGuarda = 'lisa';
+const PAPEL_GUARDA = '#2c2925';
+const ESTAMPA = 'rgba(255, 246, 230, 0.075)';
+
+function guarda(c: Ctx, v: VersaoGuarda = GUARDA) {
+    c.p.pano(PAPEL_GUARDA);
+    if (v === 'letras') {
+        const tam = 84;
+        const passo = 118;
+        const letras = 'aegorsnumdcpbh';
+        // grupos de quatro letras encostadas (com espaço entre as letras, o navegador desliga as trocas da fonte e
+        // as quatro saem iguais); as fileiras alternam o recuo, como uma estampa em meia-gota
+        for (let i = 0; i * passo < 1500 + passo; i++) {
+            const grupo = letras[i % letras.length].repeat(4);
+            linha(c, Array(5).fill(grupo).join('   '), i % 2 ? -150 : -20, 70 + i * passo, { tam, fam: 'cut', peso: 400, cor: ESTAMPA });
+        }
+    } else if (v === 'pedras') {
+        const glifos = Object.values(PALAVRAS)
+            .flatMap(pl => pl.glifos)
+            .filter(g => !g.ch.startsWith('#'));
+        let semente = 11;
+        const sorteio = () => (semente = (semente * 16807) % 2147483647) / 2147483647;
+        const passo = 152;
+        for (let j = 0; j * passo < 1500 + passo; j++) {
+            for (let i = 0; i * passo < 1000 + passo; i++) {
+                const g = glifos[Math.floor(sorteio() * glifos.length)];
+                const pontos = g.pedras.flatMap(pd => pd.vertices.flat());
+                const xs = pontos.map(([x]) => x);
+                const ys = pontos.map(([, y]) => y);
+                const mx = (Math.min(...xs) + Math.max(...xs)) / 2;
+                const my = (Math.min(...ys) + Math.max(...ys)) / 2;
+                const esc = (0.1 + sorteio() * 0.045) * (j % 2 ? 1 : 0.92);
+                const cx = -30 + i * passo + (j % 2 ? passo / 2 : 0) + (sorteio() - 0.5) * 50;
+                const cy = -20 + j * passo + (sorteio() - 0.5) * 50;
+                c.p.girar(sorteio() * 360, cx, cy, () => {
+                    for (const pd of g.pedras) c.p.caminho(pd.d, cx - mx * esc, cy - my * esc, esc, ESTAMPA);
+                });
+            }
+        }
+    }
+}
+
+// uma das versões da guarda, para a página de comparação
+export function desenharGuarda(p: Pincel, v: VersaoGuarda) {
+    guarda({ p, alvos: [] }, v);
+}
+
+// as páginas de abertura, na ordem dos livros de verdade: a falsa folha de rosto (p. 1), só com o título, pequeno; o
+// frontispício (p. 2), uma prancha na página inteira de frente para a folha de rosto; e, no verso da folha de rosto,
+// os créditos (p. 4), com a ficha de catalogação. Como nos livros, os números dessas páginas não aparecem
+function falsaRosto(c: Ctx) {
+    fundo(c, PAPEL);
+    linha(c, LIVRO.titulo, 500, 470, { tam: 58, fam: 'cut', peso: 400, alinhar: 'center' });
+}
+
+// o frontispício: o R da Cut de perto, cortado pelas bordas como uma foto, claro no escuro, com a legenda no pé, como
+// as aberturas dos capítulos
+function frontispicio(c: Ctx) {
+    c.p.ret(0, 0, 1000, 1500, ESCURA);
+    linha(c, 'R', -70, 1190, { tam: 1500, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
+    legendaDe(c, ['Föeger Rune Cut', 'O R de perto'], PAPEL);
+}
+
+function creditos(c: Ctx) {
+    fundo(c, PAPEL);
+    const itens: [string, string][] = [
+        ['Edição', LIVRO.edicao],
+        ['Desenho da fonte, textos e projeto gráfico', 'Luiz Felipe Föeger'],
+        ['Composto em', 'Föeger Rune Cut, Polished e Worn, com Inter Tight e DM Mono nos textos de apoio'],
+        ['Versão da fonte', 'Prévia de 5 de novembro de 2026, com 311 glifos em cada estilo'],
+    ];
+    let y = 760;
+    for (const [nome, valor] of itens) {
+        rotulo(c, nome, 29, y, { tam: 11.5, cor: CINZA });
+        y = paragrafo(c, valor, 29, y + 30, 560, { tam: 18.5, entre: 23.5 }) + 28;
+    }
+    // a ficha de catalogação, como a que vem no verso da folha de rosto, em mono numa caixa de fio fino
+    const fx = 29;
+    const fy = 1146;
+    const fl = 620;
+    const fa = 250;
+    c.p.borda(fx, fy, fl, fa, { cor: FIO, esp: 1.3 });
+    rotulo(c, 'Dados para catalogação', fx + 22, fy + 38, { tam: 11, cor: CINZA });
+    const mono = (t: string, x: number, yy: number) => linha(c, t, x, yy, { tam: 13.5, fam: 'mono', peso: 400 });
+    mono('Föeger, Luiz Felipe', fx + 22, fy + 82);
+    mono('Föeger Rune: espécime tipográfico /', fx + 52, fy + 104);
+    mono('Luiz Felipe Föeger. — Edição 01. — 2026.', fx + 22, fy + 126);
+    mono(`${EXTRAS.paginas ?? ''} p. : il. color.`, fx + 52, fy + 148);
+    mono('1. Tipografia. 2. Fontes tipográficas.', fx + 52, fy + 192);
+    mono('3. Design gráfico. I. Título.', fx + 52, fy + 214);
+    rotulo(c, LIVRO.pe, 29, 1468, { cor: CINZA });
 }
 
 function rosto(c: Ctx) {
@@ -776,8 +870,17 @@ export function desenharPagina(p: Pincel, pg: Pagina, num?: number): Alvo[] {
         case 'guarda':
             guarda(c);
             break;
+        case 'falsa-rosto':
+            falsaRosto(c);
+            break;
+        case 'frontispicio':
+            frontispicio(c);
+            break;
         case 'rosto':
             rosto(c);
+            break;
+        case 'creditos':
+            creditos(c);
             break;
         case 'sumario':
             sumario(c);

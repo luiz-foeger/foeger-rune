@@ -1,7 +1,8 @@
-// o conteúdo do livro da página: o espécime da Föeger Rune no lugar do "O livro da Föeger" do clone-tantan, com a
-// mesma ordem de folhas (capa, rosto, capítulos com abertura e matéria, papel vegetal entre algumas páginas, colofão e
-// contracapa). O sumário fica em lista no verso da capa, a primeira página que aparece ao abrir o livro, como o da
-// versão antiga, e a dupla depois do rosto apresenta os três estilos. Os números e os fatos são os da prévia de 05/11 (311 glifos em cada estilo,
+// o conteúdo do livro da página: o espécime da Föeger Rune no lugar do "O livro da Föeger" do clone-tantan, na ordem
+// dos livros de verdade: a capa com a guarda lisa por dentro; as páginas de abertura (a falsa folha de rosto, o
+// frontispício, a folha de rosto, os créditos no verso dela e o sumário, numa página da direita); a dupla que apresenta
+// os três estilos; os capítulos com abertura e matéria, com papel vegetal entre algumas páginas; os caracteres; o
+// colofão; e a contracapa, também com a guarda por dentro. Os números e os fatos são os da prévia de 05/11 (311 glifos em cada estilo,
 // as larguras de cada estilo, o revezamento das minúsculas, o L do meio e o f do começo).
 import type { Familia } from './pincel';
 
@@ -169,7 +170,10 @@ export type Pagina =
     | { tipo: 'capa' }
     | { tipo: 'guarda' }
     | { tipo: 'contracapa' }
+    | { tipo: 'falsa-rosto' }
+    | { tipo: 'frontispicio' }
     | { tipo: 'rosto' }
+    | { tipo: 'creditos' }
     | { tipo: 'sumario' }
     | { tipo: 'estilos-esq' }
     | { tipo: 'estilos-dir' }
@@ -184,13 +188,16 @@ export type Pagina =
 
 export type Folha = { frente: Pagina; verso: Pagina; tipo: 'capa' | 'papel' | 'vegetal' | 'contracapa'; numFrente?: number; numVerso?: number };
 
-// as páginas dos caracteres, para o sumário (preenchidas na montagem)
-export const EXTRAS: { caracteres?: [number, number] } = {};
+// as páginas dos caracteres, para o sumário, e o total de páginas numeradas, para a ficha dos créditos (preenchidos
+// na montagem)
+export const EXTRAS: { caracteres?: [number, number]; paginas?: number } = {};
 
 export function montarFolhas(): Folha[] {
     const f: Folha[] = [];
-    f.push({ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'sumario' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'rosto' }, verso: { tipo: 'estilos-esq' } });
+    f.push({ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'guarda' } });
+    f.push({ tipo: 'papel', frente: { tipo: 'falsa-rosto' }, verso: { tipo: 'frontispicio' } });
+    f.push({ tipo: 'papel', frente: { tipo: 'rosto' }, verso: { tipo: 'creditos' } });
+    f.push({ tipo: 'papel', frente: { tipo: 'sumario' }, verso: { tipo: 'estilos-esq' } });
     let direita: Pagina = { tipo: 'estilos-dir' };
     CAPITULOS.forEach((c, i) => {
         f.push({ tipo: 'papel', frente: direita, verso: { tipo: 'abertura-imagem', cap: i } });
@@ -201,7 +208,7 @@ export function montarFolhas(): Folha[] {
     f.push({ tipo: 'papel', frente: direita, verso: { tipo: 'caracteres-esq' } });
     f.push({ tipo: 'papel', frente: { tipo: 'caracteres-dir' }, verso: { tipo: 'colofao' } });
     f.push({ tipo: 'contracapa', frente: { tipo: 'guarda' }, verso: { tipo: 'contracapa' } });
-    // números de página: o rosto é a 1; o papel vegetal não conta
+    // números de página: a falsa folha de rosto é a 1; o papel vegetal não conta
     let n = 1;
     for (const folha of f) {
         if (folha.tipo !== 'papel') continue;
@@ -215,6 +222,7 @@ export function montarFolhas(): Folha[] {
     });
     const car = f.find(x => x.verso.tipo === 'caracteres-esq')!.numVerso!;
     EXTRAS.caracteres = [car, car + 1];
+    EXTRAS.paginas = n - 1;
     return f;
 }
 
@@ -228,10 +236,9 @@ export function folhaDosCaracteres(folhas: Folha[]) {
     return folhas.findIndex(x => x.verso.tipo === 'caracteres-esq') + 1;
 }
 
-// a ordem do PDF: capa, o sumário do verso dela, as páginas numeradas (com o papel vegetal no lugar dele) e a contracapa
+// a ordem do PDF: capa, as páginas numeradas (com o papel vegetal no lugar dele) e a contracapa
 export function paginasDoPdf(folhas: Folha[]): { pagina: Pagina; num?: number }[] {
     const lista: { pagina: Pagina; num?: number }[] = [{ pagina: { tipo: 'capa' } }];
-    if (folhas[0]?.verso.tipo === 'sumario') lista.push({ pagina: folhas[0].verso });
     folhas.forEach((f, i) => {
         if (f.tipo === 'papel') {
             // a frente vem antes do verso; o verso da folha anterior já entrou
