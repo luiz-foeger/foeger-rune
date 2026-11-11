@@ -5279,15 +5279,15 @@ html[data-paleta='azul'] [data-clone] {
     }
 }
 
-/* 23. o editor do "escreva aqui": a barra (os grupos de botões redondos, as réguas e as cores, sobre a trama dos
-   painéis) e a arte embaixo (o fundo na cor escolhida, com o grão do papel se quiser, e os dois blocos escritos direto
-   na tela; o escolhido ganha um contorno claro e escuro, que aparece em qualquer fundo, e a etiqueta com o nome) */
+/* 23. o editor do "escreva aqui": a arte (3 × 2) e o inspetor (1 × 2) lado a lado, nos painéis com réguas e trama do
+   resto do site. Na arte, o fundo na cor escolhida (com o grão do papel, se quiser) e os dois blocos escritos direto na
+   tela; o escolhido ganha a moldura de seleção azul com as alças nos cantos, como num programa de desenho. No inspetor,
+   segmentos retos com a borda fina, réguas finas com o valor na DM Mono, chaves e amostras quadradas */
 .fx-editor {
     position: relative;
-    width: calc(4 * var(--M) + 3 * var(--G));
     display: flex;
-    flex-direction: column;
-    gap: calc(34 * var(--u));
+    align-items: flex-start;
+    gap: var(--G);
 }
 .fx-editor-sonda {
     position: absolute;
@@ -5296,123 +5296,14 @@ html[data-paleta='azul'] [data-clone] {
     visibility: hidden;
     pointer-events: none;
 }
-.fx-editor-barra {
-    display: flex;
-    flex-direction: column;
-    gap: calc(22 * var(--u));
-    padding: calc(30 * var(--u)) calc(40 * var(--u));
-    border: var(--linha-fina) solid var(--borda);
-    border-radius: calc(2 * var(--u));
-    background-color: var(--fundo);
-    background-image: var(--trama);
-    background-size: calc(29.5 * var(--u)) calc(29.5 * var(--u));
-}
-.fx-editor-linha {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: calc(20 * var(--u)) calc(46 * var(--u));
-}
-.fx-editor-grupo,
-.fx-editor-regua {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: calc(8 * var(--u));
-}
-.fx-editor-grupo-nome {
-    margin-right: calc(6 * var(--u));
-    font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-rot);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    opacity: 0.6;
-}
-.fx-editor-botao {
-    display: inline-flex;
-    align-items: center;
-    gap: calc(6 * var(--u));
-    padding: calc(9 * var(--u)) calc(16 * var(--u));
-    border: var(--linha-fina) solid var(--tinta);
-    border-radius: 999px;
-    background: var(--fundo);
-    color: var(--tinta);
-    font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-sec);
-    font-weight: 600;
-    line-height: 1;
-    cursor: pointer;
-    transition:
-        background-color 0.15s,
-        color 0.15s;
-}
-.fx-editor-botao:hover {
-    background: #ececec;
-}
-.fx-editor-botao[data-ativo] {
-    background: var(--tinta);
-    color: var(--fundo);
-}
-.fx-editor-sorteio {
-    border-color: var(--p-worn);
-    background: var(--p-worn);
-}
-.fx-editor-sorteio:hover {
-    background: #57a07f;
-}
-.fx-editor-acoes {
-    display: flex;
-    gap: calc(10 * var(--u));
-    margin-left: auto;
-}
-.fx-editor-regua input[type='range'] {
-    width: calc(210 * var(--u));
-    min-width: 90px;
-    accent-color: var(--tinta);
-    cursor: pointer;
-}
-.fx-editor-valor {
-    min-width: 3.2em;
-    font-family: var(--ff-mono), monospace;
-    font-size: var(--t-rot);
-}
-.fx-editor-cor {
-    position: relative;
-    width: calc(30 * var(--u));
-    height: calc(30 * var(--u));
-    min-width: 18px;
-    min-height: 18px;
-    padding: 0;
-    border: var(--linha-fina) solid rgb(0 0 0 / 0.35);
-    border-radius: 50%;
-    cursor: pointer;
-}
-.fx-editor-cor[data-ativo] {
-    outline: max(1.5px, calc(2 * var(--u))) solid var(--tinta);
-    outline-offset: max(2px, calc(3 * var(--u)));
-}
-/* a outra cor: o arco-íris até a pessoa escolher uma; o seletor de cor do navegador fica por cima, invisível */
-.fx-editor-cor-livre {
-    overflow: hidden;
-    background: conic-gradient(#e86f9a, #e3b55a, #62b08d, #8aa4da, #2d4ca3, #e86f9a);
-}
-.fx-editor-cor-livre input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
 .fx-editor-arte {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: calc(44 * var(--u));
-    padding: calc(70 * var(--u)) calc(96 * var(--u));
+    gap: calc(40 * var(--u));
+    padding: calc(64 * var(--u)) calc(84 * var(--u));
     overflow: hidden;
     transition: background-color 0.3s;
 }
@@ -5436,73 +5327,330 @@ html[data-paleta='azul'] [data-clone] {
     overflow-wrap: anywhere;
     cursor: text;
 }
-.fx-editor-bloco[data-ativo='true']::before {
-    content: '';
+/* a moldura de seleção: a linha azul fina, as quatro alças brancas nos cantos e a etiqueta com o nome do bloco */
+.fx-editor-selecao {
     position: absolute;
-    inset: calc(-14 * var(--u)) calc(-22 * var(--u));
-    border-radius: calc(6 * var(--u));
-    box-shadow:
-        0 0 0 max(1px, calc(1.5 * var(--u))) rgb(255 255 255 / 0.7),
-        0 0 0 max(2px, calc(3 * var(--u))) rgb(0 0 0 / 0.3);
-    pointer-events: none;
-}
-.fx-editor-etiqueta {
-    position: absolute;
-    left: calc(-22 * var(--u));
-    top: calc(-14 * var(--u));
-    padding: calc(5 * var(--u)) calc(9 * var(--u));
-    border-radius: calc(4 * var(--u));
-    background: #111;
-    color: #fff;
-    font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-rot);
-    font-weight: 600;
-    line-height: 1;
+    inset: calc(-12 * var(--u)) calc(-18 * var(--u));
+    border: 1px solid #2f6fe4;
     opacity: 0;
-    transform: translateY(-100%);
     transition: opacity 0.15s;
     pointer-events: none;
     z-index: 1;
 }
-.fx-editor-bloco[data-ativo='true'] .fx-editor-etiqueta {
+.fx-editor-bloco[data-ativo='true'] .fx-editor-selecao {
     opacity: 1;
+}
+.fx-editor-selecao i {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border: 1px solid #2f6fe4;
+    background: #fff;
+}
+.fx-editor-selecao i:nth-child(1) {
+    left: -4px;
+    top: -4px;
+}
+.fx-editor-selecao i:nth-child(2) {
+    right: -4px;
+    top: -4px;
+}
+.fx-editor-selecao i:nth-child(3) {
+    left: -4px;
+    bottom: -4px;
+}
+.fx-editor-selecao i:nth-child(4) {
+    right: -4px;
+    bottom: -4px;
+}
+.fx-editor-selecao b {
+    position: absolute;
+    left: -1px;
+    top: -1px;
+    padding: 3px 6px;
+    background: #2f6fe4;
+    color: #fff;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: max(9px, calc(12 * var(--u)));
+    font-weight: 600;
+    line-height: 1;
+    transform: translateY(-100%);
+}
+
+/* o inspetor: as medidas saem de um --u próprio (no celular, o dobro do da página, para os controles terem tamanho de
+   dedo), e os corpos também, por isso ficam aqui e não nas variáveis da página */
+.fx-inspetor-editor {
+    --t1: max(9px, calc(14 * var(--u)));
+    --t2: max(11px, calc(18 * var(--u)));
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: calc(16 * var(--u));
+    padding: calc(24 * var(--u)) calc(24 * var(--u));
+}
+.fx-inspetor-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: calc(11 * var(--u));
+    padding-top: calc(15 * var(--u));
+    border-top: var(--linha-fina) solid rgb(0 0 0 / 0.14);
+}
+.fx-inspetor-linha {
+    display: grid;
+    grid-template-columns: calc(90 * var(--u)) minmax(0, 1fr);
+    align-items: center;
+    gap: calc(10 * var(--u));
+    min-height: calc(28 * var(--u));
+}
+.fx-inspetor-linha[data-embaixo] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(8 * var(--u));
+}
+.fx-inspetor-nome {
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t1);
+    font-weight: 500;
+    line-height: 1;
+    color: rgb(0 0 0 / 0.58);
+}
+.fx-inspetor-controle {
+    display: flex;
+    align-items: center;
+    gap: calc(8 * var(--u));
+    min-width: 0;
+}
+.fx-inspetor-valor {
+    font-family: var(--ff-mono), monospace;
+    font-size: var(--t1);
+    line-height: 1;
+    text-align: right;
+    color: rgb(0 0 0 / 0.7);
+}
+/* a régua: o trilho fino, cheio na cor da tinta até onde vai o valor, e o botão redondo vazado */
+.fx-inspetor-regua {
+    grid-template-columns: calc(90 * var(--u)) minmax(0, 1fr) calc(40 * var(--u));
+    cursor: pointer;
+}
+.fx-inspetor-regua input[type='range'] {
+    width: 100%;
+    height: calc(18 * var(--u));
+    min-height: 14px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+}
+.fx-inspetor-regua input[type='range']::-webkit-slider-runnable-track {
+    height: max(1.5px, calc(2 * var(--u)));
+    background: linear-gradient(90deg, var(--tinta) var(--cheio), rgb(0 0 0 / 0.18) var(--cheio));
+}
+.fx-inspetor-regua input[type='range']::-webkit-slider-thumb {
+    width: max(10px, calc(12 * var(--u)));
+    height: max(10px, calc(12 * var(--u)));
+    margin-top: calc(max(10px, calc(12 * var(--u))) / -2 + max(0.75px, calc(1 * var(--u))));
+    border: max(1px, calc(1.5 * var(--u))) solid var(--tinta);
+    border-radius: 50%;
+    background: var(--fundo);
+    appearance: none;
+}
+.fx-inspetor-regua input[type='range']::-moz-range-track {
+    height: max(1.5px, calc(2 * var(--u)));
+    background: rgb(0 0 0 / 0.18);
+}
+.fx-inspetor-regua input[type='range']::-moz-range-progress {
+    height: max(1.5px, calc(2 * var(--u)));
+    background: var(--tinta);
+}
+.fx-inspetor-regua input[type='range']::-moz-range-thumb {
+    width: max(10px, calc(12 * var(--u)));
+    height: max(10px, calc(12 * var(--u)));
+    border: max(1px, calc(1.5 * var(--u))) solid var(--tinta);
+    border-radius: 50%;
+    background: var(--fundo);
+}
+/* os segmentos: a caixa de borda fina com as opções divididas por um fio; a escolhida, cheia */
+.fx-segmentos {
+    display: flex;
+    width: 100%;
+    overflow: hidden;
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: var(--fundo);
+}
+.fx-segmento {
+    flex: 1 1 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(7 * var(--u)) calc(4 * var(--u));
+    border: 0;
+    border-left: var(--linha-fina) solid var(--tinta);
+    background: none;
+    color: var(--tinta);
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t1);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color 0.15s,
+        color 0.15s;
+}
+.fx-segmento:first-child {
+    border-left: 0;
+}
+.fx-segmento:hover {
+    background: rgb(0 0 0 / 0.06);
+}
+.fx-segmento[data-ativo] {
+    background: var(--tinta);
+    color: var(--fundo);
+}
+.fx-inspetor-editor > .fx-segmentos .fx-segmento {
+    padding: calc(10 * var(--u));
+    font-size: var(--t2);
+}
+/* a chave: o trilho redondo e a bolinha, que corre para a direita e inverte quando liga */
+.fx-chave {
+    position: relative;
+    flex: none;
+    width: calc(34 * var(--u));
+    height: calc(18 * var(--u));
+    min-width: 26px;
+    min-height: 14px;
+    padding: 0;
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: 999px;
+    background: none;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+.fx-chave i {
+    position: absolute;
+    top: 50%;
+    left: 12%;
+    width: 38%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--tinta);
+    transform: translateY(-50%);
+    transition:
+        left 0.2s,
+        background-color 0.15s;
+}
+.fx-chave[data-ligada] {
+    background: var(--tinta);
+}
+.fx-chave[data-ligada] i {
+    left: 50%;
+    background: var(--fundo);
+}
+.fx-chave + .fx-inspetor-valor {
+    text-align: left;
+}
+/* as amostras: quadradinhos de borda fina; a escolhida com um anel em volta; a de fora, xadrez com o seletor por cima */
+.fx-amostras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(6 * var(--u));
+}
+.fx-amostra {
+    position: relative;
+    width: calc(22 * var(--u));
+    height: calc(22 * var(--u));
+    min-width: 14px;
+    min-height: 14px;
+    padding: 0;
+    border: var(--linha-fina) solid rgb(0 0 0 / 0.28);
+    border-radius: calc(2 * var(--u));
+    cursor: pointer;
+}
+.fx-amostra[data-ativo] {
+    outline: max(1px, calc(1.5 * var(--u))) solid var(--tinta);
+    outline-offset: max(1.5px, calc(2 * var(--u)));
+}
+.fx-amostra-livre {
+    overflow: hidden;
+    background: repeating-conic-gradient(#d6d6d6 0 25%, #ffffff 0 50%) 50% / calc(8 * var(--u)) calc(8 * var(--u));
+}
+.fx-amostra-livre input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+/* os modelos, como links sublinhados, e as duas ações no pé */
+.fx-inspetor-modelos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(6 * var(--u)) calc(14 * var(--u));
+}
+.fx-inspetor-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--tinta);
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t2);
+    font-weight: 500;
+    line-height: 1.3;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+}
+.fx-inspetor-link:hover {
+    color: rgb(0 0 0 / 0.55);
+}
+.fx-inspetor-acoes {
+    display: flex;
+    gap: calc(8 * var(--u));
+}
+.fx-inspetor-acao {
+    flex: 1;
+    padding: calc(10 * var(--u));
+    border: var(--linha-fina) solid var(--tinta);
+    border-radius: calc(3 * var(--u));
+    background: var(--tinta);
+    color: var(--fundo);
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t2);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+}
+.fx-inspetor-acao + .fx-inspetor-acao {
+    background: none;
+    color: var(--tinta);
+}
+.fx-inspetor-acao:hover {
+    opacity: 0.85;
 }
 @media (max-width: 899px) {
     .fx-editor {
-        width: calc(2 * var(--M) + var(--G));
+        flex-direction: column;
+        align-items: center;
+        gap: calc(56 * var(--u));
     }
-    .fx-editor-barra {
-        padding: calc(36 * var(--u)) calc(34 * var(--u));
-        gap: calc(34 * var(--u));
-    }
-    .fx-editor-linha {
-        gap: calc(30 * var(--u));
-    }
-    .fx-editor-botao {
-        padding: calc(16 * var(--u)) calc(24 * var(--u));
-    }
-    .fx-editor-cor {
-        width: calc(56 * var(--u));
-        height: calc(56 * var(--u));
-    }
-    .fx-editor-regua input[type='range'] {
-        width: calc(420 * var(--u));
-    }
-    .fx-editor-acoes {
-        margin-left: 0;
+    .fx-inspetor-editor {
+        --u: calc(100cqw / 945 * 2);
     }
     .fx-editor-arte {
         padding: calc(60 * var(--u)) calc(56 * var(--u));
     }
-    /* a arte em cima e presa no alto da tela (logo abaixo do cabeçalho), para ver o resultado enquanto mexe na barra */
-    .fx-editor > .fx-painel {
-        order: -1;
+    /* a arte presa no alto da tela (logo abaixo do cabeçalho), para ver o resultado enquanto mexe no inspetor; a régua
+       de baixo dela cairia em cima do inspetor */
+    .fx-editor > .fx-painel:nth-of-type(1) {
         position: sticky;
         top: 64px;
         z-index: 2;
     }
-    /* a régua de baixo da arte presa cairia em cima da barra */
-    .fx-editor > .fx-painel .fx-regua[data-lado='base'] {
+    .fx-editor > .fx-painel:nth-of-type(1) .fx-regua[data-lado='base'] {
         display: none !important;
     }
 }
