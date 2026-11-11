@@ -68,9 +68,8 @@ export default function SecaoLivro() {
         <>
             <section className="fx-livro" aria-label="O livro">
                 <canvas ref={tela} className="fx-livro-tela" tabIndex={0} aria-label="O espécime da Föeger Rune: clique na página ou arraste o canto para folhear" />
-                <div className="fx-livro-carregando" data-pronto={pronto}>
-                    {erro || 'Föeger Rune · espécime'}
-                </div>
+                {/* sem tela de carregamento: o livro aparece quando fica pronto; só um erro, se houver, ocupa o lugar dele */}
+                {erro && <div className="fx-livro-carregando">{erro}</div>}
                 <p className="fx-livro-dica" data-oculta={!pronto || mexeu}>
                     Clique na página ou arraste o canto · Ctrl + roda aproxima
                 </p>

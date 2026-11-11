@@ -503,7 +503,7 @@ function capa(c: Ctx) {
     relevo(c, 'Föeger', 64, 340, { tam: 236, fam: 'cut', peso: 400 });
     relevo(c, 'Rune', 64, 560, { tam: 236, fam: 'cut', peso: 400 });
     relevo(c, 'Espécime tipográfico', 70, 690, { tam: 50, peso: 300 });
-    relevo(c, 'LUIZ FELIPE FÖEGER', 72, 1430, { tam: 15, fam: 'mono', peso: 400, espaco: 0.08 });
+    relevo(c, 'LUIZ FÖEGER', 72, 1430, { tam: 15, fam: 'mono', peso: 400, espaco: 0.08 });
     relevo(c, 'Föeger.', 930, 1436, { tam: 46, fam: 'cut', peso: 400, alinhar: 'right' });
 }
 
@@ -588,7 +588,7 @@ function creditos(c: Ctx) {
     fundo(c, PAPEL);
     const itens: [string, string][] = [
         ['Edição', LIVRO.edicao],
-        ['Desenho da fonte, textos e projeto gráfico', 'Luiz Felipe Föeger'],
+        ['Desenho da fonte, textos e projeto gráfico', 'Luiz Föeger'],
         ['Composto em', 'Föeger Rune Cut, Polished e Worn, com Inter Tight e DM Mono nos textos de apoio'],
         ['Versão da fonte', 'Prévia de 5 de novembro de 2026, com 311 glifos em cada estilo'],
     ];
@@ -607,7 +607,7 @@ function creditos(c: Ctx) {
     const mono = (t: string, x: number, yy: number) => linha(c, t, x, yy, { tam: 13.5, fam: 'mono', peso: 400 });
     mono('Föeger, Luiz Felipe', fx + 22, fy + 82);
     mono('Föeger Rune: espécime tipográfico /', fx + 52, fy + 104);
-    mono('Luiz Felipe Föeger. — Edição 01. — 2026.', fx + 22, fy + 126);
+    mono('Luiz Föeger. — Edição 01. — 2026.', fx + 22, fy + 126);
     mono(`${EXTRAS.paginas ?? ''} p. : il. color.`, fx + 52, fy + 148);
     mono('1. Tipografia. 2. Fontes tipográficas.', fx + 52, fy + 192);
     mono('3. Design gráfico. I. Título.', fx + 52, fy + 214);
@@ -628,7 +628,7 @@ function rosto(c: Ctx) {
         const r = linha(c, nome, x, 818, { tam: 44, fam, peso: 400 });
         x = r.x1 + 28;
     });
-    linha(c, 'Luiz Felipe Föeger', 27, 1180, { tam: 36, peso: 400 });
+    linha(c, 'Luiz Föeger', 27, 1180, { tam: 36, peso: 400 });
     fio(c, 29, 1386, 973, 1386);
     linha(c, 'Föeger.', 29, 1462, { tam: 56, fam: 'cut', peso: 400 });
     rotulo(c, LIVRO.edicao, 973, 1460, { alinhar: 'right' });
@@ -659,7 +659,7 @@ function linhaDoSumario(c: Ctx, y: number, o: { n?: string; titulo: string; pagi
     } else {
         if (o.n) rotulo(c, o.n, 29, y + 54, { cor: aceso ? COR.laranja : CINZA });
         linha(c, o.titulo, 112, y + 58, { tam: 46, peso: 300, cor });
-        linha(c, pg, 973, y + 58, { tam: 42, peso: 300, alinhar: 'right', cor });
+        linha(c, pg, 973, y + 58, { tam: 34, peso: 300, alinhar: 'right', cor });
         fio(c, 29, y + alto, 973, y + alto);
     }
     alvo(c, 20, y + 3, 980, y + alto - 3, o.destino);
@@ -1034,7 +1034,7 @@ function colofao(c: Ctx) {
         500,
         { tam: 18.5, entre: 25, alinhar: 'center' },
     );
-    rotulo(c, `${LIVRO.edicao} · Luiz Felipe Föeger`, 500, 1300, { alinhar: 'center', cor: CINZA });
+    rotulo(c, `${LIVRO.edicao} · Luiz Föeger`, 500, 1300, { alinhar: 'center', cor: CINZA });
 }
 
 // desenha uma página com o pincel e devolve as áreas clicáveis

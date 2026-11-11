@@ -299,7 +299,6 @@ uniform float uTopoD, uTopoE, uTempo;
 out vec4 cor;
 ${dobra ? RECORTE : ''}
 vec3 sobreFundo(vec4 c) { return c.rgb + uFundo * (1.0 - c.a); }
-float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 void main() {
     ${dobra ? DESCARTE : 'float cob = 1.0;'}
     vec2 st = gl_FragCoord.xy / uTela;
@@ -317,7 +316,6 @@ void main() {
     vec4 imp = texture(uImp, vUv);
     float f = fr ? 0.95 : 0.45;
     c = c * (1.0 - imp.a * f) + imp.rgb * f;
-    c += (hash(gl_FragCoord.xy + uTempo) - 0.5) * 0.07;
     cor = vec4(c, cob);
 }`;
 
@@ -460,11 +458,9 @@ in vec2 vSt;
 uniform sampler2D uTex;
 uniform float uTempo;
 out vec4 cor;
-float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 void main() {
     vec4 t = texture(uTex, vSt);
-    vec3 c = t.rgb + (hash(gl_FragCoord.xy + fract(uTempo * 7.13) * 91.7) - 0.5) * 0.05 * t.a;
-    cor = vec4(max(c, 0.0), t.a);
+    cor = vec4(max(t.rgb, 0.0), t.a);
 }`;
 
 
