@@ -5724,3 +5724,18 @@ html[data-paleta='azul'] [data-clone] {
         display: none;
     }
 }
+
+/* 25. a transição entre as páginas (Transicao.tsx): a cortina preta por cima da página e por baixo do cabeçalho e do
+   desfoque do alto; ela fica escondida e só aparece durante a troca, quando também segura os cliques */
+.fx-transicao {
+    position: fixed;
+    inset: 0;
+    z-index: 98;
+    display: none;
+    background: #111111;
+}
+/* durante a troca, a página cresce até 1,3× e passaria da largura da tela: a moldura do palco corta o que sobra dos lados
+   (o clip não cria rolagem, e o sticky da arte do playground continua funcionando) */
+.fx-palco-moldura {
+    overflow-x: clip;
+}

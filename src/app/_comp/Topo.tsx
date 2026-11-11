@@ -3,9 +3,10 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useLenis } from 'lenis/react';
 import { Logo } from './LogoFoeger';
+import { useNavegar } from './Transicao';
 import { CABECALHO } from '../_lib/conteudo';
 
 // o topo: o cabeçalho (o hero com as pedras está em HeroPedras.tsx)
@@ -29,7 +30,7 @@ function Rola({ texto }: { texto: string }) {
 export function Cabecalho() {
     const lenis = useLenis();
     const caminho = usePathname();
-    const rotas = useRouter();
+    const navegar = useNavegar();
     const [aberto, setAberto] = useState(false);
     const [montado, setMontado] = useState(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- o portal só existe no navegador
@@ -65,13 +66,13 @@ export function Cabecalho() {
         if (lenis) lenis.scrollTo(y);
         else window.scrollTo({ top: y, behavior: 'smooth' });
     };
-    // fecha a cortina e rola depois que ela sobe; se o alvo é da outra página, abre a página já na seção (o alvo vazio
-    // é o topo)
+    // fecha a cortina e rola depois que ela sobe; se o alvo é da outra página, vai para ela pela transição (Transicao.tsx)
+    // e abre já na seção (o alvo vazio é o topo)
     const ir = (alvo: string | number, pagina = '/') => () => {
         const estava = aberto;
         setAberto(false);
         if (pagina !== caminho) {
-            window.setTimeout(() => rotas.push(alvo ? `${pagina}#${alvo}` : pagina), estava ? 350 : 0);
+            window.setTimeout(() => navegar(alvo ? `${pagina}#${alvo}` : pagina), estava ? 350 : 0);
             return;
         }
         window.setTimeout(() => rolarPara(alvo || 0), estava ? 350 : 0);
@@ -126,7 +127,17 @@ export function Cabecalho() {
                 <div className="fx-cab-direita">
                     <nav className="fx-cab-paginas" aria-label="Páginas">
                         {CABECALHO.paginas.map(p => (
-                            <Link key={p.href} href={p.href} className="fx-cab-acao" data-atual={p.href === caminho || undefined} aria-current={p.href === caminho ? 'page' : undefined}>
+                            <Link
+                                key={p.href}
+                                href={p.href}
+                                className="fx-cab-acao"
+                                data-atual={p.href === caminho || undefined}
+                                aria-current={p.href === caminho ? 'page' : undefined}
+                                onClick={e => {
+                                    e.preventDefault();
+                                    if (p.href !== caminho) navegar(p.href);
+                                }}
+                            >
                                 <Rola texto={p.texto} />
                             </Link>
                         ))}

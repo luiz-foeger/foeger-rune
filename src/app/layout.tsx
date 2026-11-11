@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import Rolagem from './_comp/Rolagem';
+import Transicao from './_comp/Transicao';
 import './globals.css';
 import './clone.css';
 
@@ -36,9 +37,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </head>
             <body className={`${cut.variable} ${polished.variable} ${worn.variable} ${ui.variable} ${mono.variable}`}>
                 <Rolagem>
-                    <div data-clone>
-                        {children}
-                    </div>
+                    {/* a transição entre as páginas: o palco (a página) e a cortina ficam aqui, fora do [data-clone],
+                        e sobrevivem à troca de rota */}
+                    <Transicao>
+                        <div data-clone>
+                            {children}
+                        </div>
+                    </Transicao>
                 </Rolagem>
             </body>
         </html>
