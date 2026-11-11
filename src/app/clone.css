@@ -5693,24 +5693,10 @@ html[data-paleta='azul'] [data-clone] {
     }
 }
 
-/* 24. as duas páginas: a da prática começa abaixo do cabeçalho (sem o hero); cada faixa dela abre com o nome do estilo,
-   na etiqueta das manchetes da home; e a chamada que leva de uma página à outra (o painel inteiro é o link, com a frase
+/* 24. as duas páginas: a da prática começa abaixo do cabeçalho (sem o hero); e a chamada que leva de uma página à outra (o painel inteiro é o link, com a frase
    grande na Rune Cut e a seta que anda no hover) */
 .fx-corpo-pagina {
     padding-top: calc(150 * var(--u));
-}
-.fx-faixa-rotulo {
-    align-self: flex-start;
-    margin: 0;
-    padding: calc(14 * var(--u)) calc(18 * var(--u));
-    border: var(--linha-fina) solid var(--tinta);
-    border-radius: calc(3 * var(--u));
-    background: var(--cor-faixa);
-    font-family: var(--ff-ui), sans-serif;
-    font-size: max(12px, calc(56 * var(--u)));
-    font-weight: 600;
-    line-height: 1;
-    text-box: trim-both cap alphabetic;
 }
 .fx-chamada {
     position: absolute;
