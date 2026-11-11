@@ -3,7 +3,7 @@
 // de 32, prancha com moldura e legenda de 459 × 444 e a prancha inteira do pé com 500 de altura. No lugar das fotos
 // do tantan entram pranchas de letras da Föeger Rune nas cores dos estilos. Tudo passa pelo pincel (canvas para as
 // texturas, SVG para o PDF), e cada página devolve as áreas clicáveis (o sumário) em fração da página.
-import { CAPITULOS, COR, EXTRAS, LIVRO, type Pagina } from './conteudo';
+import { CAPITULOS, COR, EXTRAS, LIVRO, type IdCapitulo, type Pagina } from './conteudo';
 import { medir, TINTA, type Estilo, type Familia, type Pincel } from './pincel';
 import { PALAVRAS, type Glifo } from '../glifos';
 import { ESTILO_MEDIDAS } from '../medidas';
@@ -187,7 +187,19 @@ type Prancha =
     | 'correnteza'
     | 'acentos'
     | 'tamanhos'
-    | 'ploc';
+    | 'ploc'
+    | 'gabarito'
+    | 'pontos'
+    | 'nome'
+    | 'datas'
+    | 'cartaz'
+    | 'livro'
+    | 'disco'
+    | 'esgotado'
+    | 'av'
+    | 'pares'
+    | 's8'
+    | 'arquivos';
 
 // as linhas de uma prancha, cada uma ajustada à largura, centradas na altura
 function linhasNaCaixa(c: Ctx, linhas: string[], fam: Familia, cor: string, x: number, y: number, l: number, a: number, o: { frac?: number; entre?: number; semCalt?: boolean; alinhar?: 'left' | 'center' } = {}) {
@@ -348,6 +360,148 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
         c.p.ret(x, y, l, a, COR.polished);
         linhasNaCaixa(c, ['Ploc! Tum!', 'Crás, Bum!'], 'polished', tintaSobre(COR.polished), x, y, l, a, { frac: 0.86, entre: 1.05, alinhar: 'left' });
     },
+    // ---- as pranchas dos três capítulos novos ----
+    // o gabarito em que a fonte nasceu: uma folha de quadrados, cada um com a letra desenhada, a linha de base e o
+    // caractere pequeno no canto, como os gabaritos de desenhar fonte
+    gabarito(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, '#e4e1da');
+        const letras = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ012345678');
+        const colunas = 5;
+        const m = l * 0.06;
+        const lado = (l - 2 * m) / colunas;
+        const linhas = Math.ceil(letras.length / colunas);
+        const y0 = y + (a - linhas * lado) / 2;
+        letras.forEach((ch, i) => {
+            const cx = x + m + (i % colunas) * lado;
+            const cy = y0 + Math.floor(i / colunas) * lado;
+            c.p.borda(cx, cy, lado, lado, { cor: 'rgba(27,26,24,0.35)', esp: 1.2 });
+            fio(c, cx + lado * 0.08, cy + lado * 0.78, cx + lado * 0.92, cy + lado * 0.78, 'rgba(27,26,24,0.18)', 1);
+            rotulo(c, ch, cx + 10, cy + 20, { tam: Math.max(8, lado * 0.06), cor: CINZA });
+            linha(c, ch, cx + lado / 2, cy + lado * 0.78, { tam: lado * 0.6, fam: 'cut', peso: 400, cor: ESCURA, alinhar: 'center', semCalt: true });
+        });
+    },
+    // os pontos do alfabeto antes e depois das retas
+    pontos(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, '#e4e1da');
+        const tam = ajustar(c, '3.390', { fam: 'cut', semCalt: true }, l * 0.62);
+        const tl = Math.max(9, a * 0.026);
+        const antes = linha(c, '3.390', x + l * 0.12, y + a * 0.44, { tam, fam: 'cut', peso: 400, cor: '#a39d93', semCalt: true });
+        c.p.fio(antes.x0 - 8, y + a * 0.44 - MAIUSCULA * tam * 0.45, antes.x1 + 8, y + a * 0.44 - MAIUSCULA * tam * 0.45, { cor: COR.laranja, esp: Math.max(2, tam * 0.05) });
+        rotulo(c, 'Pontos antes', x + l * 0.12, y + a * 0.44 - MAIUSCULA * tam - tl * 1.2, { tam: tl, cor: CINZA });
+        linha(c, '1.262', x + l * 0.12, y + a * 0.84, { tam, fam: 'cut', peso: 400, cor: ESCURA, semCalt: true });
+        rotulo(c, 'Depois, só retas', x + l * 0.12, y + a * 0.84 - MAIUSCULA * tam - tl * 1.2, { tam: tl, cor: CINZA });
+    },
+    // o nome: a Sans riscada e a Rune embaixo
+    nome(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, COR.cut);
+        const tinta = tintaSobre(COR.cut);
+        const tam = ajustar(c, 'Sans', { fam: 'cut' }, l * 0.56);
+        const r = linha(c, 'Sans', x + l * 0.16, y + a * 0.42, { tam, fam: 'cut', peso: 400, cor: tinta });
+        c.p.fio(r.x0 - 10, y + a * 0.42 - MAIUSCULA * tam * 0.45, r.x1 + 10, y + a * 0.42 - MAIUSCULA * tam * 0.45, { cor: tinta, esp: Math.max(2, tam * 0.06) });
+        linha(c, 'Rune', x + l * 0.16, y + a * 0.86, { tam, fam: 'cut', peso: 400, cor: tinta });
+    },
+    // as duas datas, claras no escuro (a prancha do pé)
+    datas(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, ESCURA);
+        const t = '23.01 → 05.11';
+        const tam = ajustar(c, t, { fam: 'cut', semCalt: true }, l * 0.86);
+        const r = linha(c, t, x + l * 0.07, y + a * 0.5, { tam, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
+        const tl = Math.max(9, a * 0.03);
+        rotulo(c, 'Janeiro: o gabarito', r.x0, y + a * 0.5 + tl * 2.6, { tam: tl, cor: COR.cut });
+        rotulo(c, 'Novembro: a pedra', r.x1, y + a * 0.5 + tl * 2.6, { tam: tl, cor: COR.cut, alinhar: 'right' });
+    },
+    // o cartaz do festival nas duas páginas (a abertura dupla do capítulo do uso), com as linhas de tipo de madeira
+    cartaz(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, COR.worn);
+        const tinta = tintaSobre(COR.worn);
+        const linhas: [string, Familia, number, number][] = [
+            ['21 MAR ★ 20H ★ GALPÃO DA PEDREIRA', 'cut', 0.56, 0.36],
+            ['QUEBRA PEDRA', 'cut', 0.9, 0.64],
+            ['festival de rock bruto', 'polished', 0.6, 0.82],
+        ];
+        for (const [t, fam, frac, alt] of linhas) {
+            const tam = ajustar(c, t, { fam, semCalt: true }, l * frac);
+            linha(c, t, x + l / 2, y + a * alt, { tam, fam, peso: 400, cor: tinta, alinhar: 'center', semCalt: true });
+        }
+    },
+    // a capa do livro infantil, com o título na Polished
+    livro(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, '#3f74c4');
+        const tinta = '#fff6e4';
+        rotulo(c, 'Coleção Correnteza', x + l * 0.1, y + a * 0.16, { tam: Math.max(9, a * 0.03), cor: tinta });
+        linhasNaCaixa(c, ['A pedrinha', 'que rolou'], 'polished', tinta, x, y, l, a * 0.9, { frac: 0.8, entre: 1.02, alinhar: 'left' });
+    },
+    // o disco: os sulcos, o selo com o título na Worn e o furo
+    disco(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, '#e4e1da');
+        const cx = x + l / 2;
+        const cy = y + a / 2;
+        const r = Math.min(l, a) * 0.44;
+        c.p.circulo(cx, cy, r, '#151515');
+        for (let k = 0.48; k < 0.97; k += 0.07) c.p.circulo(cx, cy, r * k, null, { cor: 'rgba(255,255,255,0.07)', esp: 1 });
+        c.p.circulo(cx, cy, r * 0.42, COR.polished);
+        rotulo(c, 'Os Rolados', cx, cy - r * 0.2, { tam: Math.max(8, r * 0.07), alinhar: 'center', cor: ESCURA });
+        linha(c, 'foz', cx, cy + r * 0.16, { tam: r * 0.3, fam: 'worn', peso: 400, cor: ESCURA, alinhar: 'center' });
+        c.p.circulo(cx, cy, r * 0.035, '#e4e1da');
+    },
+    // o preço do festival com a tira de esgotado colada torta por cima (a prancha do pé)
+    esgotado(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, '#efe7d6');
+        const tam = ajustar(c, 'pista a R$ 20', { fam: 'cut', semCalt: true }, l * 0.84);
+        linha(c, 'pista a R$ 20', x + l * 0.08, y + a * 0.62, { tam, fam: 'cut', peso: 400, cor: ESCURA, semCalt: true });
+        c.p.girar(-4, x + l * 0.7, y + a * 0.5, () => {
+            c.p.ret(x + l * 0.44, y + a * 0.34, l * 0.62, a * 0.3, COR.laranja);
+            const te = ajustar(c, 'ESGOTADO', { fam: 'cut', semCalt: true }, l * 0.44);
+            linha(c, 'ESGOTADO', x + l * 0.73, y + a * 0.49 + (MAIUSCULA * te) / 2, { tam: te, fam: 'cut', peso: 400, cor: ESCURA, alinhar: 'center', semCalt: true });
+        });
+    },
+    // o par AV como está hoje, sem ajuste, e como vai ficar, com o ajuste de −100 medido na Cut
+    av(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, ESCURA);
+        const tam = Math.min(ajustar(c, 'AV', { fam: 'cut', semCalt: true }, l * 0.78), a * 0.3);
+        const tl = Math.max(9, a * 0.012);
+        const hoje = y + a * 0.44;
+        const w = largura(c, 'AV', { tam, fam: 'cut', semCalt: true });
+        const x0 = x + (l - w) / 2;
+        linha(c, 'AV', x0, hoje, { tam, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
+        rotulo(c, 'Hoje, sem ajuste', x0, hoje + tl * 4, { tam: tl * 1.3, cor: PAPEL });
+        const depois = y + a * 0.82;
+        const wa = largura(c, 'A', { tam, fam: 'cut', semCalt: true });
+        linha(c, 'A', x0, depois, { tam, fam: 'cut', peso: 400, cor: COR.laranja, semCalt: true });
+        linha(c, 'V', x0 + wa - tam * 0.1, depois, { tam, fam: 'cut', peso: 400, cor: COR.laranja, semCalt: true });
+        rotulo(c, 'Depois, com −100', x0, depois + tl * 4, { tam: tl * 1.3, cor: COR.laranja });
+    },
+    // os pares que mais pedem ajuste, com o valor medido na Cut
+    pares(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, '#e4e1da');
+        const pares: [string, string][] = [
+            ['To', '−113'],
+            ['AV', '−100'],
+            ['LT', '−110'],
+            ['r.', '−128'],
+        ];
+        const passo = a / (pares.length + 0.4);
+        const tam = passo * 0.62;
+        const tl = Math.max(9, a * 0.03);
+        pares.forEach(([par, valor], i) => {
+            const base = y + passo * (i + 0.95);
+            linha(c, par, x + l * 0.1, base, { tam, fam: 'cut', peso: 400, cor: ESCURA, semCalt: true });
+            rotulo(c, valor, x + l * 0.9, base, { tam: tl * 1.2, alinhar: 'right', cor: ESCURA });
+            if (i < pares.length - 1) c.p.fio(x + l * 0.1, base + passo * 0.2, x + l * 0.9, base + passo * 0.2, { cor: 'rgba(27,26,24,0.25)', esp: 1 });
+        });
+    },
+    // o s da Polished grande, com a abertura quase fechada
+    s8(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, COR.polished);
+        centrado(c, 's', 'polished', tintaSobre(COR.polished), x, y, l, a, { frac: 0.5, altura: ALTURA_X });
+    },
+    // os arquivos que faltam, claros no escuro (a prancha do pé)
+    arquivos(c, x, y, l, a) {
+        c.p.ret(x, y, l, a, ESCURA);
+        const tam = ajustar(c, 'OTF ★ WOFF2', { fam: 'cut', semCalt: true }, l * 0.8);
+        linha(c, 'OTF ★ WOFF2', x + l * 0.07, y + a * 0.56, { tam, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
+        rotulo(c, 'Föeger Rune Cut · Polished · Worn', x + l * 0.07, y + a * 0.56 + Math.max(9, a * 0.03) * 2.6, { tam: Math.max(9, a * 0.03), cor: COR.cut });
+    },
 };
 
 // uma prancha numa caixa da página, cortada pela caixa e pela página
@@ -366,16 +520,29 @@ function moldura(c: Ctx, k: Prancha, x: number, y: number, l: number, a: number,
 }
 
 // as pranchas de cada capítulo: a da abertura, as duas molduras da matéria e a do pé
-const PRANCHAS_CAP: { abertura: Prancha; esq: Prancha; dir: Prancha; pe: Prancha; legendaEsq: [string, string]; legendaDir: [string, string] }[] = [
-    { abertura: 'aa', esq: 'maiusculas', dir: 'minusculas', pe: 'numeros', legendaEsq: ['Maiúsculas', 'Cut, sem as trocas'], legendaDir: ['Minúsculas', 'Cut, sem as trocas'] },
-    { abertura: 'seixo', esq: 'tres-pedras', dir: 'r-desgaste', pe: 'tanto', legendaEsq: ['Pedra', 'Três desgastes'], legendaDir: ['R', 'Um por cima do outro'] },
-    { abertura: 'ssss', esq: 'trocas', dir: 'l-f', pe: 'correnteza', legendaEsq: ['Worn', 'Sem e com as trocas'], legendaDir: ['L.alt e f.ini', 'Pelo lugar na palavra'] },
-    { abertura: 'acai', esq: 'acentos', dir: 'tamanhos', pe: 'ploc', legendaEsq: ['Acentos e frações', 'Cut'], legendaDir: ['Do cartaz ao texto', 'Cut'] },
-];
+type PranchasDoCapitulo = { abertura: Prancha; esq: Prancha; dir: Prancha; pe: Prancha; legendaEsq: [string, string]; legendaDir: [string, string] };
+const PRANCHAS_ID: Record<IdCapitulo, PranchasDoCapitulo> = {
+    historia: { abertura: 'gabarito', esq: 'pontos', dir: 'nome', pe: 'datas', legendaEsq: ['Pontos', 'Antes e depois das retas'], legendaDir: ['O nome', 'Da Sans à Rune'] },
+    alfabeto: { abertura: 'aa', esq: 'maiusculas', dir: 'minusculas', pe: 'numeros', legendaEsq: ['Maiúsculas', 'Cut, sem as trocas'], legendaDir: ['Minúsculas', 'Cut, sem as trocas'] },
+    estilos: { abertura: 'seixo', esq: 'tres-pedras', dir: 'r-desgaste', pe: 'tanto', legendaEsq: ['Pedra', 'Três desgastes'], legendaDir: ['R', 'Um por cima do outro'] },
+    variacoes: { abertura: 'ssss', esq: 'trocas', dir: 'l-f', pe: 'correnteza', legendaEsq: ['Worn', 'Sem e com as trocas'], legendaDir: ['L.alt e f.ini', 'Pelo lugar na palavra'] },
+    texto: { abertura: 'acai', esq: 'acentos', dir: 'tamanhos', pe: 'ploc', legendaEsq: ['Acentos e frações', 'Cut'], legendaDir: ['Do cartaz ao texto', 'Cut'] },
+    uso: { abertura: 'cartaz', esq: 'livro', dir: 'disco', pe: 'esgotado', legendaEsq: ['Livro', 'A Polished na capa'], legendaDir: ['Disco', 'A Worn no selo'] },
+    falta: { abertura: 'av', esq: 'pares', dir: 's8', pe: 'arquivos', legendaEsq: ['Pares de letras', 'O ajuste por fazer'], legendaDir: ['O s da Polished', 'A abertura que fecha'] },
+};
+const PRANCHAS_CAP = (cap: number) => PRANCHAS_ID[CAPITULOS[cap].id];
 
 // a tinta da abertura de cada capítulo, pelo fundo da prancha dela
-const FUNDO_ABERTURA = [() => COR.cut, () => COR.polished, () => COR.roxo, () => COR.laranja];
-const tintaDaAbertura = (cap: number) => tintaSobre(FUNDO_ABERTURA[cap]());
+const FUNDO_ABERTURA: Record<IdCapitulo, () => string> = {
+    historia: () => '#e4e1da',
+    alfabeto: () => COR.cut,
+    estilos: () => COR.polished,
+    variacoes: () => COR.roxo,
+    texto: () => COR.laranja,
+    uso: () => COR.worn,
+    falta: () => ESCURA,
+};
+const tintaDaAbertura = (cap: number) => tintaSobre(FUNDO_ABERTURA[CAPITULOS[cap].id]());
 
 const tituloDe = (cap: number) => CAPITULOS[cap].sumario.join(' ');
 const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
@@ -531,7 +698,7 @@ const SUMARIO_SECAO = 44;
 type Destino = Omit<Alvo, 'x' | 'y' | 'l' | 'a'>;
 
 // uma linha do sumário; devolve onde começa a seguinte
-function linhaDoSumario(c: Ctx, y: number, o: { n?: string; titulo: string; pagina?: number; destino: Destino; secao?: boolean }) {
+function linhaDoSumario(c: Ctx, y: number, o: LinhaSumario) {
     const aceso = c.destaque === c.alvos.length;
     const alto = o.secao ? SUMARIO_SECAO : SUMARIO_PARTE;
     const cor = aceso ? COR.laranja : o.secao ? CINZA : TINTA;
@@ -550,26 +717,62 @@ function linhaDoSumario(c: Ctx, y: number, o: { n?: string; titulo: string; pagi
     return y + alto;
 }
 
-function sumario(c: Ctx) {
-    fundo(c, PAPEL);
-    linha(c, 'Sumário', 22, 190, { tam: 92 });
-    let y = 262;
-    fio(c, 29, y, 973, y);
-    y = linhaDoSumario(c, y, { titulo: 'Os três estilos', pagina: EXTRAS.estilos, destino: { pagina: EXTRAS.estilos } });
+// as linhas do sumário em blocos (uma parte com as seções dela), para dividir as duas páginas sem separar a parte das
+// seções
+type LinhaSumario = { n?: string; titulo: string; pagina?: number; destino: Destino; secao?: boolean };
+function blocosDoSumario(): LinhaSumario[][] {
+    const blocos: LinhaSumario[][] = [[{ titulo: 'Os três estilos', pagina: EXTRAS.estilos, destino: { pagina: EXTRAS.estilos } }]];
     CAPITULOS.forEach((ch, i) => {
         const p = ch.paginas;
-        y = linhaDoSumario(c, y, { n: pagina2(ch.n), titulo: ch.sumario.join(' '), pagina: p?.[0], destino: { cap: i } });
         // as duas seções: a página da esquerda e a da direita da matéria, depois da abertura
         const secoes = p ? [p[0] + 2, p[1]] : [];
-        ch.secoes.forEach((s, k) => {
-            y = linhaDoSumario(c, y, { titulo: s, pagina: secoes[k], destino: { pagina: secoes[k] }, secao: true });
-        });
+        blocos.push([
+            { n: pagina2(ch.n), titulo: ch.sumario.join(' '), pagina: p?.[0], destino: { cap: i } },
+            ...ch.secoes.map((s, k) => ({ titulo: s, pagina: secoes[k], destino: { pagina: secoes[k] }, secao: true })),
+        ]);
     });
     const car = EXTRAS.caracteres;
-    y = linhaDoSumario(c, y, { titulo: 'Caracteres', pagina: car?.[0], destino: { caracteres: true } });
-    y = linhaDoSumario(c, y, { titulo: 'Letras', pagina: car?.[0], destino: { pagina: car?.[0] }, secao: true });
-    y = linhaDoSumario(c, y, { titulo: 'Sinais', pagina: car?.[1], destino: { pagina: car?.[1] }, secao: true });
-    linhaDoSumario(c, y, { titulo: 'Colofão', pagina: EXTRAS.colofao, destino: { pagina: EXTRAS.colofao } });
+    blocos.push([
+        { titulo: 'Caracteres', pagina: car?.[0], destino: { caracteres: true } },
+        { titulo: 'Letras', pagina: car?.[0], destino: { pagina: car?.[0] }, secao: true },
+        { titulo: 'Sinais', pagina: car?.[1], destino: { pagina: car?.[1] }, secao: true },
+    ]);
+    blocos.push([{ titulo: 'Colofão', pagina: EXTRAS.colofao, destino: { pagina: EXTRAS.colofao } }]);
+    return blocos;
+}
+const alturaDoBloco = (b: LinhaSumario[]) => b.reduce((s, l) => s + (l.secao ? SUMARIO_SECAO : SUMARIO_PARTE), 0);
+
+// os blocos de cada página: a primeira leva o que couber até perto da metade da altura total
+function paginasDoSumario(): [LinhaSumario[][], LinhaSumario[][]] {
+    const blocos = blocosDoSumario();
+    const total = blocos.reduce((s, b) => s + alturaDoBloco(b), 0);
+    let soma = 0;
+    let corte = blocos.length;
+    for (let i = 0; i < blocos.length; i++) {
+        const h = alturaDoBloco(blocos[i]);
+        if (soma + h / 2 > total / 2) {
+            corte = i;
+            break;
+        }
+        soma += h;
+    }
+    return [blocos.slice(0, corte), blocos.slice(corte)];
+}
+
+function sumario(c: Ctx, parte: 0 | 1) {
+    fundo(c, PAPEL);
+    if (parte === 0) linha(c, 'Sumário', 22, 190, { tam: 92 });
+    let y = 262;
+    fio(c, 29, y, 973, y);
+    for (const bloco of paginasDoSumario()[parte]) for (const l of bloco) y = linhaDoSumario(c, y, l);
+}
+
+// a epígrafe, como nos livros: o ditado sozinho numa página da direita, no alto, alinhado à direita, com a origem
+// embaixo
+function epigrafe(c: Ctx) {
+    fundo(c, PAPEL);
+    const fim = paragrafo(c, 'Água mole em pedra dura, tanto bate até que fura.', 330, 470, 600, { tam: 46, entre: 54, fam: 'polished', peso: 400, alinhar: 'right' });
+    rotulo(c, 'Ditado popular', 930, fim + 24, { alinhar: 'right', cor: CINZA });
 }
 
 // a dupla depois do rosto apresenta os três estilos: à esquerda, o título e a abertura, e o cartão da Cut; à direita, os
@@ -652,7 +855,7 @@ function legendaDe(c: Ctx, l: [string, string], cor: string) {
 
 function aberturaImagem(c: Ctx, cap: number) {
     const ch = CAPITULOS[cap];
-    const k = PRANCHAS_CAP[cap].abertura;
+    const k = PRANCHAS_CAP(cap).abertura;
     if (ch.modo === 'dupla') prancha(c, k, 0, 0, 2000, 1500);
     else prancha(c, k, 0, 0, 1000, 1500);
     legendaDe(c, ch.legenda, tintaDaAbertura(cap));
@@ -661,7 +864,7 @@ function aberturaImagem(c: Ctx, cap: number) {
 function aberturaTitulo(c: Ctx, cap: number, num?: number) {
     const ch = CAPITULOS[cap];
     if (ch.modo === 'dupla') {
-        prancha(c, PRANCHAS_CAP[cap].abertura, -1000, 0, 2000, 1500);
+        prancha(c, PRANCHAS_CAP(cap).abertura, -1000, 0, 2000, 1500);
         rotulo(c, `Capítulo ${ch.n}`, 973, 70, { cor: tintaDaAbertura(cap), alinhar: 'right' });
         linha(c, ch.sumario[0], 973, 170, { tam: 76, cor: tintaDaAbertura(cap), alinhar: 'right' });
         linha(c, ch.sumario[1], 973, 250, { tam: 72, fam: ch.estilo, peso: 400, cor: tintaDaAbertura(cap), alinhar: 'right' });
@@ -697,7 +900,44 @@ function aberturaTitulo(c: Ctx, cap: number, num?: number) {
 function mostra(c: Ctx, cap: number) {
     const x = 548;
     const l = 425;
-    if (cap === 0) {
+    const id = CAPITULOS[cap].id;
+    if (id === 'historia') {
+        // a linha do tempo da fonte, com as datas em mono e o que aconteceu em cada uma
+        rotulo(c, 'Linha do tempo', x, 140, { cor: CINZA });
+        const marcos: [string, string][] = [
+            ['23 jan 2026', 'O gabarito vira fonte, com 81 glifos: a Föeger Sans.'],
+            ['10 out', 'A ideia da pedra: cada estilo é um tempo de uso.'],
+            ['4 nov', 'As letras refeitas só com retas, os acentos tirados do desenho e o nome Rune.'],
+            ['5 nov', 'Os sinais, os três desgastes, o L do meio, o f do começo e os quatro cortes das minúsculas.'],
+            ['Esta prévia', '311 glifos em cada estilo.'],
+        ];
+        let y = 210;
+        for (const [data, texto] of marcos) {
+            rotulo(c, data, x, y, { tam: 12.5 });
+            y = paragrafo(c, texto, x, y + 32, l, { tam: 18.5, entre: 23.5 }) + 8;
+            fio(c, x, y, x + l, y);
+            y += 40;
+        }
+    } else if (id === 'falta') {
+        // o que já está feito (✓, na Cut) e o que falta (um traço laranja)
+        rotulo(c, 'Feito e por fazer', x, 140, { cor: CINZA });
+        const itens: [boolean, string][] = [
+            [true, '311 glifos em cada estilo'],
+            [true, 'Acentos, sinais e símbolos'],
+            [true, 'Os quatro cortes das minúsculas'],
+            [true, 'Os três desgastes'],
+            [false, 'O ajuste dos pares em cada estilo'],
+            [false, 'O þ minúsculo'],
+            [false, 'Os arquivos para instalar e para a web'],
+        ];
+        itens.forEach(([feito, texto], i) => {
+            const y = 230 + i * 74;
+            if (feito) linha(c, '✓', x, y, { tam: 28, fam: 'cut', peso: 400, cor: COR.wornEscuro, semCalt: true });
+            else c.p.fio(x + 2, y - 9, x + 26, y - 9, { cor: COR.laranja, esp: 3 });
+            linha(c, texto, x + 48, y, { tam: 20, peso: feito ? 400 : 500, cor: feito ? TINTA : ESCURA });
+            fio(c, x, y + 26, x + l, y + 26);
+        });
+    } else if (id === 'alfabeto') {
         // o a da Cut pelo contorno, com os pontos como estão no arquivo da fonte
         const g = glifoDe('Rolado', 'a');
         const tam = 640;
@@ -710,7 +950,7 @@ function mostra(c: Ctx, cap: number) {
         rotulo(c, 'Linha de base', x + l, base + 30, { tam: 11, cor: CINZA, alinhar: 'right' });
         rotulo(c, 'Altura do x', x + l, base - 545 * (tam / 1000) - 14, { tam: 11, cor: CINZA, alinhar: 'right' });
         paragrafo(c, `O a da Cut com os ${g.pedras.reduce((s, p) => s + p.vertices.reduce((t, v) => t + v.length, 0), 0)} pontos do contorno: só retas, uma por golpe.`, x, 730, l, { tam: 18.5, entre: 23.5 });
-    } else if (cap === 2) {
+    } else if (id === 'variacoes') {
         // o revezamento de algumas minúsculas, cada uma em quatro cortes
         rotulo(c, 'Quatro cortes de cada', x, 140, { cor: CINZA });
         const letras = ['aaaa', 'eeee', 'gggg', 'oooo', 'rrrr', 'ssss'];
@@ -725,7 +965,7 @@ function mostra(c: Ctx, cap: number) {
 
 function artigoEsq(c: Ctx, cap: number, num?: number) {
     const ch = CAPITULOS[cap];
-    const pc = PRANCHAS_CAP[cap];
+    const pc = PRANCHAS_CAP(cap);
     fundo(c, PAPEL);
     moldura(c, pc.esq, 29, 27, 459, 444, pc.legendaEsq);
     fio(c, 519, 27, 519, 1478);
@@ -737,8 +977,23 @@ function artigoEsq(c: Ctx, cap: number, num?: number) {
     paragrafo(c, ch.corpo[1], 29, Math.max(1140, 1436 - (n - 1) * corpo.entre), 459, corpo);
     if (ch.modo === 'dupla') {
         // a abertura dupla não tem a página do título: as seções e a visão geral vêm para a coluna da direita
-        if (cap === 1) {
-            // em cima, a palavra nos três estilos, para comparar as larguras
+        if (ch.id === 'uso') {
+            // em cima, cada estilo com uma palavra do lugar onde ele aparece
+            rotulo(c, 'Cada estilo no seu lugar', 548, 160, { cor: CINZA });
+            const lugares: [Familia, string, string, string][] = [
+                ['cut', 'QUEBRA', 'Cartaz', 'Cut'],
+                ['polished', 'pedrinha', 'Livro', 'Polished'],
+                ['worn', 'foz', 'Disco', 'Worn'],
+            ];
+            const tam = Math.min(...lugares.map(([fam, t]) => ajustar(c, t, { fam }, 400)), 120);
+            lugares.forEach(([fam, t, lugar, nome], i) => {
+                const y = 330 + i * 200;
+                linha(c, t, 548, y, { tam, fam, peso: 400 });
+                rotulo(c, lugar, 548, y + 36, { tam: 11, cor: CINZA });
+                rotulo(c, nome, 973, y + 36, { tam: 11, alinhar: 'right', cor: CINZA });
+                fio(c, 548, y + 50, 973, y + 50);
+            });
+        } else if (ch.id === 'estilos') {
             // em cima, a palavra nos três estilos, com a largura de cada uma em unidades da fonte
             rotulo(c, 'A mesma palavra, mais estreita a cada estilo', 548, 160, { cor: CINZA });
             const fams: [Familia, string][] = [['cut', 'Cut'], ['polished', 'Polished'], ['worn', 'Worn']];
@@ -770,7 +1025,7 @@ function artigoEsq(c: Ctx, cap: number, num?: number) {
 
 function artigoDir(c: Ctx, cap: number, num?: number) {
     const ch = CAPITULOS[cap];
-    const pc = PRANCHAS_CAP[cap];
+    const pc = PRANCHAS_CAP(cap);
     fundo(c, PAPEL);
     paragrafo(c, ch.corpo[2], 29, 62, 459, { tam: 18.5, entre: 23.5, justificar: true, recuo: 84 });
     moldura(c, pc.dir, 514, 27, 459, 444, pc.legendaDir);
@@ -780,7 +1035,7 @@ function artigoDir(c: Ctx, cap: number, num?: number) {
     paragrafo(c, ch.citacao, 150, 770 - ((n - 1) * cit.entre) / 2, 700, cit);
     prancha(c, pc.pe, 0, 999, 1000, 501);
     // a legenda do pé: clara nas pranchas escuras (os números, a correnteza) e nas da paleta que forem escuras
-    const fundoPe: Record<string, string> = { numeros: ESCURA, correnteza: ESCURA, tanto: COR.worn, ploc: COR.polished };
+    const fundoPe: Record<string, string> = { numeros: ESCURA, correnteza: ESCURA, tanto: COR.worn, ploc: COR.polished, datas: ESCURA, arquivos: ESCURA, esgotado: '#efe7d6' };
     const cor = tintaSobre(fundoPe[pc.pe] ?? PAPEL);
     rodape(c, num, tituloDe(cap), cor === ESCURA ? undefined : cor);
 }
@@ -915,7 +1170,13 @@ export function desenharPagina(p: Pincel, pg: Pagina, num?: number, destaque = -
             creditos(c);
             break;
         case 'sumario':
-            sumario(c);
+            sumario(c, 0);
+            break;
+        case 'sumario-cont':
+            sumario(c, 1);
+            break;
+        case 'epigrafe':
+            epigrafe(c);
             break;
         case 'estilos-esq':
             estilosEsq(c, num);
