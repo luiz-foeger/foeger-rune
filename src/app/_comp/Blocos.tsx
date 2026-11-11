@@ -7,6 +7,7 @@ import { PALAVRAS, type Palavra } from '../_lib/glifos';
 import { PALAVRAS_EXTRA } from '../_lib/glifos-extra';
 import { LINHAS, type Ponto } from '../_lib/glifos';
 import { MEDIDAS } from '../_lib/medidas';
+import { pausado } from '../_lib/movimento';
 
 // o bloco do Y na seção do desgaste: a letra dividida por uma divisa. À esquerda, a pedra nova (o Cut, cheio); à
 // direita, a pedra gasta (o Worn), com a hachura do que o tempo levou, na cor da letra. As quinas vão marcadas com as
@@ -98,6 +99,11 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
             // alvo (o mouse, ou o passeio) como uma mola sem balanço
             const dt = Math.min(0.05, Math.max(0, (agora - antes) / 1000));
             antes = agora;
+            // coberta pela cortina (do menu ou da troca de página): a divisa espera parada
+            if (pausado()) {
+                quadro = requestAnimationFrame(anda);
+                return;
+            }
             const solta = cfg.anda ? W * (0.5 + 0.28 * Math.sin((agora - t0) / 2600)) : W / 2;
             const w = mouse.current !== null ? 14 : 4.5;
             velocidade += (w * w * ((mouse.current ?? solta) - x) - 2 * w * velocidade) * dt;

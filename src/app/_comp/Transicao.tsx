@@ -23,7 +23,21 @@ const CORTINA = '#111111';
 type Curva = (x: number) => number;
 // a curva do GSAP que a análise do vídeo achou (power2.inOut, a cúbica)
 const power2InOut: Curva = x => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
-const espera = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+// espera a página nova assentar: três quadros curtos seguidos (o trabalho de montar, como a física e as telas do hero,
+// já passou e acontece com a tela coberta), ou no máximo `maximo` segundos, para não segurar a cortina demais
+const assentar = (maximo: number) =>
+    new Promise<void>(fim => {
+        const inicio = performance.now();
+        let antes = inicio;
+        let curtos = 0;
+        const passo = (agora: number) => {
+            curtos = agora - antes <= 20 ? curtos + 1 : 0;
+            antes = agora;
+            if (curtos >= 3 || agora - inicio >= maximo * 1000) fim();
+            else requestAnimationFrame(passo);
+        };
+        requestAnimationFrame(passo);
+    });
 // chama aCada(p) a cada quadro com o progresso já passado pela curva, de 0 a 1
 function tween(duracao: number, curva: Curva, aCada: (p: number) => void) {
     return new Promise<void>(fim => {
@@ -99,6 +113,9 @@ export default function Transicao({ children }: { children: ReactNode }) {
             if (!el || !p) return rotas.push(href);
             ocupado.current = true;
             rotas.prefetch(destino);
+            // enquanto a cortina desce, as animações da página param (movimento.ts, pausado): cada quadro desenhado por
+            // baixo obrigava a refazer a imagem da página
+            document.documentElement.setAttribute('data-cobrindo', '');
             // cobre: a borda desce girando e a página por baixo desce, gira, cresce e escurece (atrás dela, a moldura
             // fica no preto da cortina: a página apaga rumo ao preto em vez de desbotar para o claro, e a folga que
             // abre em cima dela emenda com a cortina)
@@ -107,6 +124,9 @@ export default function Transicao({ children }: { children: ReactNode }) {
             const tmax = (H / (PIVO * W)) * 1.04;
             el.style.background = CORTINA;
             if (moldura.current) moldura.current.style.background = CORTINA;
+            // a página vira uma camada própria da placa de vídeo durante a troca: desenhada uma vez, só é movida, girada
+            // e esmaecida (sem isso, cada quadro redesenhava a página inteira no tamanho novo e a troca caía para ~30 qps)
+            p.style.willChange = 'transform, opacity';
             el.style.clipPath = descendo(0, W);
             el.style.display = 'block';
             p.style.transformOrigin = `50% ${(window.scrollY + H / 2).toFixed(0)}px`;
@@ -121,6 +141,8 @@ export default function Transicao({ children }: { children: ReactNode }) {
             p.style.opacity = '0';
             p.style.transform = '';
             trocando(true);
+            // a página nova pode animar já embaixo da cortina (o trabalho de começar acontece coberto)
+            document.documentElement.removeAttribute('data-cobrindo');
             pendente.current = { destino, ancora };
             lenisRef.current?.scrollTo(0, { immediate: true, force: true });
             window.scrollTo(0, 0);
@@ -137,7 +159,7 @@ export default function Transicao({ children }: { children: ReactNode }) {
         let vivo = true;
         (async () => {
             await document.fonts.ready;
-            await espera(60);
+            await assentar(0.35);
             if (!vivo) return;
             const el = veu.current;
             const p = palco.current;
@@ -154,6 +176,10 @@ export default function Transicao({ children }: { children: ReactNode }) {
             };
             if (p) p.style.transformOrigin = `50% ${(y + H / 2).toFixed(0)}px`;
             pose(0);
+            // já na pose de saída, a página nova é desenhada ainda coberta (invisível, a placa de vídeo só a desenhava
+            // quando a cortina começava a subir, e os primeiros quadros da subida travavam)
+            await assentar(0.2);
+            if (!vivo) return;
             if (el) el.style.clipPath = subindo(0, W, H);
             // a cortina sobe e, ao mesmo tempo, a página se endireita e os títulos e painéis à vista entram
             trocando(false);
@@ -172,6 +198,7 @@ export default function Transicao({ children }: { children: ReactNode }) {
                 p.style.transform = '';
                 p.style.opacity = '';
                 p.style.transformOrigin = '';
+                p.style.willChange = '';
             }
             if (moldura.current) moldura.current.style.background = '';
             ocupado.current = false;

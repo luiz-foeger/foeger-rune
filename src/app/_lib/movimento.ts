@@ -23,6 +23,14 @@ export function useVisivel(ref: RefObject<Element | null>, { limiar = 0, umaVez 
     return visivel;
 }
 
+// a página está coberta e não precisa desenhar: com o menu aberto (a cortina dele já desceu) ou enquanto a cortina
+// da troca de página desce por cima dela (Transicao.tsx; a página vira uma imagem que só gira e encolhe, e cada quadro
+// desenhado por baixo obrigava a refazer essa imagem)
+export const pausado = () => {
+    const h = document.documentElement;
+    return h.hasAttribute('data-menu-aberto') || h.hasAttribute('data-cobrindo');
+};
+
 // um laço de quadros (requestAnimationFrame) que só roda com o elemento na tela; recebe o tempo em segundos. Com
 // "qps", pula quadros para não passar disso (os cartões com filtro de desgaste rodam a 30: o movimento é lento e cada
 // quadro refaz os desfoques)
@@ -38,8 +46,8 @@ export function useLaco(ref: RefObject<Element | null>, quadro: (t: number) => v
         let ultimo = -Infinity;
         const intervalo = 1000 / qps - 2;
         const passo = (agora: number) => {
-            // com o menu aberto, a cortina cobre a página: nada a desenhar por trás dela
-            if (agora - ultimo >= intervalo && !document.documentElement.hasAttribute('data-menu-aberto')) {
+            // coberta pela cortina (do menu ou da troca de página): nada a desenhar por trás dela
+            if (agora - ultimo >= intervalo && !pausado()) {
                 ultimo = agora;
                 fn.current(agora / 1000);
             }

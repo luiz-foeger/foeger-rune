@@ -5,6 +5,7 @@ import Matter from 'matter-js';
 import { FiltroDesgaste, ajustarDesgaste, corte } from './Desgaste';
 import { HERO } from '../_lib/conteudo';
 import { LINHAS, PALAVRAS, type Glifo } from '../_lib/glifos';
+import { pausado } from '../_lib/movimento';
 
 // ——— o hero com as pedras que rolam ———
 // "Rune" grande na Cut; o cursor gasta a letra inteira que ele toca, em casa ou solta, e raspa a letra por onde passa,
@@ -857,7 +858,7 @@ export function HeroPedras() {
             const s = performance.now() / 1000;
             const dt = Math.min(0.05, Math.max(0, s - antes));
             antes = s;
-            if (document.documentElement.hasAttribute('data-menu-aberto')) return;
+            if (pausado()) return;
             // o meio do painel do alfabeto chegou ao topo da tela: as letras (já fora dela) voltam para casa inteiras e
             // novas, e o hero passa a rolar com a página; de volta ao topo, ele se prende de novo
             const caixaAlfabeto = (alfabeto ?? pagina)?.getBoundingClientRect();
