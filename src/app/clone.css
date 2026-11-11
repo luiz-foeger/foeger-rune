@@ -193,17 +193,57 @@
     left: 0;
 }
 
-/* entrada: sobe e aparece quando o painel chega à tela */
-.fx-revela {
-    opacity: 0;
-    transform: translateY(calc(80 * var(--u)));
-    transition:
-        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+/* entrada: a dos cartões dos projetos do clone da Studio Namma (portfolio-simulacao, nova/clone-namma/_comp/Oficina.tsx).
+   O painel espera afastado ~100 px (a 1440) para o lado dele e girado, -4,5° à esquerda e +3° à direita, sem esmaecer;
+   quando o topo passa de 88% da tela (Painel.tsx), volta reto em 0,6 s (power3.out). O lado vem da posição do painel
+   (Painel.tsx põe o data-lado); os que ocupam a largura toda alternam. A transição fica só no estado de chegada: ir para
+   a espera é seco, voltar é animado. Na troca de página (html[data-trocando]), espera a cortina subir */
+.fx-revela[data-lado='esq'] {
+    transform: translateX(calc(-131 * var(--u))) rotate(-4.5deg);
+}
+.fx-revela[data-lado='dir'] {
+    transform: translateX(calc(131 * var(--u))) rotate(3deg);
 }
 .fx-revela[data-visivel='true'] {
-    opacity: 1;
     transform: none;
+    transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+html[data-trocando] .fx-revela[data-lado='esq'][data-visivel='true'] {
+    transform: translateX(calc(-131 * var(--u))) rotate(-4.5deg);
+    transition: none;
+}
+html[data-trocando] .fx-revela[data-lado='dir'][data-visivel='true'] {
+    transform: translateX(calc(131 * var(--u))) rotate(3deg);
+    transition: none;
+}
+
+/* o gesto da Namma nos textos: a linha sobe de trás da borda de baixo da própria caixa (power3.out). O corte só pega
+   embaixo (com folga em cima e dos lados, para os acentos) e deixa as descidas do p e do g à mostra */
+.fx-mascara {
+    display: block;
+    clip-path: inset(-1em -1em -0.3em -1em);
+}
+.fx-mascara-linha {
+    display: block;
+    transform: translateY(1.5em);
+    transition: transform 1s cubic-bezier(0.165, 0.84, 0.44, 1) var(--atraso, 0s);
+}
+[data-visivel='true'] > .fx-mascara > .fx-mascara-linha {
+    transform: none;
+}
+html[data-trocando] [data-visivel] > .fx-mascara > .fx-mascara-linha {
+    transform: translateY(1.5em);
+    transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .fx-revela[data-lado] {
+        transform: none;
+        transition: none;
+    }
+    .fx-mascara-linha {
+        transform: none;
+        transition: none;
+    }
 }
 
 /* 1. o alfabeto no estilo escolhido e os três desgastes no lugar dos pesos */

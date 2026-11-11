@@ -71,12 +71,14 @@ export default function Transicao({ children }: { children: ReactNode }) {
     // a troca em andamento: a rota de destino e a âncora (a seção) para onde a página nova rola
     const pendente = useRef<{ destino: string; ancora: string | null } | null>(null);
 
-    // a posição de uma seção sem o deslocamento da entrada (o painel ainda fora da tela está 80 u abaixo do lugar dele)
+    // a posição de uma seção sem a pose da entrada (o painel que ainda não entrou está afastado e girado): o giro é em
+    // volta do centro, que não sai do lugar, então o topo é o centro da caixa menos meia altura sem transformação
     const topoDe = (id: string | null) => {
         const el = id ? document.getElementById(id) : null;
         if (!el) return 0;
+        const r = el.getBoundingClientRect();
         const t = getComputedStyle(el).transform;
-        return el.getBoundingClientRect().top + window.scrollY - new DOMMatrix(t === 'none' ? undefined : t).m42 - 90;
+        return r.top + r.height / 2 - el.offsetHeight / 2 + window.scrollY - new DOMMatrix(t === 'none' ? undefined : t).m42 - 90;
     };
 
     const navegar = useCallback(

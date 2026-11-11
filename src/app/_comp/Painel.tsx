@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, type CSSProperties, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { useVisivel } from '../_lib/movimento';
 
 // o painel da Feixen: moldura com a trama pontilhada, réguas em cima e embaixo e letras nos lados, tudo tirado da
@@ -84,8 +84,18 @@ export default function Painel({
     entrada?: boolean; // sobe e acende ao chegar na tela; sem ela, o painel já está pronto (o alfabeto, que a página traz por cima do hero)
 }) {
     const ref = useRef<HTMLElement>(null);
-    // entra quando um quinto dele já está na tela, como na gravação (o painel de baixo aparece ainda apagado)
-    const visivel = useVisivel(ref, { limiar: 0.2, umaVez: true });
+    // entra como os cartões do clone da Namma (clone.css, "entrada"): quando o topo passa de 88% da tela, volta reto do
+    // lado dele. O lado é o da metade da tela em que o painel está; os que ocupam a largura toda alternam, na ordem da
+    // página. Vai direto no elemento (o React não cuida desse atributo), antes da primeira pintura
+    const visivel = useVisivel(ref, { umaVez: true, margem: '0px 0px -12% 0px' });
+    useLayoutEffect(() => {
+        const el = ref.current;
+        if (!el || !entrada) return;
+        const r = el.getBoundingClientRect();
+        const desvio = r.left + r.width / 2 - window.innerWidth / 2;
+        const ordem = [...document.querySelectorAll('.fx-revela')].indexOf(el);
+        el.dataset.lado = Math.abs(desvio) > window.innerWidth * 0.05 ? (desvio < 0 ? 'esq' : 'dir') : ordem % 2 ? 'dir' : 'esq';
+    }, [entrada]);
     const colC = celular?.colunas ?? Math.min(2, colunas);
     const linC = celular?.linhas ?? linhas;
     const muda = colC !== colunas || linC !== linhas;

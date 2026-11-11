@@ -55,13 +55,15 @@ export function Cabecalho() {
         return () => window.removeEventListener('keydown', tecla);
     }, []);
 
-    // a posição do alvo sem o deslocamento da entrada (o painel ainda fora da tela está 80 u abaixo do lugar dele)
+    // a posição do alvo sem a pose da entrada (o painel que ainda não entrou está afastado e girado em volta do centro:
+    // o topo é o centro da caixa menos meia altura sem transformação)
     const rolarPara = (alvo: string | number) => {
         const el = typeof alvo === 'string' ? document.getElementById(alvo) : null;
         let y = typeof alvo === 'number' ? alvo : 0;
         if (el) {
+            const r = el.getBoundingClientRect();
             const t = getComputedStyle(el).transform;
-            y = el.getBoundingClientRect().top + window.scrollY - new DOMMatrix(t === 'none' ? undefined : t).m42 - 90;
+            y = r.top + r.height / 2 - el.offsetHeight / 2 + window.scrollY - new DOMMatrix(t === 'none' ? undefined : t).m42 - 90;
         }
         if (lenis) lenis.scrollTo(y);
         else window.scrollTo({ top: y, behavior: 'smooth' });
