@@ -7,6 +7,7 @@ import { CAPITULOS, COR, EXTRAS, LIVRO, type IdCapitulo, type Pagina } from './c
 import { medir, TINTA, type Estilo, type Familia, type Pincel } from './pincel';
 import { PALAVRAS, type Glifo } from '../glifos';
 import { ESTILO_MEDIDAS } from '../medidas';
+import { PECAS } from '../../_comp/LogoFoeger';
 
 // o que o clique faz: ir ao capítulo (cap), às tabelas dos caracteres ou a uma página qualquer (pagina)
 export type Alvo = { x: number; y: number; l: number; a: number; cap?: number; caracteres?: boolean; pagina?: number };
@@ -134,11 +135,60 @@ function alvo(c: Ctx, x0: number, y0: number, x1: number, y1: number, extra: Omi
     c.alvos.push({ x: x0 / 1000, y: y0 / 1500, l: (x1 - x0) / 1000, a: (y1 - y0) / 1500, ...extra });
 }
 
-// o relevo seco da capa: a letra mais escura que o pano, com a luz batendo na borda de baixo
+// o relevo seco da capa: a letra mais escura que o pano, com a luz batendo na borda de baixo (as três passadas: a luz,
+// a sombra da borda de cima e o miolo afundado)
+const RELEVO: [number, number, string][] = [
+    [1.4, 1.6, 'rgba(255,250,240,0.07)'],
+    [-0.8, -0.9, 'rgba(0,0,0,0.32)'],
+    [0, 0, 'rgba(0,0,0,0.16)'],
+];
 function relevo(c: Ctx, t: string, x: number, y: number, o: Linha) {
-    linha(c, t, x + 1.4, y + 1.6, { ...o, cor: 'rgba(255,250,240,0.07)' });
-    linha(c, t, x - 0.8, y - 0.9, { ...o, cor: 'rgba(0,0,0,0.32)' });
-    linha(c, t, x, y, { ...o, cor: 'rgba(0,0,0,0.16)' });
+    for (const [dx, dy, cor] of RELEVO) linha(c, t, x + dx, y + dy, { ...o, cor });
+}
+
+// ---------- a logo da Föeger ----------
+
+// a logo de verdade (a escrita, a do cabeçalho do site: as peças em linha, cada uma no lugar e no giro dela), no lugar
+// do nome escrito na fonte. A caixa das peças já postas sai das próprias peças (os caminhos só têm M, L, H, V e Z); a
+// linha de base é o pé das letras sem descendente (o g desce dela e o F, um pouco)
+const LOGO = (() => {
+    let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const [d, tx, ty, r, cx, cy] of PECAS) {
+        const a = (r * Math.PI) / 180;
+        let [px, py] = [0, 0];
+        for (const [, cmd, args] of d.matchAll(/([MLHVZ])([^MLHVZ]*)/g)) {
+            const n = args.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+            const pontos: [number, number][] = [];
+            if (cmd === 'H') n.forEach(v => pontos.push([(px = v), py]));
+            else if (cmd === 'V') n.forEach(v => pontos.push([px, (py = v)]));
+            else for (let i = 0; i + 1 < n.length; i += 2) pontos.push([(px = n[i]), (py = n[i + 1])]);
+            for (const [qx, qy] of pontos) {
+                const x = tx + cx + (qx - cx) * Math.cos(a) - (qy - cy) * Math.sin(a);
+                const y = ty + cy + (qx - cx) * Math.sin(a) + (qy - cy) * Math.cos(a);
+                [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
+            }
+        }
+    }
+    return { x0, y0, x1, y1, base: 945 };
+})();
+
+// a logo com a altura de maiúscula de um texto de corpo tam (do topo do F à linha de base), com a linha de base em y e
+// alinhada em x como as linhas de texto
+function logo(c: Ctx, x: number, y: number, tam: number, cor: string, alinhar: 'left' | 'center' | 'right' = 'left') {
+    const k = (tam * MAIUSCULA) / (LOGO.base - LOGO.y0);
+    const l = k * (LOGO.x1 - LOGO.x0);
+    const ox = alinhar === 'right' ? x - l : alinhar === 'center' ? x - l / 2 : x;
+    const oy = y - k * (LOGO.base - LOGO.y0);
+    for (const [d, tx, ty, r, cx, cy] of PECAS) {
+        const px = ox + k * (tx - LOGO.x0);
+        const py = oy + k * (ty - LOGO.y0);
+        c.p.girar(r, px + k * cx, py + k * cy, () => c.p.caminho(d, px, py, k, cor));
+    }
+}
+
+// a logo em relevo seco, como o texto do relevo
+function logoEmRelevo(c: Ctx, x: number, y: number, tam: number, alinhar: 'left' | 'center' | 'right' = 'left') {
+    for (const [dx, dy, cor] of RELEVO) logo(c, x + dx, y + dy, tam, cor, alinhar);
 }
 
 // um texto da Rune centrado numa caixa: o corpo faz a palavra ocupar a fração da largura (sem passar da altura) e a
@@ -527,7 +577,7 @@ function capa(c: Ctx) {
     linha(c, 'Luiz Föeger', 64, 110, { tam: 26, peso: 600, cor: CREME });
     linha(c, 'Föeger Rune: espécime tipográfico', 64, 230, { tam: 36, peso: 700, cor: CREME });
     marcas(c, 826, 90, CREME);
-    linha(c, 'Föeger.', 936, 1440, { tam: 36, fam: 'cut', peso: 400, cor: CREME, alinhar: 'right' });
+    logo(c, 936, 1440, 36, CREME, 'right');
 }
 
 // a contracapa, do mesmo azul da capa: o nome no meio, a frase do livro e o selo da editora no pé, tudo em relevo
@@ -535,7 +585,7 @@ function contracapa(c: Ctx) {
     c.p.ret(0, 0, 1000, 1500, COR.frioEscuro);
     relevo(c, 'Föeger Rune', 500, 770, { tam: 76, fam: 'cut', peso: 400, alinhar: 'center' });
     relevo(c, LIVRO.frase, 500, 860, { tam: 34, fam: 'polished', peso: 400, alinhar: 'center' });
-    relevo(c, 'Föeger.', 500, 1436, { tam: 46, fam: 'cut', peso: 400, alinhar: 'center' });
+    logoEmRelevo(c, 500, 1436, 46, 'center');
 }
 
 // a guarda: o papel colado por dentro da capa e da contracapa, sem texto, como nos livros de verdade. Por enquanto ela
@@ -653,7 +703,7 @@ function rosto(c: Ctx) {
     });
     linha(c, 'Luiz Föeger', 27, 1180, { tam: 36, peso: 400 });
     fio(c, 29, 1386, 973, 1386);
-    linha(c, 'Föeger.', 29, 1462, { tam: 56, fam: 'cut', peso: 400 });
+    logo(c, 29, 1462, 56, TINTA);
     rotulo(c, LIVRO.edicao, 973, 1460, { alinhar: 'right' });
 }
 
@@ -1047,7 +1097,7 @@ function caracteresDir(c: Ctx, num?: number) {
 // bloco curto centrado, sem número de página
 function colofao(c: Ctx) {
     fundo(c, PAPEL);
-    linha(c, 'Föeger.', 500, 1010, { tam: 56, fam: 'cut', peso: 400, alinhar: 'center' });
+    logo(c, 500, 1010, 56, TINTA, 'center');
     rotulo(c, 'Colofão', 500, 1080, { alinhar: 'center', cor: CINZA });
     paragrafo(
         c,
