@@ -15,10 +15,12 @@ const W = 1;
 const H = 1.5;
 const ESP = 0.0016;
 // a capa dura: a grossura da tábua (umas nove folhas) e quanto ela sobra em volta das folhas, na largura (só do lado de
-// fora; na lombada ela começa junto) e na altura (metade em cima, metade embaixo)
+// fora; na lombada ela começa junto) e na altura (metade em cima, metade embaixo). A sobra é pouca, como a de antes da
+// capa grossa: somada à borda arredondada da tábua, que sai mais um pouco (BOJO), fica perto de 1,2% da largura e de
+// 0,9% da altura em cada lado
 const GROSSO = 0.014;
-const SOBRA_L = 1.02;
-const SOBRA_A = 1.026;
+const SOBRA_L = 1.01;
+const SOBRA_A = 1.015;
 // o raio dos cantos de fora da capa dura e quanto a borda da tábua sai para fora (em frações da meia grossura: a
 // borda é quase reta, com as quinas arredondadas)
 const RAIO_CAPA = 0.012;
