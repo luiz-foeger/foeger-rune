@@ -6,7 +6,7 @@
 // Uso: abrir http://localhost:3700/print e imprimir (ou gerar com o puppeteer, page.pdf, depois
 // que a <main> ganhar data-pronto)
 import { useEffect, useState } from 'react';
-import { CAPITULOS, lerCores, montarFolhas, paginasDoPdf } from '../_lib/especime/conteudo';
+import { lerCores, montarFolhas, paginasDoPdf, tintaDoVegetal } from '../_lib/especime/conteudo';
 import { desenharPagina, PAPEL } from '../_lib/especime/paginas';
 import { carregarFontes, familiasDe, pincelSvg } from '../_lib/especime/pincel';
 
@@ -39,7 +39,7 @@ export default function EspecimeParaImprimir() {
                 const p = pincelSvg(fam, `p${i}`);
                 desenharPagina(p, pagina, num);
                 // o papel vegetal sai na cor dele (no livro, a cor vem do shader)
-                const t = pagina.tipo === 'vegetal' ? CAPITULOS[pagina.cap].vegetal?.tinta : undefined;
+                const t = tintaDoVegetal(pagina);
                 return p.svg(t ? `rgb(${t.join(',')})` : undefined);
             });
             if (vivo) setPaginas(svgs);

@@ -1,33 +1,26 @@
-// o conteúdo do livro da página: o espécime da Föeger Rune no lugar do "O livro da Föeger" do clone-tantan, na ordem
-// dos livros de verdade: a capa com a guarda lisa por dentro; as páginas de abertura (a falsa folha de rosto, o
-// frontispício, a folha de rosto, os créditos no verso dela e o sumário, numa página da direita); a dupla que apresenta
-// os três estilos; os capítulos com abertura e matéria, com papel vegetal entre algumas páginas; os caracteres; o
-// colofão; e a contracapa, também com a guarda por dentro. Os números e os fatos são os da prévia de 05/11 (311 glifos em cada estilo,
-// as larguras de cada estilo, o revezamento das minúsculas, o L do meio e o f do começo).
+// o conteúdo do livro da página: o espécime da Föeger Rune, na ordem dos livros de verdade e contado como a vida de uma
+// pedra: a capa com a guarda lisa por dentro; as páginas de abertura (a falsa folha de rosto, o frontispício, a folha
+// de rosto, os créditos no verso dela, o sumário e a apresentação); os quatro capítulos (como as letras foram
+// construídas, os três estilos, as variações e a fonte do título ao texto); os caracteres; o colofão; e a contracapa,
+// também com a guarda por dentro. Cada assunto abre numa página da direita, com um papel vegetal por cima, impresso com
+// o desenho de construção dele; virado, o vegetal deita por cima da última página do assunto anterior. Os números e os
+// fatos são os da prévia de 05/11 (311 glifos em cada estilo, as larguras de cada estilo, o revezamento das minúsculas,
+// o L do meio e o f do começo).
 import type { Familia } from './pincel';
 
-export type IdCapitulo = 'historia' | 'alfabeto' | 'estilos' | 'variacoes' | 'texto' | 'uso';
+export type IdCapitulo = 'construcao' | 'estilos' | 'variacoes' | 'tamanhos';
 export type Capitulo = {
-    // o id do capítulo (as pranchas e as mostras de cada um são achadas por ele, não pela posição)
+    // o id do capítulo (as páginas de cada um são achadas por ele, não pela posição)
     id: IdCapitulo;
     n: number;
-    tema: string;
-    // o título em escada: cada linha com o recuo em fração da caixa do título (0 = esquerda)
-    titulo: [string, number][];
-    // o título no sumário em duas linhas: a primeira na Inter Tight leve, a segunda na Rune do capítulo
-    sumario: [string, string];
+    titulo: string;
+    // a Rune do título na abertura e do número grande na página de texto
     estilo: Familia;
-    secoes: [string, string];
-    visaoGeral: string;
+    // o texto do capítulo: a abertura, em corpo grande, e três parágrafos
+    abertura: string;
     corpo: [string, string, string];
-    citacao: string;
-    // a abertura em página (a prancha à esquerda, o título no papel) ou dupla (uma prancha nas duas páginas)
-    modo: 'pagina' | 'dupla';
-    cor: string;
-    tinta: string;
-    legenda: [string, string];
-    // o papel vegetal antes da página da direita da matéria: a cor do papel e o desenho impresso nele
-    vegetal?: { tinta: [number, number, number]; desenho: 'construcao' | 'cortes' };
+    // as seções que aparecem no sumário: o nome e a página, contada a partir da abertura (1 é a seguinte)
+    secoes: [string, number][];
     paginas?: [number, number];
 };
 
@@ -59,162 +52,100 @@ const VARIAVEIS: Record<keyof typeof COR, string> = {
     frioEscuro: '--p-frio-escuro',
     claroFrio: '--p-claro-frio',
 };
-const rgb = (hex: string): [number, number, number] => {
+type Rgb = [number, number, number];
+const rgb = (hex: string): Rgb => {
     const h = hex.replace('#', '');
-    return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)) as [number, number, number];
+    return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)) as Rgb;
 };
+
+// os papéis vegetais, um antes de cada assunto: o desenho impresso nele e a cor do papel. O das variações tem a cor do
+// tom frio claro da paleta (lida por lerCores); os outros, a do papel vegetal comum
+export type DesenhoVegetal = 'construcao' | 'contornos' | 'cortes' | 'regua' | 'gabarito';
+export const VEGETAIS: { desenho: DesenhoVegetal; tinta: Rgb }[] = [
+    { desenho: 'construcao', tinta: [246, 245, 241] },
+    { desenho: 'contornos', tinta: [246, 245, 241] },
+    { desenho: 'cortes', tinta: [221, 227, 243] },
+    { desenho: 'regua', tinta: [246, 245, 241] },
+    { desenho: 'gabarito', tinta: [246, 245, 241] },
+];
+
 export function lerCores(el: Element) {
     const cs = getComputedStyle(el);
     for (const k of Object.keys(VARIAVEIS) as (keyof typeof COR)[]) {
         const v = cs.getPropertyValue(VARIAVEIS[k]).trim();
         if (/^#[0-9a-f]{6}$/i.test(v)) COR[k] = v;
     }
-    // o papel vegetal do capítulo 3 tem a cor do tom frio claro
-    const v = CAPITULOS.find(x => x.id === 'variacoes')?.vegetal;
-    if (v) v.tinta = rgb(COR.tintaFrio);
+    VEGETAIS[2].tinta = rgb(COR.tintaFrio);
 }
 
 export const CAPITULOS: Capitulo[] = [
     {
-        id: 'historia',
+        id: 'construcao',
         n: 1,
-        tema: 'Como nasceu',
-        titulo: [['A Mão', 0.04], ['&', 0.5], ['O Gabarito', 0.16]],
-        sumario: ['A Mão', '& O Gabarito'],
+        titulo: 'A construção das letras',
         estilo: 'cut',
-        secoes: ['Do gabarito à fonte', 'Da Sans à Rune'],
-        visaoGeral:
-            'A Föeger Rune começou como uma folha de gabarito preenchida à mão, em janeiro de 2026. Em novembro, o desenho virou pedra: refeito só com retas, com acentos, sinais e três desgastes.',
+        abertura: 'Toda letra começou num quadrado de um gabarito, desenhada à mão. Depois, cada uma foi refeita a partir do próprio desenho, só com retas.',
         corpo: [
-            'Tudo começou numa folha de gabarito, com um quadrado para cada letra. O desenho foi feito à mão e virou fonte por um serviço on-line, com 81 glifos: as letras, os números, o ponto, a vírgula e parte dos acentos. Era a Föeger Sans, ainda sem pontuação e sem nenhum ajuste de espaço.',
-            'Em novembro, cada letra foi refeita a partir do próprio desenho. As alturas foram alinhadas sem esticar as letras, as curvas da vetorização viraram retas e as quinas ganharam o corte reto do cinzel. As letras caíram de 3.390 para 1.262 pontos sem perder o jeito da mão.',
-            'Os acentos saíram das marcas do próprio desenho, os sinais vieram de folhas desenhadas pelo autor e a fonte trocou de nome: Rune, porque runas são letras gravadas em pedra.',
+            'O desenho à mão virou contorno, e as curvas da vetorização viraram retas. As alturas foram alinhadas sem esticar as letras, e o alfabeto caiu de 3.390 para 1.262 pontos sem perder o jeito da mão.',
+            'Nas quinas, um corte reto, como o golpe de um cinzel. Por isso nenhuma letra é perfeitamente reta e nenhuma é igual à outra: de longe, a palavra parece um muro de pedras encaixadas; de perto, cada pedra tem o seu desenho.',
+            'Os acentos saíram das marcas do próprio desenho, e os sinais, de folhas desenhadas pelo autor. O nome também veio da pedra: runas são letras gravadas em pedra.',
         ],
-        citacao: 'Toda letra começou num quadrado.',
-        modo: 'pagina',
-        cor: '#e4e1da',
-        tinta: '#1b1a18',
-        legenda: ['Föeger Rune Cut', 'O gabarito'],
-    },
-    {
-        id: 'alfabeto',
-        n: 2,
-        tema: 'Alfabeto',
-        titulo: [['A', 0], ['Pedra', 0.16], ['&', 0.6], ['O Corte', 0.36]],
-        sumario: ['A Pedra', '& O Corte'],
-        estilo: 'cut',
-        secoes: ['Maiúsculas e minúsculas', 'Números e sinais'],
-        visaoGeral:
-            'Vinte e seis maiúsculas, vinte e seis minúsculas, os números e os sinais do dia a dia, tirados do mesmo traço. A Cut é a pedra recém-cortada: o desenho como saiu da mão e um corte reto em cada quina.',
-        corpo: [
-            'A Föeger Rune começou num gabarito, uma letra por quadrado, desenhada à mão. Cada traço virou contorno e cada contorno virou pedra: o desenho ficou como saiu da mão, e só as quinas ganharam um corte reto, como o golpe de um cinzel.',
-            'Por isso nenhuma letra é perfeitamente reta e nenhuma é igual à outra. O peso é alto e os miolos são pequenos: de longe, a palavra parece um muro de pedras encaixadas; de perto, cada pedra tem o seu desenho.',
-            'O alfabeto cobre o português inteiro, com os acentos, a pontuação, os números e os símbolos no mesmo traço. São 311 glifos em cada estilo, contando as variações que entram sozinhas.',
+        secoes: [
+            ['Os pontos de uma letra', 1],
+            ['O alfabeto da Cut', 2],
         ],
-        citacao: 'Toda pedra começa bruta.',
-        modo: 'pagina',
-        cor: COR.cut,
-        tinta: '#1b1a18',
-        legenda: ['Föeger Rune Cut', 'Quinas vivas'],
-        vegetal: { tinta: [246, 245, 241], desenho: 'construcao' },
     },
     {
         id: 'estilos',
-        n: 3,
-        tema: 'Estilos',
-        titulo: [['O Uso', 0.04], ['&', 0.55], ['O Desgaste', 0.14]],
-        sumario: ['O Uso', '& O Desgaste'],
+        n: 2,
+        titulo: 'Os três estilos',
         estilo: 'polished',
-        secoes: ['Cut, Polished e Worn', 'Quinas de fora e de dentro'],
-        visaoGeral:
-            'Três desgastes da mesma pedra. A Cut tem as quinas vivas; a Polished rolou um pouco no rio; a Worn passou anos na correnteza e ficou redonda. O desenho é o mesmo, o que muda é o tempo.',
+        abertura: 'Três desgastes da mesma pedra. A Cut tem as quinas vivas; a Polished rolou um pouco no rio; a Worn passou anos na correnteza e ficou redonda.',
         corpo: [
             'O desgaste não é um efeito por cima da letra: cada estilo é uma fonte inteira, com os 311 glifos refeitos. As quinas de fora arredondam primeiro; as de dentro, os cantos dos miolos, resistem mais.',
             'A Polished guarda o corte com as pontas lixadas e vai bem em títulos e textos curtos. A Worn é a mais macia: perde os ângulos, ganha volume e serve quando a pedra precisa parecer amiga.',
-            'Quanto mais gasta, mais estreita: o A tem 801 unidades de largura na Cut, 749 na Polished e 710 na Worn. A mesma frase ocupa menos linha a cada estilo, como a pedra que perde lascas no rio.',
+            'Quanto mais gasta, mais estreita: o A tem 801 unidades de largura na Cut, 749 na Polished e 710 na Worn. A mesma palavra ocupa menos linha a cada estilo.',
         ],
-        citacao: 'Pedra que rola não cria limo!',
-        modo: 'dupla',
-        cor: COR.polished,
-        tinta: '#1b1a18',
-        legenda: ['Föeger Rune Polished', 'Rolada no rio'],
+        secoes: [['As três larguras', 3]],
     },
     {
         id: 'variacoes',
-        n: 4,
-        tema: 'Variações',
-        titulo: [['A Regra', 0], ['&', 0.5], ['A Exceção', 0.2]],
-        sumario: ['A Regra', '& A Exceção'],
+        n: 3,
+        titulo: 'As variações',
         estilo: 'worn',
-        secoes: ['Letras repetidas', 'O L do meio e o f do começo'],
-        visaoGeral:
-            'Quem talha à mão não repete o golpe. Quando uma minúscula aparece de novo logo em seguida, a fonte troca o corte sozinha, e a palavra nunca fica com cara de carimbo.',
+        abertura: 'Quem talha à mão não repete o golpe. Quando uma minúscula aparece de novo logo em seguida, a fonte troca o corte sozinha.',
         corpo: [
             'Cada minúscula tem até quatro cortes, que se revezam: o desenho de base, depois a variação dois, a três e a quatro, e de novo a base. O texto não muda; quem faz a troca é a própria fonte, pelas alternativas de contexto.',
             'Duas letras ainda mudam conforme o lugar: o L ganha outro corte quando vem depois de outra letra, e o f tem um desenho próprio para o começo da palavra.',
             'As trocas valem nos três estilos e em qualquer programa que ligue as alternativas de contexto, o que quase todos fazem sem pedir.',
         ],
-        citacao: 'Sonhei ontem que uma pedra rolava, rolava e não paraaava!',
-        modo: 'pagina',
-        cor: COR.roxo,
-        tinta: '#f2f4fb',
-        legenda: ['Föeger Rune Worn', 'Nenhuma igual'],
-        vegetal: { tinta: [221, 227, 243], desenho: 'cortes' },
+        secoes: [['As letras repetidas', 2]],
     },
     {
-        id: 'texto',
-        n: 5,
-        tema: 'Texto',
-        titulo: [['O Texto', 0], ['&', 0.48], ['A Escala', 0.12]],
-        sumario: ['O Texto', '& A Escala'],
+        id: 'tamanhos',
+        n: 4,
+        titulo: 'Do título ao texto',
         estilo: 'cut',
-        secoes: ['Acentos e frações', 'Do cartaz ao parágrafo'],
-        visaoGeral:
-            'Feita para títulos, cartazes e palavras curtas, a Rune aguenta o parágrafo em corpo grande. Os acentos são pedras à parte, como o ponto da logo da Föeger.',
+        abertura: 'Feita para títulos, cartazes e palavras curtas, a Rune aguenta o parágrafo em corpo grande.',
         corpo: [
-            'Os acentos não nascem da letra: são pedras soltas, pousadas por cima, cada uma com o seu corte. O til, o circunflexo e o trema seguem o mesmo traço pesado das letras.',
-            'Também vêm prontas as frações mais comuns, os números elevados e os símbolos do dia a dia: setas, estrela, coração e o sinal de certo.',
-            'Grande, a pedra aparece inteira; em corpo de texto, o desenho vira textura, pesada e irregular, que pede espaço entre as linhas.',
+            'Grande, a pedra aparece inteira: as quinas, os cortes e o peso. É onde a Rune mais aparece, em títulos, cartazes, capas e palavras soltas.',
+            'Em corpo de texto, o desenho vira textura, pesada e irregular, que pede frases curtas e espaço entre as linhas.',
+            'Os acentos são pedras à parte, pousadas por cima, e as frações, os números elevados e os símbolos do dia a dia vêm no mesmo traço.',
         ],
-        citacao: 'Jane quer LP, fax, CD, giz, TV e bom whisky.',
-        modo: 'dupla',
-        cor: COR.laranja,
-        tinta: '#1b1a18',
-        legenda: ['Föeger Rune Cut', 'Pedras à parte'],
-    },
-    {
-        id: 'uso',
-        n: 6,
-        tema: 'Em uso',
-        titulo: [['A Rua', 0.04], ['&', 0.5], ['A Estante', 0.16]],
-        sumario: ['A Rua', '& A Estante'],
-        estilo: 'polished',
-        secoes: ['Cartazes, livros e discos', 'Cada estilo no seu lugar'],
-        visaoGeral:
-            'A Cut grita no cartaz colado na rua, a Polished conta histórias na capa do livro e a Worn aparece gasta no selo do disco. A mesma pedra, três lugares.',
-        corpo: [
-            'Na rua, a Cut ocupa o cartaz inteiro. No lambe-lambe de um festival, cada linha vai de uma borda à outra, em corpos diferentes, como o tipo de madeira das gráficas de cartaz, e as quinas vivas aguentam a tinta falhada do papel barato.',
-            'Na estante, a Polished vai bem nas capas: no título de um livro infantil ela fica amiga sem perder o peso, e num guia de viagem divide a capa com a paisagem e as placas de direção.',
-            'No disco, a Worn combina com o que já tem uso: a capa de papelão gasta, o selo do lado B, a etiqueta do sebo. Quanto mais gasta a peça, mais a Worn parece estar em casa.',
-        ],
-        citacao: 'Cada pedra no seu lugar.',
-        modo: 'dupla',
-        cor: COR.worn,
-        tinta: '#1b1a18',
-        legenda: ['Föeger Rune Cut', 'O cartaz do festival'],
+        secoes: [['A Rune em parágrafo', 3]],
     },
 ];
 
 export const LIVRO = {
     titulo: 'Föeger Rune',
-    cabeca: 'FÖEGER RUNE — ESPÉCIME',
-    pe: 'UMA FONTE DA FÖEGER',
     edicao: 'Edição 01 — 2026',
     frase: 'Pedra que se gasta.',
+    apresentacao:
+        'A Föeger Rune nasceu de um gabarito desenhado à mão, uma letra por quadrado. Cada letra foi refeita só com retas, com o corte reto do cinzel nas quinas: é a Cut. A mesma pedra, rolada no rio, deu a Polished, com as pontas lixadas, e a Worn, redonda. São três fontes inteiras, com 311 glifos em cada uma.',
 };
 
 // as páginas do livro: cada folha tem a frente (a página da direita enquanto está à direita) e o verso (a da esquerda
-// depois de virada)
+// depois de virada). As do capítulo: a abertura (a da direita, embaixo do vegetal) e as três seguintes (k de 0 a 2)
 export type Pagina =
     | { tipo: 'capa' }
     | { tipo: 'guarda' }
@@ -224,38 +155,40 @@ export type Pagina =
     | { tipo: 'rosto' }
     | { tipo: 'creditos' }
     | { tipo: 'sumario' }
-    | { tipo: 'estilos-esq' }
-    | { tipo: 'estilos-dir' }
-    | { tipo: 'abertura-imagem'; cap: number }
-    | { tipo: 'abertura-titulo'; cap: number }
-    | { tipo: 'artigo-esq'; cap: number }
-    | { tipo: 'artigo-dir'; cap: number }
-    | { tipo: 'vegetal'; cap: number }
-    | { tipo: 'caracteres-esq' }
-    | { tipo: 'caracteres-dir' }
+    | { tipo: 'apresentacao' }
+    | { tipo: 'abertura'; cap: number }
+    | { tipo: 'materia'; cap: number; k: number }
+    | { tipo: 'vegetal'; v: number }
+    | { tipo: 'letras' }
+    | { tipo: 'acentos' }
+    | { tipo: 'sinais' }
     | { tipo: 'colofao' };
+
+// a cor do papel vegetal de uma página (as outras não têm)
+export const tintaDoVegetal = (p: Pagina) => (p.tipo === 'vegetal' ? VEGETAIS[p.v].tinta : undefined);
 
 export type Folha = { frente: Pagina; verso: Pagina; tipo: 'capa' | 'papel' | 'vegetal' | 'contracapa'; numFrente?: number; numVerso?: number };
 
-// as páginas dos caracteres, a da dupla dos estilos e a do colofão, para o sumário, e o total de páginas numeradas, para a ficha
-// dos créditos (preenchidos na montagem)
-export const EXTRAS: { caracteres?: [number, number]; paginas?: number; estilos?: number; colofao?: number } = {};
+// as páginas que o sumário e os créditos precisam saber (preenchidas na montagem): a apresentação, as três dos
+// caracteres, o colofão e o total de páginas numeradas, para a ficha
+export const EXTRAS: { apresentacao?: number; letras?: number; acentos?: number; sinais?: number; colofao?: number; paginas?: number } = {};
 
 export function montarFolhas(): Folha[] {
     const f: Folha[] = [];
+    const vegetal = (v: number): Folha => ({ tipo: 'vegetal', frente: { tipo: 'vegetal', v }, verso: { tipo: 'vegetal', v } });
     f.push({ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'guarda' } });
     f.push({ tipo: 'papel', frente: { tipo: 'falsa-rosto' }, verso: { tipo: 'frontispicio' } });
     f.push({ tipo: 'papel', frente: { tipo: 'rosto' }, verso: { tipo: 'creditos' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'sumario' }, verso: { tipo: 'estilos-esq' } });
-    let direita: Pagina = { tipo: 'estilos-dir' };
-    CAPITULOS.forEach((c, i) => {
-        f.push({ tipo: 'papel', frente: direita, verso: { tipo: 'abertura-imagem', cap: i } });
-        f.push({ tipo: 'papel', frente: { tipo: 'abertura-titulo', cap: i }, verso: { tipo: 'artigo-esq', cap: i } });
-        if (c.vegetal) f.push({ tipo: 'vegetal', frente: { tipo: 'vegetal', cap: i }, verso: { tipo: 'vegetal', cap: i } });
-        direita = { tipo: 'artigo-dir', cap: i };
+    f.push({ tipo: 'papel', frente: { tipo: 'sumario' }, verso: { tipo: 'apresentacao' } });
+    // cada capítulo: o vegetal, a abertura (com a primeira página no verso) e a folha das outras duas
+    CAPITULOS.forEach((_, cap) => {
+        f.push(vegetal(cap));
+        f.push({ tipo: 'papel', frente: { tipo: 'abertura', cap }, verso: { tipo: 'materia', cap, k: 0 } });
+        f.push({ tipo: 'papel', frente: { tipo: 'materia', cap, k: 1 }, verso: { tipo: 'materia', cap, k: 2 } });
     });
-    f.push({ tipo: 'papel', frente: direita, verso: { tipo: 'caracteres-esq' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'caracteres-dir' }, verso: { tipo: 'colofao' } });
+    f.push(vegetal(CAPITULOS.length));
+    f.push({ tipo: 'papel', frente: { tipo: 'letras' }, verso: { tipo: 'acentos' } });
+    f.push({ tipo: 'papel', frente: { tipo: 'sinais' }, verso: { tipo: 'colofao' } });
     f.push({ tipo: 'contracapa', frente: { tipo: 'guarda' }, verso: { tipo: 'contracapa' } });
     // números de página: a falsa folha de rosto é a 1; o papel vegetal não conta
     let n = 1;
@@ -264,22 +197,27 @@ export function montarFolhas(): Folha[] {
         folha.numFrente = n++;
         folha.numVerso = n++;
     }
-    CAPITULOS.forEach((c, i) => {
-        const ini = f.find(x => x.verso.tipo === 'abertura-imagem' && 'cap' in x.verso && x.verso.cap === i)!.numVerso!;
-        const fim = f.find(x => x.frente.tipo === 'artigo-dir' && 'cap' in x.frente && x.frente.cap === i)!.numFrente!;
-        c.paginas = [ini, fim];
+    const pagina = (t: Pagina['tipo'], lado: 'frente' | 'verso', cap?: number) => {
+        const x = f.find(y => y[lado].tipo === t && (cap === undefined || ('cap' in y[lado] && (y[lado] as { cap: number }).cap === cap)))!;
+        return lado === 'frente' ? x.numFrente! : x.numVerso!;
+    };
+    CAPITULOS.forEach((c, cap) => {
+        const ini = pagina('abertura', 'frente', cap);
+        c.paginas = [ini, ini + 3];
     });
-    const car = f.find(x => x.verso.tipo === 'caracteres-esq')!.numVerso!;
-    EXTRAS.caracteres = [car, car + 1];
+    EXTRAS.apresentacao = pagina('apresentacao', 'verso');
+    EXTRAS.letras = pagina('letras', 'frente');
+    EXTRAS.acentos = pagina('acentos', 'verso');
+    EXTRAS.sinais = pagina('sinais', 'frente');
+    EXTRAS.colofao = pagina('colofao', 'verso');
     EXTRAS.paginas = n - 1;
-    EXTRAS.estilos = f.find(x => x.verso.tipo === 'estilos-esq')!.numVerso!;
-    EXTRAS.colofao = f.find(x => x.verso.tipo === 'colofao')!.numVerso!;
     return f;
 }
 
-// a folha a virar para chegar ao capítulo i (a abertura fica aberta: a folha da abertura-imagem já virada)
+// quantas folhas virar para o capítulo i ficar aberto: a abertura à direita, limpa, com o vegetal já virado por cima da
+// página anterior
 export function folhaDoCapitulo(folhas: Folha[], i: number) {
-    return folhas.findIndex(x => x.verso.tipo === 'abertura-imagem' && 'cap' in x.verso && x.verso.cap === i) + 1;
+    return folhas.findIndex(x => x.frente.tipo === 'abertura' && x.frente.cap === i);
 }
 
 // quantas folhas virar para a página n ficar aberta (o sumário leva a qualquer página): se ela é o verso de uma folha
@@ -290,9 +228,9 @@ export function contagemDaPagina(folhas: Folha[], n: number) {
     return folhas[i].numVerso === n ? i + 1 : i;
 }
 
-// a página dos caracteres (o sumário também leva a ela)
+// a página das letras, a primeira dos caracteres (o sumário também leva a ela), com o vegetal do gabarito já virado
 export function folhaDosCaracteres(folhas: Folha[]) {
-    return folhas.findIndex(x => x.verso.tipo === 'caracteres-esq') + 1;
+    return folhas.findIndex(x => x.frente.tipo === 'letras');
 }
 
 // a ordem do PDF: capa, as páginas numeradas (com o papel vegetal no lugar dele) e a contracapa

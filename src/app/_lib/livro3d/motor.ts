@@ -7,7 +7,7 @@
 // quando a seção sai da tela, o toque deixa a página rolar na vertical (pan-y) e dois dedos aproximam. As páginas
 // são as do espécime da Föeger Rune, desenhadas pelo pincel de canvas.
 import { malha, olhar, perspectiva, programa, quadroDeDesenho, liberarQuadro, mult, norm, cruz, type Quadro, type Prog } from './gl';
-import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, contagemDaPagina, lerCores, CAPITULOS, type Pagina } from '../especime/conteudo';
+import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, contagemDaPagina, lerCores, tintaDoVegetal, type Pagina } from '../especime/conteudo';
 import { desenharPagina, type Alvo } from '../especime/paginas';
 import { carregarFontes, familiasDe, pincelCanvas, type Familias } from '../especime/pincel';
 
@@ -769,8 +769,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const vegetal = d.tipo === 'vegetal';
         const frente = face(d.frente, d.numFrente);
         const verso = vegetal ? frente : face(d.verso, d.numVerso);
-        const cap = 'cap' in d.frente ? d.frente.cap : 0;
-        const tinta = (vegetal && CAPITULOS[cap].vegetal?.tinta) || [246, 245, 241];
+        const tinta = (vegetal && tintaDoVegetal(d.frente)) || [246, 245, 241];
         return { i, frente, verso, rigida: d.tipo === 'capa' || d.tipo === 'contracapa', vegetal, tinta, lado: 0, phi: 0, curl: 0, twist: 0, grabV: 0.5, dobra: 0, larg: 1, inclina: 0, zt: 0, anim: null, vinco: null };
     });
     const faces = Array.from(new Set(folhas.flatMap(f => [f.frente, f.verso])));
