@@ -45,6 +45,7 @@ export const COR = {
     wornEscuro: '#2e7d5c',
     frioEscuro: '#1e3473',
     claroFrio: '#f2f4fb',
+    papel: '#f1ece1',
 };
 const VARIAVEIS: Record<keyof typeof COR, string> = {
     cut: '--p-cut',
@@ -58,6 +59,7 @@ const VARIAVEIS: Record<keyof typeof COR, string> = {
     wornEscuro: '--p-worn-escuro',
     frioEscuro: '--p-frio-escuro',
     claroFrio: '--p-claro-frio',
+    papel: '--p-papel',
 };
 const rgb = (hex: string): [number, number, number] => {
     const h = hex.replace('#', '');
