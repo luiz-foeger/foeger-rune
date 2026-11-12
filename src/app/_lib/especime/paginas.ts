@@ -797,29 +797,30 @@ function creditos(c: Ctx) {
 
 // a folha de rosto, de frente para o frontispício e no mesmo eixo dele, como as folhas de rosto clássicas: o título na
 // Cut e o subtítulo; embaixo, a chave das tintas do frontispício, como nas provas de impressão (um quadrado de cada
-// tinta, com o nome do estilo no próprio estilo); o autor mais abaixo e, no pé, o selo da editora com a edição e o ano.
-// Sem cabeço nem frase (a frase do livro fica na contracapa)
+// tinta, com o nome do estilo na grotesca, em negrito); o autor mais abaixo e, no pé, o selo da editora com a edição e
+// o ano. Sem cabeço nem frase (a frase do livro fica na contracapa)
 function rosto(c: Ctx) {
     fundo(c, PAPEL);
     const tam = ajustar(c, 'Föeger Rune', { fam: 'cut', peso: 400 }, 640);
     linha(c, 'Föeger Rune', 500, 440, { tam, fam: 'cut', peso: 400, alinhar: 'center' });
     linha(c, 'Espécime tipográfico', 500, 528, { tam: 42, alinhar: 'center' });
-    // a chave das tintas: o quadrado da altura da maiúscula e o nome, os três numa linha centrada
-    const tamNome = 30;
-    const lado = MAIUSCULA * tamNome;
+    // a chave das tintas: o quadrado da altura da maiúscula da grotesca (a da Inter Tight, 0,727 do corpo) e o nome, os
+    // três numa linha centrada
+    const nome = { tam: 28, peso: 700 };
+    const lado = 0.727 * nome.tam;
     const vao = 12;
     const entre = 44;
-    const chaves: [Familia, string, string][] = [
-        ['cut', 'Cut', COR.cut],
-        ['polished', 'Polished', COR.polished],
-        ['worn', 'Worn', COR.worn],
+    const chaves: [string, string][] = [
+        ['Cut', COR.cut],
+        ['Polished', COR.polished],
+        ['Worn', COR.worn],
     ];
-    const largos = chaves.map(([fam, nome]) => lado + vao + largura(c, nome, { tam: tamNome, fam, peso: 400 }));
+    const largos = chaves.map(([t]) => lado + vao + largura(c, t, nome));
     let x = 500 - (largos.reduce((s, l) => s + l, 0) + entre * (chaves.length - 1)) / 2;
     const base = 650;
-    chaves.forEach(([fam, nome, cor], i) => {
+    chaves.forEach(([t, cor], i) => {
         c.p.ret(x, base - lado, lado, lado, cor);
-        linha(c, nome, x + lado + vao, base, { tam: tamNome, fam, peso: 400 });
+        linha(c, t, x + lado + vao, base, nome);
         x += largos[i] + entre;
     });
     linha(c, 'Luiz Föeger', 500, 1060, { tam: 36, peso: 400, alinhar: 'center' });
