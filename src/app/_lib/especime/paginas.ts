@@ -4,7 +4,7 @@
 // do tantan entram pranchas de letras da Föeger Rune nas cores dos estilos. Tudo passa pelo pincel (canvas para as
 // texturas, SVG para o PDF), e cada página devolve as áreas clicáveis (o sumário) em fração da página.
 import { CAPITULOS, COR, EXTRAS, LIVRO, type IdCapitulo, type Pagina } from './conteudo';
-import { medir, pincelCanvas, TINTA, type Estilo, type Familia, type Familias, type Pincel } from './pincel';
+import { medir, TINTA, type Estilo, type Familia, type Pincel } from './pincel';
 import { PALAVRAS, type Glifo } from '../glifos';
 import { ESTILO_MEDIDAS } from '../medidas';
 
@@ -14,7 +14,6 @@ export type Alvo = { x: number; y: number; l: number; a: number; cap?: number; c
 type Ctx = { p: Pincel; alvos: Alvo[]; destaque?: number };
 
 export const PAPEL = '#efeeea';
-export const CAPA = '#26231f';
 const CINZA = '#5f5f5b';
 const FIO = '#cfcec9';
 const ESCURA = '#1b1a18';
@@ -496,175 +495,14 @@ const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
 
 // ---------- as páginas ----------
 
-// a capa da frente, com versões para escolher (a página /versoes/capa mostra lado a lado), a partir de capas de livros
-// de tipografia de verdade: uma ideia grande, o texto miúdo e a tinta granulada da risografia. São três composições,
-// cada uma em mais de uma paleta: as primeiras, coloridas; as outras, contidas, com o papel e uma ou duas tintas. O
-// relevo seco fica só na contracapa: na frente ele sumia no pano escuro.
-// - sobreposicao: como o "Como criar tipos": o R gigante da Cut e o da Worn, cortados pela borda de baixo, um por cima
-//   do outro, como duas tintas impressas (onde se cruzam, escurece); o autor e o título miúdos no alto;
-// - corte: como os "Elementos do estilo tipográfico": o R da Cut e as retas dos cortes de cinzel prolongadas para fora
-//   da letra, como linhas de construção; o título pequeno no pé;
-// - empilhada: como as capas de romance de título enorme: FÖEGER / RU / NE ocupando a capa, cada linha mais gasta (Cut,
-//   Polished e Worn)
-// Em todas, os quadradinhos de marca no canto, como nos espécimes das fundições
-export type VersaoCapa = VersaoChapada | Sobreposicao;
-type VersaoChapada =
-    | 'sobreposicao'
-    | 'corte'
-    | 'empilhada'
-    | 'sobreposicao-papel'
-    | 'sobreposicao-grafite'
-    | 'corte-papel'
-    | 'corte-salvia'
-    | 'empilhada-papel'
-    | 'empilhada-areia';
-type Rgb = [number, number, number];
-// o papel, a tinta (e a segunda, transparente, da sobreposição), o texto miúdo, a marca do pé da sobreposição (que fica
-// em cima da letra) e as retas do corte
-interface Paleta {
-    comp: 'sobreposicao' | 'corte' | 'empilhada';
-    papel: string;
-    tinta: Rgb;
-    tinta2?: Rgb;
-    alfa2?: number;
-    texto: string;
-    marca?: string;
-    retas?: string;
-    esp?: number;
-}
-const CAPAS: Record<VersaoChapada, Paleta> = {
-    sobreposicao: { comp: 'sobreposicao', papel: '#2d84c4', tinta: [239, 92, 78], tinta2: [150, 34, 40], alfa2: 0.62, texto: '#fbf3ea' },
-    corte: { comp: 'corte', papel: '#d9473d', tinta: [27, 26, 24], texto: '#fbf3ea', retas: '#fbf3ea' },
-    empilhada: { comp: 'empilhada', papel: '#f3c230', tinta: [214, 58, 48], texto: ESCURA },
-    'sobreposicao-papel': { comp: 'sobreposicao', papel: '#ebe5da', tinta: [192, 180, 162], tinta2: [33, 31, 28], alfa2: 0.6, texto: '#1f1d1a', marca: '#ebe5da' },
-    'sobreposicao-grafite': { comp: 'sobreposicao', papel: '#2a2724', tinta: [74, 68, 61], tinta2: [236, 229, 214], alfa2: 0.5, texto: '#ebe5da', marca: '#2a2724' },
-    'corte-papel': { comp: 'corte', papel: '#ebe5da', tinta: [31, 29, 26], texto: '#1f1d1a', retas: '#c4452f', esp: 3 },
-    'corte-salvia': { comp: 'corte', papel: '#a9af9c', tinta: [52, 61, 49], texto: '#343d31', retas: '#f1ede2', esp: 3 },
-    'empilhada-papel': { comp: 'empilhada', papel: '#ebe5da', tinta: [31, 29, 26], texto: '#1f1d1a' },
-    'empilhada-areia': { comp: 'empilhada', papel: '#e3d6c2', tinta: [172, 84, 56], texto: '#3b2a20' },
-};
-const CAPA_VERSAO: VersaoCapa = 'sobre-tres-azul-liso';
-
-// a tinta granulada da risografia, como a das capas impressas assim (a do "Piquenique na estrada"): o desenho vai para
-// um canvas à parte, a borda é suavizada e, pixel a pixel, um ruído decide se a tinta pega. Na borda ela se desfaz em
-// pontinhos; no miolo, falha de vez em quando; e a cor ganha manchas largas, mais claras e mais escuras, como a tinta
-// que não assenta igual. Sai sempre igual (sorteio com semente) e fica guardada, porque a capa é redesenhada várias
-// vezes no livro
-const GRANULADOS = new Map<string, HTMLCanvasElement>();
-// numa resolução menor que a da página, para o grão ficar grosso como o da risografia
-const GL = 820;
-const GA = 1230;
-
-// uma camada de tinta: quanto ela pega em cada pixel (0 é o papel aparecendo) e o tom da mancha ali
-function camadaGranulada(fam: Familias, semente0: number, desenho: (p: Pincel) => void) {
-    const mascara = document.createElement('canvas');
-    mascara.width = GL;
-    mascara.height = GA;
-    desenho(pincelCanvas(mascara.getContext('2d')!, GL / 1000, fam));
-    const borrada = document.createElement('canvas');
-    borrada.width = GL;
-    borrada.height = GA;
-    const g = borrada.getContext('2d', { willReadFrequently: true })!;
-    g.filter = 'blur(4px)';
-    g.drawImage(mascara, 0, 0);
-    const d = g.getImageData(0, 0, GL, GA).data;
-    const pega = new Float32Array(GL * GA);
-    const tom = new Float32Array(GL * GA);
-    let semente = semente0;
-    const sorteio = () => (semente = (semente * 16807) % 2147483647) / 2147483647;
-    // as manchas: uma grade bem pequena de ruído, lida com interpolação, para áreas largas e suaves (a grade fina
-    // deixava as manchas com cara de quadradinhos)
-    const GX = 12;
-    const GY = 18;
-    // a interpolação suave (smoothstep) não deixa as manchas com cara de quadrado
-    const suave = (u: number) => u * u * (3 - 2 * u);
-    const grade = Array.from({ length: (GX + 1) * (GY + 1) }, sorteio);
-    const ponto = (i: number, j: number) => grade[j * (GX + 1) + i];
-    for (let y = 0; y < GA; y++) {
-        const fy = (y / GA) * GY;
-        const iy = Math.floor(fy);
-        const ty = suave(fy - iy);
-        for (let x = 0; x < GL; x++) {
-            const i = y * GL + x;
-            const cob = d[i * 4 + 3] / 255;
-            if (cob <= 0) continue;
-            const n = sorteio();
-            if (cob <= 0.04 + 0.92 * n || (cob > 0.97 && n > 0.975)) continue;
-            const fx = (x / GL) * GX;
-            const ix = Math.floor(fx);
-            const tx = suave(fx - ix);
-            const m = (ponto(ix, iy) * (1 - tx) + ponto(ix + 1, iy) * tx) * (1 - ty) + (ponto(ix, iy + 1) * (1 - tx) + ponto(ix + 1, iy + 1) * tx) * ty;
-            // a mancha larga e o grão de cada pixel
-            tom[i] = 0.86 + 0.24 * m + (sorteio() - 0.5) * 0.14;
-            pega[i] = 0.78 + 0.22 * m;
-        }
-    }
-    return { pega, tom };
-}
-
-// uma tinta só, num canvas transparente, para pôr por cima do que já está na página
-function granulado(chave: string, fam: Familias, cor: Rgb, alfa: number, semente: number, desenho: (p: Pincel) => void) {
-    const pronto = GRANULADOS.get(chave);
-    if (pronto) return pronto;
-    const { pega, tom } = camadaGranulada(fam, semente, desenho);
-    const tela = document.createElement('canvas');
-    tela.width = GL;
-    tela.height = GA;
-    const g = tela.getContext('2d')!;
-    const img = g.createImageData(GL, GA);
-    const d = img.data;
-    for (let i = 0; i < GL * GA; i++) {
-        if (!pega[i]) continue;
-        d[i * 4] = Math.min(255, cor[0] * tom[i]);
-        d[i * 4 + 1] = Math.min(255, cor[1] * tom[i]);
-        d[i * 4 + 2] = Math.min(255, cor[2] * tom[i]);
-        d[i * 4 + 3] = 255 * alfa * pega[i];
-    }
-    g.putImageData(img, 0, 0);
-    GRANULADOS.set(chave, tela);
-    return tela;
-}
-
-// várias tintas no mesmo papel, como na risografia de verdade. No papel claro, cada uma multiplica as de baixo (a
-// tinta é transparente), e onde duas se cruzam nasce uma terceira cor, mais escura; no papel escuro, a tinta cobre
-// (como a tinta opaca), deixando passar só um pouco da de baixo. Sai a capa inteira, com o papel
-type Camada = { cor: Rgb; alfa?: number; desenho: (p: Pincel) => void };
-type ModoTinta = 'multiplica' | 'cobre';
-function risografia(chave: string, fam: Familias, papel: Rgb, camadas: Camada[], modo: ModoTinta = 'multiplica') {
-    const pronto = GRANULADOS.get(chave);
-    if (pronto) return pronto;
-    const n = GL * GA;
-    const cor = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) cor.set(papel, i * 3);
-    camadas.forEach((cam, k) => {
-        const { pega, tom } = camadaGranulada(fam, 11 + 12 * k, cam.desenho);
-        const alfa = cam.alfa ?? (modo === 'cobre' ? 0.86 : 1);
-        for (let i = 0; i < n; i++) {
-            const a = alfa * pega[i];
-            if (!a) continue;
-            for (let ch = 0; ch < 3; ch++) {
-                const tinta = Math.min(255, cam.cor[ch] * tom[i]);
-                const j = i * 3 + ch;
-                cor[j] = modo === 'cobre' ? cor[j] * (1 - a) + tinta * a : cor[j] * (1 - a + (a * tinta) / 255);
-            }
-        }
-    });
-    const tela = document.createElement('canvas');
-    tela.width = GL;
-    tela.height = GA;
-    const g = tela.getContext('2d')!;
-    const img = g.createImageData(GL, GA);
-    const d = img.data;
-    for (let i = 0; i < n; i++) {
-        d[i * 4] = cor[i * 3];
-        d[i * 4 + 1] = cor[i * 3 + 1];
-        d[i * 4 + 2] = cor[i * 3 + 2];
-        d[i * 4 + 3] = 255;
-    }
-    g.putImageData(img, 0, 0);
-    GRANULADOS.set(chave, tela);
-    return tela;
-}
+// a capa da frente, como as capas de livros de tipografia de verdade: uma ideia grande e o texto miúdo. As três
+// passadas do R, uma por estilo (Cut, Polished e Worn), descendo em diagonal no meio da capa, cada uma na cor do estilo
+// no site (o ocre, o azul e o verde), chapadas e um pouco transparentes, para o cruzamento delas aparecer, sobre o azul
+// fundo do site; o autor e o título no alto, os quadradinhos de marca no canto, como nos espécimes das fundições, e a
+// marca no pé. O relevo seco fica só na contracapa: na frente ele sumia no pano. As outras propostas (com a tinta
+// granulada da risografia, em outros papéis, num rótulo colado ou com a cinta) estão no histórico
+const CREME = '#f1ece1';
+const comAlfa = (hex: string, a: number) => `rgba(${[0, 2, 4].map(i => parseInt(hex.replace('#', '').slice(i, i + 2), 16)).join(',')},${a})`;
 
 // os quadradinhos e o fio de marca, no canto (x, y é o canto de cima à esquerda do grupo)
 function marcas(c: Ctx, x: number, y: number, cor: string) {
@@ -674,248 +512,27 @@ function marcas(c: Ctx, x: number, y: number, cor: string) {
     fio(c, x, y + 26, x + 110, y + 26, cor, 1.6);
 }
 
-function capaSobreposicao(c: Ctx, v: VersaoCapa, pal: Paleta) {
-    c.p.ret(0, 0, 1000, 1500, pal.papel);
-    const tam = 1180;
-    // as duas letras em tinta de risografia: a de baixo, cheia, e a de cima, transparente; onde as duas se cruzam,
-    // escurece
-    const fam = c.p.fam;
-    c.p.imagem(granulado(`${v}-cut`, fam, pal.tinta, 1, 11, q => q.texto('R', 30, 1640, { tam, fam: 'cut', peso: 400, cor: '#000', semCalt: true })), 0, 0, 1000, 1500);
-    c.p.imagem(granulado(`${v}-worn`, fam, pal.tinta2 ?? pal.tinta, pal.alfa2 ?? 1, 23, q => q.texto('R', 250, 1760, { tam, fam: 'worn', peso: 400, cor: '#000', semCalt: true })), 0, 0, 1000, 1500);
-    linha(c, 'Luiz Föeger', 64, 110, { tam: 26, peso: 600, cor: pal.texto });
-    linha(c, 'Föeger Rune: espécime tipográfico', 64, 230, { tam: 36, peso: 700, cor: pal.texto });
-    marcas(c, 826, 90, pal.texto);
-    linha(c, 'Föeger.', 936, 1440, { tam: 36, fam: 'cut', peso: 400, cor: pal.marca ?? pal.texto, alinhar: 'right' });
+function capa(c: Ctx) {
+    c.p.ret(0, 0, 1000, 1500, COR.frioEscuro);
+    // o grupo das três centrado na largura e na altura entre o título e a marca do pé
+    const tam = 760;
+    const [dx, dy] = [168, 150];
+    const estilos: Familia[] = ['cut', 'polished', 'worn'];
+    const cores = [COR.cut, COR.polished, COR.worn];
+    const largo = Math.max(...estilos.map((fam, i) => i * dx + largura(c, 'R', { tam, fam, peso: 400, semCalt: true })));
+    const alto = MAIUSCULA * tam + 2 * dy;
+    const x0 = 500 - largo / 2;
+    const base0 = 822 - alto / 2 + MAIUSCULA * tam;
+    estilos.forEach((fam, i) => linha(c, 'R', x0 + i * dx, base0 + i * dy, { tam, fam, peso: 400, cor: comAlfa(cores[i], 0.86), semCalt: true }));
+    linha(c, 'Luiz Föeger', 64, 110, { tam: 26, peso: 600, cor: CREME });
+    linha(c, 'Föeger Rune: espécime tipográfico', 64, 230, { tam: 36, peso: 700, cor: CREME });
+    marcas(c, 826, 90, CREME);
+    linha(c, 'Föeger.', 936, 1440, { tam: 36, fam: 'cut', peso: 400, cor: CREME, alinhar: 'right' });
 }
 
-function capaCorte(c: Ctx, v: VersaoCapa, pal: Paleta) {
-    c.p.ret(0, 0, 1000, 1500, pal.papel);
-    // o R da Cut pelos contornos de verdade, com as retas dos cortes prolongadas
-    const g = glifoDe('R', 'R');
-    const tam = 560;
-    const esc = tam / 1000;
-    const x0 = 250;
-    const base = 800;
-    // em tinta de risografia, como as outras composições
-    c.p.imagem(granulado(v, c.p.fam, pal.tinta, 1, 31, q => contorno({ p: q, alvos: [] }, g, x0, base, tam, '#000')), 0, 0, 1000, 1500);
-    const anel = g.pedras[0].vertices[0];
-    const p = (i: number): [number, number] => [x0 + (anel[i][0] - g.x) * esc, base + anel[i][1] * esc];
-    // o topo, a lateral da barriga e a ponta da perna: três golpes de cinzel
-    for (const [a, b, antes, depois] of [
-        [4, 5, 0.5, 0.35],
-        [2, 3, 0.55, 0.45],
-        [11, 0, 0.6, 0.9],
-    ] as [number, number, number, number][]) {
-        const [ax, ay] = p(a);
-        const [bx, by] = p(b);
-        const dx = bx - ax;
-        const dy = by - ay;
-        c.p.fio(ax - dx * antes, ay - dy * antes, bx + dx * depois, by + dy * depois, { cor: pal.retas ?? pal.texto, esp: pal.esp ?? 4 });
-    }
-    linha(c, 'FÖEGER RUNE', 64, 1300, { tam: 24, peso: 500, cor: pal.texto, espaco: 0.14 });
-    linha(c, 'espécime tipográfico', 64, 1336, { tam: 22, peso: 300, cor: pal.texto });
-    linha(c, 'Luiz Föeger', 64, 1376, { tam: 22, peso: 500, cor: pal.texto });
-    marcas(c, 826, 90, pal.texto);
-}
-
-function capaEmpilhada(c: Ctx, v: VersaoCapa, pal: Paleta) {
-    c.p.ret(0, 0, 1000, 1500, pal.papel);
-    const linhas: [string, Familia][] = [
-        ['FÖEGER', 'cut'],
-        ['RU', 'polished'],
-        ['NE', 'worn'],
-    ];
-    // cada linha na largura da capa; se a pilha passar do espaço até o autor, todas diminuem juntas (e ficam centradas)
-    const vao = 26;
-    const largos = linhas.map(([t, fam]) => ajustar(c, t, { fam, semCalt: true }, 920));
-    const alto = largos.reduce((s, tam) => s + MAIUSCULA * tam, 0) + vao * (linhas.length - 1);
-    const k = Math.min(1, (1330 - 110) / alto);
-    // as três linhas em tinta de risografia, centradas
-    const familias = c.p.fam;
-    const tinta = granulado(v, familias, pal.tinta, 1, 7, q => {
-        let y = 110;
-        linhas.forEach(([t, fam], i) => {
-            const tam = largos[i] * k;
-            y += MAIUSCULA * tam;
-            const e = { tam, fam, peso: 400, cor: '#000', semCalt: true };
-            q.texto(t, 500 - medir(familias, t, e) / 2, y, e);
-            y += vao;
-        });
-    });
-    c.p.imagem(tinta, 0, 0, 1000, 1500);
-    linha(c, 'Luiz Föeger', 500, 1400, { tam: 34, peso: 700, cor: pal.texto, alinhar: 'center' });
-    linha(c, 'espécime tipográfico', 500, 1440, { tam: 22, peso: 400, cor: pal.texto, alinhar: 'center' });
-    marcas(c, 826, 40, pal.texto);
-}
-
-// a sobreposição em papel, em seis propostas, com as cores da página (as da paleta, lidas antes de desenhar: na
-// paleta azul do site, a capa fica azul também): o papel dos cartazes e as tintas dos estilos (o ocre da Cut, o azul
-// da Polished e o verde da Worn) ou a terracota de destaque
-type Sobreposicao =
-    | 'sobre-estilos'
-    | 'sobre-tres'
-    | 'sobre-registro'
-    | 'sobre-iniciais'
-    | 'sobre-divisa'
-    | 'sobre-perto'
-    | 'sobre-tres-grafite'
-    | 'sobre-tres-azul'
-    | 'sobre-tres-azul-liso'
-    | 'sobre-tres-terracota'
-    | 'sobre-tres-kraft'
-    | 'sobre-tres-pedra'
-    | 'sobre-tres-bege-1'
-    | 'sobre-tres-bege-2'
-    | 'sobre-tres-bege-3'
-    | 'sobre-tres-rotulo'
-    | 'sobre-tres-cinta';
-// o papel de cada versão (o padrão é o creme dos cartazes, com o texto escuro e a tinta que multiplica)
-// a montagem: a impressão na capa inteira (o padrão), num rótulo de papel colado no pano escuro da capa dura, ou na
-// capa inteira com uma cinta de papel escuro em volta do pé, onde vai o texto
-// liso: sem o granulado, as letras chapadas
-type Riso = { camadas: Camada[]; divisa?: boolean; papel?: string; texto?: string; modo?: ModoTinta; montagem?: 'rotulo' | 'cinta'; liso?: boolean };
-const CREME = '#f1ece1';
-const rgbDe = (hex: string) => [0, 2, 4].map(i => parseInt(hex.replace('#', '').slice(i, i + 2), 16)) as Rgb;
-// uma letra para a máscara de uma tinta (em preto: só conta onde tem desenho)
-const letra = (t: string, f: Familia, x: number, base: number, tam: number) => (q: Pincel) =>
-    q.texto(t, x, base, { tam, fam: f, peso: 400, cor: '#000', semCalt: true });
-const larguraLetra = (fam: Familias, t: string, f: Familia, tam: number) => medir(fam, t, { tam, fam: f, peso: 400, semCalt: true });
-const SOBREPOSICOES: Record<Sobreposicao, (fam: Familias) => Riso> = {
-    // 1. a de antes, com as cores dos estilos: o R da Cut em ocre e o da Worn em verde; no cruzamento, oliva
-    'sobre-estilos': () => ({
-        camadas: [
-            { cor: rgbDe(COR.cut), desenho: letra('R', 'cut', 30, 1640, 1180) },
-            { cor: rgbDe(COR.worn), desenho: letra('R', 'worn', 250, 1760, 1180) },
-        ],
-    }),
-    // 2. três passadas, uma por estilo, descendo em diagonal
-    'sobre-tres': fam => {
-        // o grupo das três no meio da capa: centrado na largura e na altura entre o título e a marca do pé
-        const tam = 760;
-        const [dx, dy] = [168, 150];
-        const estilos: Familia[] = ['cut', 'polished', 'worn'];
-        const cores = [COR.cut, COR.polished, COR.worn];
-        const largo = Math.max(...estilos.map((f, i) => i * dx + larguraLetra(fam, 'R', f, tam)));
-        const alto = MAIUSCULA * tam + 2 * dy;
-        const x0 = 500 - largo / 2;
-        const base0 = 822 - alto / 2 + MAIUSCULA * tam;
-        return { camadas: estilos.map((f, i) => ({ cor: rgbDe(cores[i]), desenho: letra('R', f, x0 + i * dx, base0 + i * dy, tam) })) };
-    },
-    // 3. fora de registro: o R nos três estilos quase um em cima do outro, no meio; o que sobra de cada um é o desgaste
-    'sobre-registro': fam => {
-        const tam = 800;
-        const r = (f: Familia, dx: number, dy: number) => letra('R', f, 500 - larguraLetra(fam, 'R', f, tam) / 2 + dx, 1060 + dy, tam);
-        return {
-            camadas: [
-                { cor: rgbDe(COR.cut), desenho: r('cut', -34, -20) },
-                { cor: rgbDe(COR.polished), desenho: r('polished', 0, 0) },
-                { cor: rgbDe(COR.worn), desenho: r('worn', 34, 20) },
-            ],
-        };
-    },
-    // 4. as iniciais: o F da Cut em terracota e o R da Worn em azul, grandes, cortados pelas bordas
-    'sobre-iniciais': () => ({
-        camadas: [
-            { cor: rgbDe(COR.laranja), desenho: letra('F', 'cut', -60, 1180, 1200) },
-            { cor: rgbDe(COR.polished), desenho: letra('R', 'worn', 300, 1560, 1200) },
-        ],
-    }),
-    // 5. a divisa, como a do alto do site: o mesmo R, a metade da esquerda na Cut, em ocre, e a da direita na Worn, em
-    //    verde, com o fio no meio
-    'sobre-divisa': fam => {
-        const tam = 1000;
-        const x = (f: Familia) => 500 - larguraLetra(fam, 'R', f, tam) / 2;
-        return {
-            divisa: true,
-            camadas: [
-                { cor: rgbDe(COR.cut), desenho: q => q.recortar(0, 0, 500, 1500, () => letra('R', 'cut', x('cut'), 1180, tam)(q)) },
-                { cor: rgbDe(COR.worn), desenho: q => q.recortar(500, 0, 500, 1500, () => letra('R', 'worn', x('worn'), 1180, tam)(q)) },
-            ],
-        };
-    },
-    // 6. de perto: um pedaço do R da Cut e do da Worn, tão grandes que viram formas
-    'sobre-perto': () => ({
-        camadas: [
-            { cor: rgbDe(COR.cut), desenho: letra('R', 'cut', -260, 2560, 2400) },
-            { cor: rgbDe(COR.laranja), desenho: letra('R', 'worn', -40, 2690, 2400) },
-        ],
-    }),
-    // as três passadas em papéis que se destacam da página clara: os escuros com a tinta que cobre (o grafite da
-    // contracapa e o azul fundo do site), a terracota do site e dois papéis médios em que a tinta ainda multiplica (o
-    // kraft e o cinza de pedra)
-    'sobre-tres-grafite': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: CAPA, texto: CREME, modo: 'cobre' }),
-    'sobre-tres-azul': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: COR.frioEscuro, texto: CREME, modo: 'cobre' }),
-    'sobre-tres-azul-liso': fam => ({ ...SOBREPOSICOES['sobre-tres-azul'](fam), liso: true }),
-    'sobre-tres-terracota': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: COR.laranja, texto: CREME, modo: 'cobre' }),
-    'sobre-tres-kraft': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: '#c6a67c' }),
-    'sobre-tres-pedra': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: '#a8a499' }),
-    // o bege, entre o creme (que some na página clara) e o kraft (escuro demais), em três tons
-    'sobre-tres-bege-1': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: '#e8dcc6' }),
-    'sobre-tres-bege-2': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: '#dfcfb2', texto: '#ffffff' }),
-    'sobre-tres-bege-3': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: '#d6c09c' }),
-    // a capa escura com as letras no claro: o bege como rótulo colado no pano, ou como a capa, com a cinta escura
-    'sobre-tres-rotulo': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: '#dfcfb2', texto: CREME, montagem: 'rotulo' }),
-    'sobre-tres-cinta': fam => ({ ...SOBREPOSICOES['sobre-tres'](fam), papel: '#dfcfb2', texto: CREME, montagem: 'cinta' }),
-};
-const ehSobreposicao = (v: VersaoCapa): v is Sobreposicao => v in SOBREPOSICOES;
-
-function capaRiso(c: Ctx, v: Sobreposicao) {
-    const fam = c.p.fam;
-    const { camadas, divisa, papel = COR.papel, texto = ESCURA, modo, montagem, liso } = SOBREPOSICOES[v](fam);
-    // a chave leva as cores, que mudam com a paleta da página
-    const chave = `${v}-${papel}-${camadas.map(k => k.cor.join(',')).join('-')}`;
-    const impressao = () => {
-        if (!liso) return c.p.imagem(risografia(chave, fam, rgbDe(papel), camadas, modo), 0, 0, 1000, 1500);
-        // sem o granulado: as letras chapadas, em vetor (nítidas também no PDF), com a mesma transparência da tinta
-        // que cobre, para o cruzamento ainda aparecer
-        c.p.ret(0, 0, 1000, 1500, papel);
-        for (const cam of camadas) {
-            const cor = `rgba(${cam.cor.join(',')},${cam.alfa ?? (modo === 'cobre' ? 0.86 : 1)})`;
-            cam.desenho({ ...c.p, texto: (t, x, y, e) => c.p.texto(t, x, y, { ...e, cor }) });
-        }
-    };
-    if (montagem === 'rotulo') {
-        // o pano da capa dura (o mesmo da contracapa) e o rótulo colado, com uma sombra fina por baixo; as letras
-        // saem pelas bordas do rótulo
-        const [x, y, l, a] = [90, 330, 820, 960];
-        c.p.pano(CAPA);
-        c.p.ret(x + 3, y + 5, l, a, 'rgba(0,0,0,0.35)');
-        c.p.recortar(x, y, l, a, impressao);
-    } else impressao();
-    if (montagem === 'cinta') {
-        // a cinta de papel escuro em volta do pé, com a sombra da borda de cima, e o texto nela
-        c.p.ret(0, 1196, 1000, 4, 'rgba(0,0,0,0.25)');
-        c.p.ret(0, 1200, 1000, 300, CAPA);
-        linha(c, 'Föeger Rune: espécime tipográfico', 64, 1290, { tam: 36, peso: 700, cor: texto });
-        linha(c, 'Luiz Föeger', 64, 1340, { tam: 26, peso: 600, cor: texto });
-        marcas(c, 826, 90, ESCURA);
-        linha(c, 'Föeger.', 936, 1440, { tam: 36, fam: 'cut', peso: 400, cor: texto, alinhar: 'right' });
-        return;
-    }
-    // o fio da divisa só na altura da letra, sem cruzar o título
-    if (divisa) fio(c, 500, 340, 500, 1260, texto, 1.6);
-    linha(c, 'Luiz Föeger', 64, 110, { tam: 26, peso: 600, cor: texto });
-    linha(c, 'Föeger Rune: espécime tipográfico', 64, 230, { tam: 36, peso: 700, cor: texto });
-    marcas(c, 826, 90, texto);
-    linha(c, 'Föeger.', 936, 1440, { tam: 36, fam: 'cut', peso: 400, cor: texto, alinhar: 'right' });
-}
-
-function capa(c: Ctx, v: VersaoCapa = CAPA_VERSAO) {
-    if (ehSobreposicao(v)) return capaRiso(c, v);
-    const pal = CAPAS[v];
-    if (pal.comp === 'corte') capaCorte(c, v, pal);
-    else if (pal.comp === 'empilhada') capaEmpilhada(c, v, pal);
-    else capaSobreposicao(c, v, pal);
-}
-
-// uma das versões da capa, para a página de comparação
-export function desenharCapa(p: Pincel, v: VersaoCapa) {
-    capa({ p, alvos: [] }, v);
-}
-
-// a contracapa de pano: o nome no meio, a frase do livro e o selo da editora no pé, tudo em relevo
+// a contracapa, do mesmo azul da capa: o nome no meio, a frase do livro e o selo da editora no pé, tudo em relevo
 function contracapa(c: Ctx) {
-    c.p.pano(CAPA);
+    c.p.ret(0, 0, 1000, 1500, COR.frioEscuro);
     relevo(c, 'Föeger Rune', 500, 770, { tam: 76, fam: 'cut', peso: 400, alinhar: 'center' });
     relevo(c, LIVRO.frase, 500, 860, { tam: 34, fam: 'polished', peso: 400, alinhar: 'center' });
     relevo(c, 'Föeger.', 500, 1436, { tam: 46, fam: 'cut', peso: 400, alinhar: 'center' });
