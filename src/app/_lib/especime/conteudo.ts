@@ -14,13 +14,19 @@ export type Capitulo = {
     id: IdCapitulo;
     n: number;
     titulo: string;
-    // a Rune do título na abertura e do número grande na página de texto
+    // o título em duas linhas, como na abertura: a primeira na grotesca leve, a segunda na Rune do capítulo
+    linhas: [string, string];
+    // a Rune do título, da epígrafe e do número grande na página de texto
     estilo: Familia;
-    // o texto do capítulo: a abertura, em corpo grande, e três parágrafos
-    abertura: string;
+    // a frase do capítulo, na abertura
+    epigrafe: string;
+    // a visão geral, na abertura, e o texto da página que fecha o capítulo (o primeiro parágrafo em corpo grande)
+    visaoGeral: string;
     corpo: [string, string, string];
-    // as seções que aparecem no sumário: o nome e a página, contada a partir da abertura (1 é a seguinte)
-    secoes: [string, number][];
+    // quantas páginas o capítulo tem depois da abertura (sempre ímpar: ele fecha numa página da esquerda)
+    materias: number;
+    // as seções da abertura: o nome, a página (contada a partir da abertura: 1 é a seguinte) e se aparece no sumário
+    secoes: { nome: string; k: number; sumario?: boolean }[];
     paginas?: [number, number];
 };
 
@@ -83,56 +89,83 @@ export const CAPITULOS: Capitulo[] = [
         id: 'construcao',
         n: 1,
         titulo: 'A construção das letras',
+        linhas: ['A construção', 'das letras'],
         estilo: 'cut',
-        abertura: 'Toda letra começou num quadrado de um gabarito, desenhada à mão. Depois, cada uma foi refeita a partir do próprio desenho, só com retas.',
+        epigrafe: 'Toda pedra começa bruta.',
+        visaoGeral: 'Toda letra começou num quadrado de um gabarito, desenhada à mão. Depois, cada uma foi refeita a partir do próprio desenho, só com retas, e ganhou o corte do cinzel nas quinas.',
         corpo: [
             'O desenho à mão virou contorno, e as curvas da vetorização viraram retas. As alturas foram alinhadas sem esticar as letras, e o alfabeto caiu de 3.390 para 1.262 pontos sem perder o jeito da mão.',
             'Nas quinas, um corte reto, como o golpe de um cinzel. Por isso nenhuma letra é perfeitamente reta e nenhuma é igual à outra: de longe, a palavra parece um muro de pedras encaixadas; de perto, cada pedra tem o seu desenho.',
             'Os acentos saíram das marcas do próprio desenho, e os sinais, de folhas desenhadas pelo autor. O nome também veio da pedra: runas são letras gravadas em pedra.',
         ],
+        materias: 3,
         secoes: [
-            ['Os pontos de uma letra', 1],
-            ['O alfabeto da Cut', 2],
+            { nome: 'Os pontos de uma letra', k: 1, sumario: true },
+            { nome: 'O alfabeto da Cut', k: 2, sumario: true },
+            { nome: 'Como as letras foram feitas', k: 3 },
         ],
     },
     {
         id: 'estilos',
         n: 2,
         titulo: 'Os três estilos',
+        linhas: ['Os três', 'estilos'],
         estilo: 'polished',
-        abertura: 'Três desgastes da mesma pedra. A Cut tem as quinas vivas; a Polished rolou um pouco no rio; a Worn passou anos na correnteza e ficou redonda.',
+        epigrafe: 'Pedra que rola não cria limo!',
+        visaoGeral: 'Três desgastes da mesma pedra. A Cut tem as quinas vivas; a Polished rolou um pouco no rio; a Worn passou anos na correnteza e ficou redonda.',
         corpo: [
             'O desgaste não é um efeito por cima da letra: cada estilo é uma fonte inteira, com os 311 glifos refeitos. As quinas de fora arredondam primeiro; as de dentro, os cantos dos miolos, resistem mais.',
             'A Polished guarda o corte com as pontas lixadas e vai bem em títulos e textos curtos. A Worn é a mais macia: perde os ângulos, ganha volume e serve quando a pedra precisa parecer amiga.',
             'Quanto mais gasta, mais estreita: o A tem 801 unidades de largura na Cut, 749 na Polished e 710 na Worn. A mesma palavra ocupa menos linha a cada estilo.',
         ],
-        secoes: [['As três larguras', 3]],
+        materias: 5,
+        secoes: [
+            { nome: 'A Polished, de perto', k: 1 },
+            { nome: 'A mesma palavra nos três estilos', k: 3 },
+            { nome: 'As três larguras', k: 4, sumario: true },
+            { nome: 'Como cada estilo se gasta', k: 5 },
+        ],
     },
     {
         id: 'variacoes',
         n: 3,
         titulo: 'As variações',
+        linhas: ['As', 'variações'],
         estilo: 'worn',
-        abertura: 'Quem talha à mão não repete o golpe. Quando uma minúscula aparece de novo logo em seguida, a fonte troca o corte sozinha.',
+        epigrafe: 'Sonhei ontem que uma pedra rolava, rolava e não paraaava!',
+        visaoGeral: 'Quem talha à mão não repete o golpe. Quando uma minúscula aparece de novo logo em seguida, a fonte troca o corte sozinha, e a palavra nunca fica com cara de carimbo.',
         corpo: [
             'Cada minúscula tem até quatro cortes, que se revezam: o desenho de base, depois a variação dois, a três e a quatro, e de novo a base. O texto não muda; quem faz a troca é a própria fonte, pelas alternativas de contexto.',
             'Duas letras ainda mudam conforme o lugar: o L ganha outro corte quando vem depois de outra letra, e o f tem um desenho próprio para o começo da palavra.',
             'As trocas valem nos três estilos e em qualquer programa que ligue as alternativas de contexto, o que quase todos fazem sem pedir.',
         ],
-        secoes: [['As letras repetidas', 2]],
+        materias: 3,
+        secoes: [
+            { nome: 'Os quatro cortes do s', k: 1 },
+            { nome: 'As letras repetidas', k: 2, sumario: true },
+            { nome: 'Como as trocas funcionam', k: 3 },
+        ],
     },
     {
         id: 'tamanhos',
         n: 4,
         titulo: 'Do título ao texto',
+        linhas: ['Do título', 'ao texto'],
         estilo: 'cut',
-        abertura: 'Feita para títulos, cartazes e palavras curtas, a Rune aguenta o parágrafo em corpo grande.',
+        epigrafe: 'Jane quer LP, fax, CD, giz, TV e bom whisky.',
+        visaoGeral: 'Feita para títulos, cartazes e palavras curtas, a Rune aguenta o parágrafo em corpo grande. Grande, a pedra aparece inteira; pequena, vira textura.',
         corpo: [
             'Grande, a pedra aparece inteira: as quinas, os cortes e o peso. É onde a Rune mais aparece, em títulos, cartazes, capas e palavras soltas.',
             'Em corpo de texto, o desenho vira textura, pesada e irregular, que pede frases curtas e espaço entre as linhas.',
             'Os acentos são pedras à parte, pousadas por cima, e as frações, os números elevados e os símbolos do dia a dia vêm no mesmo traço.',
         ],
-        secoes: [['A Rune em parágrafo', 3]],
+        materias: 5,
+        secoes: [
+            { nome: 'Em corpo de cartaz', k: 1 },
+            { nome: 'A mesma palavra em seis corpos', k: 3 },
+            { nome: 'A Rune em parágrafo', k: 4, sumario: true },
+            { nome: 'Onde a Rune funciona melhor', k: 5 },
+        ],
     },
 ];
 
@@ -145,7 +178,7 @@ export const LIVRO = {
 };
 
 // as páginas do livro: cada folha tem a frente (a página da direita enquanto está à direita) e o verso (a da esquerda
-// depois de virada). As do capítulo: a abertura (a da direita, embaixo do vegetal) e as três seguintes (k de 0 a 2)
+// depois de virada). As do capítulo: a abertura (a da direita, embaixo do vegetal) e as seguintes (k a partir de 0)
 export type Pagina =
     | { tipo: 'capa' }
     | { tipo: 'guarda' }
@@ -180,11 +213,11 @@ export function montarFolhas(): Folha[] {
     f.push({ tipo: 'papel', frente: { tipo: 'falsa-rosto' }, verso: { tipo: 'frontispicio' } });
     f.push({ tipo: 'papel', frente: { tipo: 'rosto' }, verso: { tipo: 'creditos' } });
     f.push({ tipo: 'papel', frente: { tipo: 'sumario' }, verso: { tipo: 'apresentacao' } });
-    // cada capítulo: o vegetal, a abertura (com a primeira página no verso) e a folha das outras duas
-    CAPITULOS.forEach((_, cap) => {
+    // cada capítulo: o vegetal, a abertura (com a primeira página no verso) e as folhas das outras, de duas em duas
+    CAPITULOS.forEach((ch, cap) => {
         f.push(vegetal(cap));
         f.push({ tipo: 'papel', frente: { tipo: 'abertura', cap }, verso: { tipo: 'materia', cap, k: 0 } });
-        f.push({ tipo: 'papel', frente: { tipo: 'materia', cap, k: 1 }, verso: { tipo: 'materia', cap, k: 2 } });
+        for (let k = 1; k < ch.materias; k += 2) f.push({ tipo: 'papel', frente: { tipo: 'materia', cap, k }, verso: { tipo: 'materia', cap, k: k + 1 } });
     });
     f.push(vegetal(CAPITULOS.length));
     f.push({ tipo: 'papel', frente: { tipo: 'letras' }, verso: { tipo: 'acentos' } });
@@ -203,7 +236,7 @@ export function montarFolhas(): Folha[] {
     };
     CAPITULOS.forEach((c, cap) => {
         const ini = pagina('abertura', 'frente', cap);
-        c.paginas = [ini, ini + 3];
+        c.paginas = [ini, ini + c.materias];
     });
     EXTRAS.apresentacao = pagina('apresentacao', 'verso');
     EXTRAS.letras = pagina('letras', 'frente');

@@ -640,9 +640,9 @@ function sumario(c: Ctx) {
     CAPITULOS.forEach((ch, i) => {
         const p0 = ch.paginas?.[0];
         y = linhaDoSumario(c, y, { n: pagina2(ch.n), titulo: ch.titulo, pagina: p0, destino: { cap: i } });
-        for (const [t, k] of ch.secoes) {
+        for (const { nome, k } of ch.secoes.filter(x => x.sumario)) {
             const pagina = p0 !== undefined ? p0 + k : undefined;
-            y = linhaDoSumario(c, y, { titulo: t, pagina, destino: { pagina }, secao: true });
+            y = linhaDoSumario(c, y, { titulo: nome, pagina, destino: { pagina }, secao: true });
         }
     });
     y = linhaDoSumario(c, y, { titulo: 'Os caracteres', pagina: EXTRAS.letras, destino: { caracteres: true } });
@@ -696,54 +696,43 @@ const COR_DO_CAPITULO: Record<IdCapitulo, () => string> = {
     tamanhos: () => COR.laranja,
 };
 
-// uma frase na Rune, centrada no meio da página
-function fraseNoMeio(c: Ctx, frase: string, fam: Familia) {
-    const o: Paragrafo = { tam: 64, entre: 70, fam, peso: 400, alinhar: 'center' };
-    const n = contarLinhas(c, frase, 760, o);
-    paragrafo(c, frase, 120, 800 - ((n - 1) * o.entre) / 2, 760, o);
-}
-
-// a abertura do capítulo, na página da direita, embaixo do vegetal: o número em mono e o título na Rune do capítulo, no
-// alto, e a peça do capítulo no meio, que aparece borrada pelo vegetal até ele ser virado
+// a abertura do capítulo, na página da direita, embaixo do vegetal: a introdução, como as dos livros de verdade. No
+// alto, o número do capítulo em mono; o título em duas linhas, como o da apresentação (a primeira na grotesca leve, a
+// segunda na Rune do capítulo); a epígrafe na mesma Rune; e as seções, como uma tabela de uma coluna com a página de
+// cada uma, e a visão geral do capítulo
 function abertura(c: Ctx, cap: number, num?: number) {
     const ch = CAPITULOS[cap];
+    const p0 = ch.paginas?.[0] ?? 0;
     fundo(c, PAPEL);
+    fio(c, 29, 22, 973, 22);
     rotulo(c, `Capítulo ${ch.n}`, 29, 70, { cor: CINZA });
-    const tam = Math.min(84, ajustar(c, ch.titulo, { fam: ch.estilo, peso: 400 }, 944));
-    linha(c, ch.titulo, 22, 190, { tam, fam: ch.estilo, peso: 400 });
-    if (ch.id === 'construcao') fraseNoMeio(c, 'Toda pedra começa bruta.', 'cut');
-    else if (ch.id === 'variacoes') fraseNoMeio(c, 'Sonhei ontem que uma pedra rolava, rolava e não paraaava!', 'worn');
-    else if (ch.id === 'estilos') {
-        // a mesma palavra nos três estilos, cada um mais estreito que o anterior
-        const tamP = ajustar(c, 'Pedra', { fam: 'cut', peso: 400 }, 700);
-        const entre = tamP * 1.05;
-        const y0 = 440 + MAIUSCULA * tamP;
-        ESTILOS.forEach(([fam, nome], i) => {
-            const y = y0 + i * entre;
-            linha(c, 'Pedra', 250, y, { tam: tamP, fam, peso: 400 });
-            rotulo(c, nome, 29, y - MAIUSCULA * tamP * 0.5 + 5, { cor: CINZA });
-        });
-    } else prancha(c, 'cascata', CASCATA.x, CASCATA.y, CASCATA.l, CASCATA.a);
+    const [l1, l2] = ch.linhas;
+    linha(c, l1, 22, 330, { tam: Math.min(118, ajustar(c, l1, {}, 944)) });
+    linha(c, l2, 26, 452, { tam: Math.min(112, ajustar(c, l2, { fam: ch.estilo, peso: 400 }, 944)), fam: ch.estilo, peso: 400 });
+    paragrafo(c, ch.epigrafe, 29, 620, 700, { tam: 40, entre: 48, fam: ch.estilo, peso: 400 });
+    rotulo(c, 'Seções', 29, 900);
+    ch.secoes.forEach(({ nome, k }, i) => {
+        const y = 900 + i * 40;
+        rotulo(c, nome, 345, y, { tam: 11.5 });
+        rotulo(c, `Página ${pagina2(p0 + k)}`, 973, y, { tam: 11.5, alinhar: 'right', cor: CINZA });
+        fio(c, 345, y + 14, 973, y + 14);
+    });
+    rotulo(c, 'Visão geral', 29, 1200);
+    paragrafo(c, ch.visaoGeral, 345, 1200, 628, { tam: 21, entre: 25.5 });
     rodape(c, num, ch.titulo);
 }
 
-// o texto do capítulo a partir de y: a abertura em corpo grande e os três parágrafos em duas colunas
-function textoDoCapitulo(c: Ctx, cap: number, y: number) {
-    const ch = CAPITULOS[cap];
-    y = paragrafo(c, ch.abertura, 29, y, 900, { tam: 30, entre: 38, peso: 300 }) + 40;
-    const corpo: Paragrafo = { tam: 18.5, entre: 23.5, justificar: true };
-    const y1 = paragrafo(c, ch.corpo[0], 29, y, 459, corpo) + corpo.entre;
-    paragrafo(c, ch.corpo[1], 29, y1, 459, corpo);
-    paragrafo(c, ch.corpo[2], 514, y, 459, corpo);
-}
-
-// a página só de texto, que fecha o capítulo: o número grande na Rune e na cor do capítulo, e o texto embaixo
+// a página só de texto, que fecha o capítulo: o número grande na Rune e na cor do capítulo e, embaixo, o texto (o
+// primeiro parágrafo em corpo grande e os outros dois em duas colunas)
 function paginaDeTexto(c: Ctx, cap: number, num?: number) {
     const ch = CAPITULOS[cap];
     fundo(c, PAPEL);
     rotulo(c, `Capítulo ${ch.n}`, 29, 70, { cor: CINZA });
     linha(c, pagina2(ch.n), 14, 560, { tam: 420, fam: ch.estilo, peso: 400, cor: COR_DO_CAPITULO[ch.id]() });
-    textoDoCapitulo(c, cap, 720);
+    const y = paragrafo(c, ch.corpo[0], 29, 720, 900, { tam: 30, entre: 38, peso: 300 }) + 40;
+    const corpo: Paragrafo = { tam: 18.5, entre: 23.5, justificar: true };
+    paragrafo(c, ch.corpo[1], 29, y, 459, corpo);
+    paragrafo(c, ch.corpo[2], 514, y, 459, corpo);
     rodape(c, num, LIVRO.titulo);
 }
 
@@ -798,21 +787,36 @@ function seixo(c: Ctx, lado: 0 | 1, num?: number) {
     else rodape(c, num, CAPITULOS[1].titulo, tinta);
 }
 
-// a mesma palavra nos três estilos, com a largura de cada uma em unidades da fonte, e o texto do capítulo
+// a mesma palavra nos três estilos, cada um mais estreito que o anterior, com o nome de cada estilo ao lado
+function pedraTres(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    rotulo(c, 'A mesma palavra nos três estilos', 29, 70, { cor: CINZA });
+    const tam = ajustar(c, 'Pedra', { fam: 'cut', peso: 400 }, 720);
+    const entre = tam * 1.12;
+    const y0 = 360 + MAIUSCULA * tam;
+    ESTILOS.forEach(([fam, nome], i) => {
+        const y = y0 + i * entre;
+        linha(c, 'Pedra', 230, y, { tam, fam, peso: 400 });
+        rotulo(c, nome, 29, y - MAIUSCULA * tam * 0.5 + 5, { cor: CINZA });
+    });
+    rodape(c, num, LIVRO.titulo);
+}
+
+// a mesma palavra nos três estilos, com a largura de cada uma em unidades da fonte
 function larguras(c: Ctx, cap: number, num?: number) {
     fundo(c, PAPEL);
     rotulo(c, 'A mesma palavra, mais estreita a cada estilo', 29, 70, { cor: CINZA });
-    const tam = ajustar(c, 'Rune', { fam: 'cut' }, 470);
+    const tam = ajustar(c, 'Rune', { fam: 'cut' }, 700);
+    const passo = MAIUSCULA * tam + 150;
     ESTILOS.forEach(([fam, nome], i) => {
-        const y = 130 + MAIUSCULA * tam + i * (MAIUSCULA * tam + 60);
+        const y = 300 + MAIUSCULA * tam + i * passo;
         linha(c, 'Rune', 29, y, { tam, fam, peso: 400 });
         const unidades = Math.round(largura(c, 'Rune', { tam: 1000, fam }));
-        rotulo(c, nome, 29, y + 36, { tam: 11.5, cor: CINZA });
-        rotulo(c, `${unidades} unidades`, 973, y + 36, { tam: 11.5, alinhar: 'right', cor: CINZA });
-        fio(c, 29, y + 50, 973, y + 50);
+        rotulo(c, nome, 29, y + 40, { tam: 11.5, cor: CINZA });
+        rotulo(c, `${unidades} unidades`, 973, y + 40, { tam: 11.5, alinhar: 'right', cor: CINZA });
+        fio(c, 29, y + 56, 973, y + 56);
     });
-    textoDoCapitulo(c, cap, 880);
-    rodape(c, num, LIVRO.titulo);
+    rodape(c, num, CAPITULOS[cap].titulo);
 }
 
 // os quatro cortes do s na página inteira, claros no azul
@@ -844,26 +848,39 @@ function ploc(c: Ctx, lado: 0 | 1, num?: number) {
     else rodape(c, num, CAPITULOS[3].titulo, tinta);
 }
 
-// a Rune em parágrafo, em dois corpos, e o texto do capítulo
+// a mesma palavra em seis corpos, do título ao texto
+function cascata(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    rotulo(c, 'A mesma palavra em seis corpos', 29, 70, { cor: CINZA });
+    prancha(c, 'cascata', CASCATA.x, CASCATA.y, CASCATA.l, CASCATA.a);
+    rodape(c, num, LIVRO.titulo);
+}
+
+// a Rune em parágrafo, em três corpos
 const AMOSTRA =
     'Toda pedra começa bruta. Quem talha à mão não repete o golpe, e a palavra nunca fica com cara de carimbo. Pedra que rola não cria limo, e água mole em pedra dura tanto bate até que fura.';
 function paragrafoNaRune(c: Ctx, cap: number, num?: number) {
     fundo(c, PAPEL);
     rotulo(c, 'A Rune em parágrafo', 29, 70, { cor: CINZA });
-    let y = paragrafo(c, AMOSTRA, 29, 160, 944, { tam: 36, entre: 48, fam: 'cut', peso: 400 });
-    rotulo(c, 'Corpo 36', 973, 130, { cor: CINZA, alinhar: 'right', tam: 11.5 });
-    rotulo(c, 'Corpo 22', 973, y + 34, { cor: CINZA, alinhar: 'right', tam: 11.5 });
-    y = paragrafo(c, AMOSTRA, 29, y + 64, 700, { tam: 22, entre: 31, fam: 'cut', peso: 400 });
-    textoDoCapitulo(c, cap, Math.max(880, y + 90));
-    rodape(c, num, LIVRO.titulo);
+    let y = 170;
+    for (const [tam, entre, larg] of [
+        [44, 58, 944],
+        [28, 38, 820],
+        [19, 27, 620],
+    ]) {
+        rotulo(c, `Corpo ${tam}`, 973, y - tam - 6, { cor: CINZA, alinhar: 'right', tam: 11.5 });
+        y = paragrafo(c, AMOSTRA, 29, y, larg, { tam, entre, fam: 'cut', peso: 400 }) + 110;
+    }
+    rodape(c, num, CAPITULOS[cap].titulo);
 }
 
-// as páginas de cada capítulo depois da abertura: a da esquerda, a da direita e a da esquerda que fecha o capítulo
+// as páginas de cada capítulo depois da abertura, alternando esquerda e direita (a última, sempre a da esquerda, fecha
+// o capítulo com o texto)
 const MATERIAS: Record<IdCapitulo, ((c: Ctx, cap: number, num?: number) => void)[]> = {
     construcao: [pontosDoA, alfabetoDaCut, paginaDeTexto],
-    estilos: [(c, _, num) => seixo(c, 0, num), (c, _, num) => seixo(c, 1, num), larguras],
+    estilos: [(c, _, num) => seixo(c, 0, num), (c, _, num) => seixo(c, 1, num), pedraTres, larguras, paginaDeTexto],
     variacoes: [quatroS, repetidas, paginaDeTexto],
-    tamanhos: [(c, _, num) => ploc(c, 0, num), (c, _, num) => ploc(c, 1, num), paragrafoNaRune],
+    tamanhos: [(c, _, num) => ploc(c, 0, num), (c, _, num) => ploc(c, 1, num), cascata, paragrafoNaRune, paginaDeTexto],
 };
 
 // ---------- os papéis vegetais ----------
