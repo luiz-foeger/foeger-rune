@@ -294,7 +294,8 @@ float ruido(vec2 p) {
 }`;
 
 // a face de fora da capa dura (uFora), como a de um livro de verdade: o vinco da dobradiça junto da lombada (dois sulcos
-// rasos: a normal inclina nas paredes deles, que pegam a luz de um lado e ficam na sombra do outro, e o fundo escurece),
+// rasos: a normal inclina nas paredes deles, que pegam a luz de um lado e ficam na sombra do outro, e o fundo escurece;
+// os dois acabam antes da margem do texto da capa, que começa em 64 da página, perto de 0,065 aqui),
 // manchas largas e bem fracas do papel (sem grão: o papel não tinge igual) e a luz caindo um pouco para as bordas. A
 // direção da folha ao longo de X sai das derivadas da posição na tela (vale com a capa em qualquer ângulo)
 const CAPA_LUZ = `
@@ -303,13 +304,14 @@ const CAPA_LUZ = `
         float x = vUv.x * uTam.x;
         float dh = 0.0;
         float sulco = 0.0;
+        const float LARGO = 0.0032;
         for (int i = 0; i < 2; i++) {
-            float centro = i == 0 ? 0.048 : 0.066;
-            float g = exp(-pow((x - centro) / 0.004, 2.0));
-            dh += 2.0 * (x - centro) / (0.004 * 0.004) * g;
+            float centro = i == 0 ? 0.030 : 0.043;
+            float g = exp(-pow((x - centro) / LARGO, 2.0));
+            dh += 2.0 * (x - centro) / (LARGO * LARGO) * g;
             sulco += g;
         }
-        dh *= 0.0018;
+        dh *= 0.0014;
         vec3 dpx = dFdx(vPos);
         vec3 dpy = dFdy(vPos);
         vec2 dux = dFdx(vUv);
