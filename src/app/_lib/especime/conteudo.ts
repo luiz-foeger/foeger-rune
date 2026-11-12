@@ -219,8 +219,8 @@ export function montarFolhas(): Folha[] {
         { tipo: 'rosto' },
         { tipo: 'creditos' },
         { tipo: 'sumario' },
-        { tipo: 'logo' },
         { tipo: 'apresentacao' },
+        { tipo: 'logo' },
     ];
     CAPITULOS.forEach((ch, cap) => {
         seq.push({ tipo: 'cor', cap }, { vegetal: cap }, { tipo: 'abertura', cap });
@@ -256,7 +256,7 @@ export function montarFolhas(): Folha[] {
         const ini = pagina('cor', 'verso', cap);
         c.paginas = [ini, ini + 1 + c.materias];
     });
-    EXTRAS.apresentacao = pagina('logo', 'verso');
+    EXTRAS.apresentacao = pagina('apresentacao', 'verso');
     EXTRAS.letras = pagina('letras', 'frente');
     EXTRAS.acentos = pagina('acentos', 'verso');
     EXTRAS.sinais = pagina('sinais', 'frente');

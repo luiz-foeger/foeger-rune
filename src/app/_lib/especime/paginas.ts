@@ -8,8 +8,9 @@ import { medir, pincelCanvas, TINTA, type Estilo, type Familia, type Familias, t
 import { PALAVRAS, type Glifo } from '../glifos';
 import { PECAS } from '../../_comp/LogoFoeger';
 
-// o que o clique faz: ir ao capítulo (cap), às tabelas dos caracteres ou a uma página qualquer (pagina)
-export type Alvo = { x: number; y: number; l: number; a: number; cap?: number; caracteres?: boolean; pagina?: number };
+// o que o clique faz: ir ao capítulo (cap), às tabelas dos caracteres, a uma página qualquer (pagina) ou aproximar um
+// texto para ler (ler: o corpo do texto, que diz o quanto aproximar)
+export type Alvo = { x: number; y: number; l: number; a: number; cap?: number; caracteres?: boolean; pagina?: number; ler?: number };
 // destaque: a área clicável sob o mouse, pela ordem em que as áreas entram em alvos (−1 sem nenhuma)
 type Ctx = { p: Pincel; alvos: Alvo[]; destaque?: number };
 
@@ -134,6 +135,17 @@ function alvo(c: Ctx, x0: number, y0: number, x1: number, y1: number, extra: Omi
     c.alvos.push({ x: x0 / 1000, y: y0 / 1500, l: (x1 - x0) / 1000, a: (y1 - y0) / 1500, ...extra });
 }
 
+// um texto que o clique aproxima para ler (o motor leva a câmera até ele): a área, com uma folga em volta, e o corpo
+function paraLer(c: Ctx, x0: number, y0: number, x1: number, y1: number, tam: number) {
+    alvo(c, x0 - 12, y0 - 12, x1 + 12, y1 + 12, { ler: tam });
+}
+// um parágrafo que dá para aproximar, do alto da primeira linha ao pé da última; devolve a linha de base seguinte
+function paragrafoLido(c: Ctx, texto: string, x: number, y: number, larg: number, o: Paragrafo) {
+    const fim = paragrafo(c, texto, x, y, larg, o);
+    paraLer(c, x, y - o.tam * 0.75, x + larg, fim - o.entre + o.tam * 0.25, o.tam);
+    return fim;
+}
+
 // o relevo seco da capa: a letra mais escura que o pano, com a luz batendo na borda de baixo (as três passadas: a luz,
 // a sombra da borda de cima e o miolo afundado)
 const RELEVO: [number, number, string][] = [
@@ -167,15 +179,23 @@ const pontoNaLogo = (q: [number, number], tx: number, ty: number, r: number, cx:
     const a = (r * Math.PI) / 180;
     return [tx + cx + (q[0] - cx) * Math.cos(a) - (q[1] - cy) * Math.sin(a), ty + cy + (q[0] - cx) * Math.sin(a) + (q[1] - cy) * Math.cos(a)] as const;
 };
-const LOGO = (() => {
+// a caixa de cada peça já posta, nas contas da logo (pela ordem das peças: o F, o o do ö, os dois pingos, o e, o g, o
+// outro e, o r e o ponto), e a da logo inteira
+const CAIXAS_DAS_PECAS = PECAS.map(([d, tx, ty, r, cx, cy]) => {
     let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
-    for (const [d, tx, ty, r, cx, cy] of PECAS)
-        for (const q of pontosDaPeca(d)) {
-            const [x, y] = pontoNaLogo(q, tx, ty, r, cx, cy);
-            [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
-        }
-    return { x0, y0, x1, y1, base: 945 };
-})();
+    for (const q of pontosDaPeca(d)) {
+        const [x, y] = pontoNaLogo(q, tx, ty, r, cx, cy);
+        [x0, y0, x1, y1] = [Math.min(x0, x), Math.min(y0, y), Math.max(x1, x), Math.max(y1, y)];
+    }
+    return { x0, y0, x1, y1 };
+});
+const LOGO = {
+    x0: Math.min(...CAIXAS_DAS_PECAS.map(b => b.x0)),
+    y0: Math.min(...CAIXAS_DAS_PECAS.map(b => b.y0)),
+    x1: Math.max(...CAIXAS_DAS_PECAS.map(b => b.x1)),
+    y1: Math.max(...CAIXAS_DAS_PECAS.map(b => b.y1)),
+    base: 945,
+};
 
 // a logo com a altura de maiúscula de um texto de corpo tam (do topo do F à linha de base), com a linha de base em y e
 // alinhada em x como as linhas de texto
@@ -192,12 +212,18 @@ function logo(c: Ctx, x: number, y: number, tam: number, cor: string, alinhar: '
 }
 
 // a logo construída, como o a da Cut com os pontos: cada peça cheia no ocre, com o contorno e os pontos dela,
-// centrada em x e com a linha de base em y
+// centrada em x e com a linha de base em y. Devolve a caixa de cada peça na página, para as chamadas
 function logoConstruida(c: Ctx, x: number, y: number, tam: number) {
     const k = (tam * MAIUSCULA) / (LOGO.base - LOGO.y0);
     const ox = x - (k * (LOGO.x1 - LOGO.x0)) / 2;
     const oy = y - k * (LOGO.base - LOGO.y0);
     const naPagina = (lx: number, ly: number) => [ox + k * (lx - LOGO.x0), oy + k * (ly - LOGO.y0)] as const;
+    const caixa = (i: number) => {
+        const b = CAIXAS_DAS_PECAS[i];
+        const [x0, y0] = naPagina(b.x0, b.y0);
+        const [x1, y1] = naPagina(b.x1, b.y1);
+        return { x0, y0, x1, y1 };
+    };
     for (const [d, tx, ty, r, cx, cy] of PECAS) {
         const [px, py] = naPagina(tx, ty);
         c.p.girar(r, px + k * cx, py + k * cy, () => c.p.caminho(d, px, py, k, COR.cut, { cor: TINTA, esp: 1.6 }));
@@ -208,6 +234,7 @@ function logoConstruida(c: Ctx, x: number, y: number, tam: number) {
             const [vx, vy] = naPagina(lx, ly);
             c.p.quadrado(vx, vy, 5, PAPEL, { cor: TINTA, esp: 1.2 });
         }
+    return caixa;
 }
 
 // a logo em relevo seco, como o texto do relevo
@@ -700,12 +727,14 @@ function creditos(c: Ctx) {
         rotulo(c, nome, 29, y, { tam: 11.5, cor: CINZA });
         y = paragrafo(c, valor, 29, y + 30, 560, { tam: 18.5, entre: 23.5 }) + 28;
     }
+    paraLer(c, 29, 705, 589, y - 46, 18.5);
     // a ficha de catalogação, como a que vem no verso da folha de rosto, em mono numa caixa de fio fino
     const fx = 29;
     const fy = 1110;
     const fl = 620;
     const fa = 250;
     c.p.borda(fx, fy, fl, fa, { cor: FIO, esp: 1.3 });
+    paraLer(c, fx, fy, fx + fl, fy + fa, 13.5);
     rotulo(c, 'Dados para catalogação', fx + 22, fy + 38, { tam: 11, cor: CINZA });
     const mono = (t: string, x: number, yy: number) => linha(c, t, x, yy, { tam: 13.5, fam: 'mono', peso: 400 });
     mono('Föeger, Luiz Felipe', fx + 22, fy + 82);
@@ -811,27 +840,84 @@ const ESTILOS: [Familia, string, () => string][] = [
     ['worn', 'Worn', () => COR.worn],
 ];
 
-// a apresentação, no verso do sumário e de frente para a abertura do primeiro capítulo: o livro em poucas linhas e os
-// três estilos, cada um num quadro da cor dele
-// a logo da Föeger, de onde a Rune nasceu, na página da esquerda de frente para a apresentação: a logo construída, peça
-// por peça, e embaixo as mesmas letras na Cut
-function paginaDaLogo(c: Ctx, num?: number) {
-    fundo(c, PAPEL);
-    rotulo(c, 'A logo da Föeger', 29, 70, { cor: CINZA });
-    rotulo(c, 'De onde a Rune nasceu: seis letras e um ponto, só retas', 29, 92, { cor: CINZA });
-    logoConstruida(c, 500, 760, 300);
-    fio(c, 29, 960, 973, 960);
-    linha(c, 'Föeger', 500, 1210, { tam: 200, fam: 'cut', peso: 400, alinhar: 'center' });
-    rotulo(c, 'As mesmas letras na Föeger Rune Cut', 500, 1290, { alinhar: 'center', cor: CINZA });
-    rodape(c, num, LIVRO.titulo);
+// o corpo do texto das páginas de abertura (a apresentação, a história da logo e as introduções dos capítulos)
+const TEXTO: Paragrafo = { tam: 26, entre: 34 };
+
+// a história da logo, na página da direita, de frente para a apresentação: no alto, a logo da Föeger construída peça por
+// peça, com os pontos e as chamadas numeradas; o texto da origem, na altura do texto da apresentação; a lista do que
+// passou da logo para a fonte, como as tabelas das introduções, com o número de cada chamada; e, no pé, as mesmas letras
+// na Cut. As chamadas: em que peças (pela ordem de PECAS: o F, o o do ö, os dois pingos, o e, o g, o outro e, o r e o
+// ponto) e de que lado delas
+const DA_LOGO: { texto: string; chamadas: { pecas: number[]; lado: 'cima' | 'baixo' | 'esq' }[] }[] = [
+    { texto: 'Cada letra é uma peça só de retas, sem nenhuma curva: é de onde vem a Cut.', chamadas: [{ pecas: [0], lado: 'esq' }] },
+    {
+        texto: 'Os pingos do ö e o ponto são pedras soltas, como os acentos da fonte.',
+        chamadas: [
+            { pecas: [2, 3], lado: 'cima' },
+            { pecas: [8], lado: 'baixo' },
+        ],
+    },
+    {
+        texto: 'Os dois e têm cortes diferentes: o segundo virou a primeira variação do e.',
+        chamadas: [
+            { pecas: [4], lado: 'cima' },
+            { pecas: [6], lado: 'cima' },
+        ],
+    },
+];
+
+// o número de uma chamada, num círculo cheio
+function chamada(c: Ctx, n: number, x: number, y: number) {
+    c.p.circulo(x, y, 16, TINTA);
+    linha(c, String(n), x, y + 5.5, { tam: 16, fam: 'mono', peso: 400, cor: PAPEL, alinhar: 'center' });
 }
 
+function paginaDaLogo(c: Ctx, num?: number) {
+    fundo(c, PAPEL);
+    rotulo(c, 'A origem', 29, 70, { cor: CINZA });
+    const caixa = logoConstruida(c, 500, 332, 260);
+    DA_LOGO.forEach(({ chamadas }, i) => {
+        for (const { pecas, lado } of chamadas) {
+            const bs = pecas.map(caixa);
+            const x0 = Math.min(...bs.map(b => b.x0));
+            const x1 = Math.max(...bs.map(b => b.x1));
+            const y0 = Math.min(...bs.map(b => b.y0));
+            const y1 = Math.max(...bs.map(b => b.y1));
+            if (lado === 'esq') chamada(c, i + 1, x0 - 36, (y0 + y1) / 2);
+            else chamada(c, i + 1, (x0 + x1) / 2, lado === 'cima' ? y0 - 32 : y1 + 32);
+        }
+    });
+    paragrafoLido(
+        c,
+        'Antes da fonte, veio a logo da Föeger: seis letras e um ponto, feitos de peças só de retas, como pedras encaixadas. A ideia foi não parar nela. Das letras da logo saiu um alfabeto inteiro no mesmo traço, com os números, os acentos e os sinais, e depois as variações, para a mesma letra não sair sempre igual.',
+        29,
+        460,
+        760,
+        TEXTO,
+    );
+    // o que passou da logo para a fonte, uma linha por chamada
+    const y0 = 760;
+    rotulo(c, 'Da logo para a fonte', 29, y0);
+    let y = y0;
+    DA_LOGO.forEach(({ texto }, i) => {
+        chamada(c, i + 1, 345 + 16, y - 9);
+        const fim = paragrafo(c, texto, 393, y, 580, TEXTO);
+        fio(c, 345, fim - TEXTO.entre + 20, 973, fim - TEXTO.entre + 20);
+        y = fim - TEXTO.entre + 72;
+    });
+    paraLer(c, 345, y0 - 30, 973, y - 52, TEXTO.tam);
+    linha(c, 'Föeger', 500, 1290, { tam: 190, fam: 'cut', peso: 400, alinhar: 'center' });
+    rotulo(c, 'As mesmas letras na Föeger Rune Cut', 500, 1360, { alinhar: 'center', cor: CINZA });
+    rodape(c, num, 'Apresentação');
+}
+
+// a apresentação, no verso do sumário: o livro em poucas linhas e os três estilos, cada um num quadro da cor dele
 function apresentacao(c: Ctx, num?: number) {
     fundo(c, PAPEL);
     rotulo(c, 'Apresentação', 29, 70, { cor: CINZA });
     linha(c, 'Uma pedra,', 22, 230, { tam: 92 });
     linha(c, 'três desgastes.', 26, 332, { tam: 88, fam: 'polished', peso: 400 });
-    paragrafo(c, LIVRO.apresentacao, 29, 460, 760, { tam: 26, entre: 34 });
+    paragrafoLido(c, LIVRO.apresentacao, 29, 460, 760, TEXTO);
     ESTILOS.forEach(([fam, nome, cor], i) => {
         const x = 29 + i * 322;
         const fundoCor = cor();
@@ -864,29 +950,86 @@ function paginaDeCor(c: Ctx, cap: number) {
 }
 
 // a introdução do capítulo, na página da direita, embaixo do vegetal, como as dos livros de verdade. No alto, o número
-// do capítulo em mono; o título em duas linhas, como o da apresentação (a primeira na grotesca leve, a segunda na Rune
-// do capítulo); a epígrafe na mesma Rune; e as seções, como uma tabela de uma coluna com a página de cada uma, e a
-// visão geral do capítulo
-function abertura(c: Ctx, cap: number, num?: number) {
+// do capítulo em mono e o título; a epígrafe em letra normal, como um subtítulo; e, no corpo do texto da apresentação,
+// as seções, como uma tabela de uma coluna com a página de cada uma, e a visão geral do capítulo. O título tem
+// versões (a página /versoes/titulo mostra todas lado a lado):
+// - atual: em duas linhas, a primeira na grotesca leve e a segunda na Rune do capítulo;
+// - numero: o número do capítulo enorme, na Rune e na cor do assunto (a da página de cor ao lado), e o título numa
+//   linha na grotesca leve;
+// - rune: as duas linhas na Rune do capítulo;
+// - negrito: a grotesca em negrito, com o quadrado da cor do assunto na frente, como a chave das tintas da folha de
+//   rosto;
+// - largura: a primeira linha pequena, na grotesca, e a segunda na Rune, ocupando a largura da página
+export type VersaoTitulo = 'atual' | 'numero' | 'rune' | 'negrito' | 'largura';
+const TITULO: VersaoTitulo = 'atual';
+
+// o título da introdução; devolve a linha de base da epígrafe
+function tituloDaAbertura(c: Ctx, cap: number, v: VersaoTitulo) {
+    const ch = CAPITULOS[cap];
+    const cor = CORES_DOS_ASSUNTOS[ch.id]();
+    const [l1, l2] = ch.linhas;
+    const rune = { fam: ch.estilo, peso: 400 };
+    if (v === 'numero') {
+        linha(c, String(ch.n), 14, 500, { tam: 500, ...rune, cor, semCalt: true });
+        linha(c, ch.titulo, 24, 620, { tam: Math.min(76, ajustar(c, ch.titulo, {}, 944)) });
+        return 700;
+    }
+    if (v === 'rune') {
+        const tam = Math.min(116, ajustar(c, l1, rune, 944), ajustar(c, l2, rune, 944));
+        linha(c, l1, 24, 330, { tam, ...rune });
+        linha(c, l2, 24, 452, { tam, ...rune });
+        return 600;
+    }
+    if (v === 'negrito') {
+        // o quadrado com a altura da maiúscula da grotesca (0,727 do corpo), como na folha de rosto
+        const negrito = { peso: 700 };
+        const tam = Math.min(100, ajustar(c, l1, negrito, 840), ajustar(c, l2, negrito, 840));
+        const lado = 0.727 * tam;
+        const x = 29 + lado + 0.26 * tam;
+        c.p.ret(29, 330 - lado, lado, lado, cor);
+        linha(c, l1, x, 330, { tam, ...negrito });
+        linha(c, l2, x, 330 + 1.12 * tam, { tam, ...negrito });
+        return 600;
+    }
+    if (v === 'largura') {
+        linha(c, l1, 26, 240, { tam: 64 });
+        const tam = ajustar(c, l2, rune, 944);
+        linha(c, l2, 29, 270 + MAIUSCULA * tam, { tam, ...rune });
+        return 270 + MAIUSCULA * tam + 150;
+    }
+    linha(c, l1, 22, 330, { tam: Math.min(118, ajustar(c, l1, {}, 944)) });
+    linha(c, l2, 26, 452, { tam: Math.min(112, ajustar(c, l2, rune, 944)), ...rune });
+    return 600;
+}
+
+function abertura(c: Ctx, cap: number, num?: number, v: VersaoTitulo = TITULO) {
     const ch = CAPITULOS[cap];
     const intro = (ch.paginas?.[0] ?? 0) + 1;
     fundo(c, PAPEL);
     fio(c, 29, 22, 973, 22);
     rotulo(c, `Capítulo ${ch.n}`, 29, 70, { cor: CINZA });
-    const [l1, l2] = ch.linhas;
-    linha(c, l1, 22, 330, { tam: Math.min(118, ajustar(c, l1, {}, 944)) });
-    linha(c, l2, 26, 452, { tam: Math.min(112, ajustar(c, l2, { fam: ch.estilo, peso: 400 }, 944)), fam: ch.estilo, peso: 400 });
-    paragrafo(c, ch.epigrafe, 29, 620, 700, { tam: 40, entre: 48, fam: ch.estilo, peso: 400 });
-    rotulo(c, 'Seções', 29, 900);
+    const yEpigrafe = tituloDaAbertura(c, cap, v);
+    paragrafo(c, ch.epigrafe, 29, yEpigrafe, 760, { tam: 40, entre: 50, peso: 300 });
+    // as seções e a visão geral no corpo do texto da apresentação
+    const ySecoes = 880;
+    const passo = 56;
+    rotulo(c, 'Seções', 29, ySecoes);
     ch.secoes.forEach(({ nome, k }, i) => {
-        const y = 900 + i * 40;
-        rotulo(c, nome, 345, y, { tam: 11.5 });
-        rotulo(c, `Página ${pagina2(intro + k)}`, 973, y, { tam: 11.5, alinhar: 'right', cor: CINZA });
-        fio(c, 345, y + 14, 973, y + 14);
+        const y = ySecoes + i * passo;
+        linha(c, nome, 345, y, { tam: TEXTO.tam, peso: 400 });
+        linha(c, `Página ${pagina2(intro + k)}`, 973, y, { tam: TEXTO.tam, peso: 400, alinhar: 'right', cor: CINZA });
+        fio(c, 345, y + 20, 973, y + 20);
     });
-    rotulo(c, 'Visão geral', 29, 1200);
-    paragrafo(c, ch.visaoGeral, 345, 1200, 628, { tam: 21, entre: 25.5 });
+    paraLer(c, 345, ySecoes - TEXTO.tam, 973, ySecoes + (ch.secoes.length - 1) * passo + 20, TEXTO.tam);
+    const yVisao = 1130;
+    rotulo(c, 'Visão geral', 29, yVisao);
+    paragrafoLido(c, ch.visaoGeral, 345, yVisao, 628, TEXTO);
     rodape(c, num, ch.titulo);
+}
+
+// uma introdução com uma das versões do título, para a página de comparação
+export function desenharAbertura(p: Pincel, cap: number, v: VersaoTitulo) {
+    abertura({ p, alvos: [] }, cap, (CAPITULOS[cap].paginas?.[0] ?? 0) + 1, v);
 }
 
 // as matérias de cada capítulo, como as de antes: na página da esquerda, a prancha em moldura no alto, a mostra na
@@ -956,7 +1099,7 @@ function mostra(c: Ctx, cap: number) {
         rotulo(c, 'Linha de base', x + l, base + 30, { tam: 11, cor: CINZA, alinhar: 'right' });
         rotulo(c, 'Altura do x', x + l, base - 545 * (tam / 1000) - 14, { tam: 11, cor: CINZA, alinhar: 'right' });
         const pontos = g.pedras.reduce((s, p) => s + p.vertices.reduce((t, v) => t + v.length, 0), 0);
-        paragrafo(c, `O a da Cut com os ${pontos} pontos do contorno: só retas, uma por golpe.`, x, 730, l, { tam: 18.5, entre: 23.5 });
+        paragrafoLido(c, `O a da Cut com os ${pontos} pontos do contorno: só retas, uma por golpe.`, x, 730, l, { tam: 18.5, entre: 23.5 });
     } else if (id === 'estilos') {
         // a palavra nos três estilos, com a largura de cada uma em unidades da fonte
         rotulo(c, 'A mesma palavra, mais estreita a cada estilo', x, 160, { cor: CINZA });
@@ -977,7 +1120,7 @@ function mostra(c: Ctx, cap: number) {
             linha(c, t, x, y, { tam: 82, fam: 'worn', peso: 400 });
             fio(c, x, y + 26, x + l, y + 26);
         });
-        paragrafo(c, 'A primeira de cada linha é o desenho de base; as outras três entram sozinhas, na ordem, quando a letra se repete.', x, 900, l, { tam: 18.5, entre: 23.5 });
+        paragrafoLido(c, 'A primeira de cada linha é o desenho de base; as outras três entram sozinhas, na ordem, quando a letra se repete.', x, 900, l, { tam: 18.5, entre: 23.5 });
     } else {
         // os acentos, pedras à parte, em maiúsculas e em minúsculas
         rotulo(c, 'Pedras à parte', x, 160, { cor: CINZA });
@@ -997,9 +1140,9 @@ function artigoEsq(c: Ctx, cap: number, num?: number) {
     fio(c, 519, 27, 519, 1478);
     rotulo(c, secaoDaPagina(cap, num), 973, 47, { alinhar: 'right', cor: CINZA });
     linha(c, ch.titulo, 973, 84, { tam: 32, peso: 400, alinhar: 'right' });
-    paragrafo(c, ch.corpo[0], 29, 795, 459, CORPO);
+    paragrafoLido(c, ch.corpo[0], 29, 795, 459, CORPO);
     const n = contarLinhas(c, ch.corpo[1], 459, CORPO);
-    paragrafo(c, ch.corpo[1], 29, Math.max(1140, 1436 - (n - 1) * CORPO.entre), 459, CORPO);
+    paragrafoLido(c, ch.corpo[1], 29, Math.max(1140, 1436 - (n - 1) * CORPO.entre), 459, CORPO);
     mostra(c, cap);
     rodape(c, num, LIVRO.titulo);
 }
@@ -1008,7 +1151,7 @@ function artigoDir(c: Ctx, cap: number, num?: number) {
     const ch = CAPITULOS[cap];
     const a = ARTIGOS[ch.id];
     fundo(c, PAPEL);
-    paragrafo(c, ch.corpo[2], 29, 62, 459, CORPO);
+    paragrafoLido(c, ch.corpo[2], 29, 62, 459, CORPO);
     moldura(c, a.dir, 514, 27, 459, 444, a.legendaDir);
     // a citação na Rune do capítulo, centrada entre a prancha e a faixa do pé
     const cit: Paragrafo = { tam: 54, entre: 60, fam: ch.estilo, peso: 400, alinhar: 'center' };
@@ -1204,7 +1347,7 @@ function colofao(c: Ctx) {
     fundo(c, PAPEL);
     logo(c, 500, 1010, 56, TINTA, 'center');
     rotulo(c, 'Colofão', 500, 1080, { alinhar: 'center', cor: CINZA });
-    paragrafo(
+    paragrafoLido(
         c,
         'Este espécime foi composto em Föeger Rune Cut, Polished e Worn, com Inter Tight e DM Mono nos textos de apoio. A fonte é a prévia de 5 de novembro de 2026, com 311 glifos em cada estilo e ainda sem o ajuste fino dos pares de letras.',
         250,

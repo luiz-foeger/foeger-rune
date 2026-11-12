@@ -9,6 +9,7 @@
 import { malha, olhar, perspectiva, programa, quadroDeDesenho, liberarQuadro, mult, norm, cruz, type Quadro, type Prog } from './gl';
 import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, contagemDaPagina, lerCores, tintaDoVegetal, type Pagina } from '../especime/conteudo';
 import { desenharPagina, type Alvo } from '../especime/paginas';
+import { PONTEIROS, type Ponteiro } from './ponteiros';
 import { carregarFontes, familiasDe, pincelCanvas, type Familias } from '../especime/pincel';
 
 const W = 1;
@@ -1225,6 +1226,16 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     // o livro já está no lugar quando a seção chega (sem entrada: nem de longe, nem acendendo)
     const cam: Cam = { cx: 0.5, cy: 0, zoom: 1 };
     const camAlvo: Cam = { cx: 0.5, cy: 0, zoom: 1 };
+    // lendo um texto aproximado pelo clique (ver lerDePerto)
+    let lendo = false;
+    // o ponteiro sobre o livro: os desenhados no traço da fonte (ponteiros.ts); guarda qual está, para só trocar quando
+    // muda
+    let ponteiroAtual: Ponteiro = 'default';
+    function ponteiro(p: Ponteiro) {
+        if (p === ponteiroAtual) return;
+        ponteiroAtual = p;
+        cv.style.cursor = PONTEIROS[p];
+    }
     const mouse = { x: 0, y: 0, sx: 0, sy: 0, dentro: false };
     let largCss = 1;
     let altCss = 1;
@@ -1246,9 +1257,11 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const t = Math.tan(FOV / 2);
         const meiaA = dist * t;
         const meiaL = meiaA * (largCss / altCss);
-        // de perto, a câmera segue o cursor; de longe, o cursor só inclina um pouco a vista
-        const ox = m.sx * 0.3 * meiaL * perto;
-        const oy = m.sy * 0.3 * meiaA * perto;
+        // de perto, a câmera segue o cursor (lendo um texto aproximado, só um pouco, para ele ficar parado); de longe,
+        // o cursor só inclina um pouco a vista
+        const segue = lendo ? 0.1 : 0.3;
+        const ox = m.sx * segue * meiaL * perto;
+        const oy = m.sy * segue * meiaA * perto;
         const px = m.sx * 0.07 * (1 - perto);
         const py = m.sy * 0.05 * (1 - perto);
         const alvo = [c.cx + ox, c.cy + oy, 0.01];
@@ -1283,6 +1296,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     }
 
     function zoomPara(z: number, px: number, py: number) {
+        lendo = false;
         const z1 = lim(z, 0.8, 4.5);
         const [x, y] = noPlano(px, py, 0.02);
         const z0 = camAlvo.zoom;
@@ -1297,6 +1311,31 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     function prender() {
         camAlvo.cx = lim(camAlvo.cx, -W, W);
         camAlvo.cy = lim(camAlvo.cy, -H / 2, H / 2);
+    }
+
+    // o texto aproximado para ler: o clique num texto leva a câmera até o meio dele, com o corpo em uns 18 px na tela
+    // (sem o texto passar de 86% da largura nem de 80% da altura da tela, e com o zoom entre 2 e 4,5); outro clique, o
+    // Esc ou virar a folha voltam ao livro inteiro (com o zoom em 1, a câmera volta sozinha para o meio do livro)
+    function lerDePerto(lado: 0 | 1, a: Alvo) {
+        const u = a.x + a.l / 2;
+        const vv = a.y + a.a / 2;
+        // os pixels da tela por unidade da cena com o zoom em 1, e o corpo do texto em pixels
+        const px1 = altCss / (2 * distanciaBase() * Math.tan(FOV / 2));
+        const corpo = ((a.ler ?? 18.5) / 1500) * H * px1;
+        const z = lim(Math.min(18 / corpo, (0.86 * largCss) / (a.l * W * px1), (0.8 * altCss) / (a.a * H * px1)), 2, 4.5);
+        camAlvo.cx = lado === 0 ? u * W : (u - 1) * W;
+        camAlvo.cy = (0.5 - vv) * H;
+        camAlvo.zoom = z;
+        prender();
+        lendo = true;
+        destacar(null, -1);
+        cv.style.touchAction = 'none';
+        ponteiro('zoom-out');
+        o.aoInteragir();
+    }
+    function sairDaLeitura() {
+        zoomPara(1, largCss / 2, altCss / 2);
+        ponteiro('default');
     }
 
     // ---------- o que está debaixo do cursor ----------
@@ -1339,11 +1378,18 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         armado = false;
         pontoDaTroca = ultimoPonto;
         destacar(null, -1);
-        if (cv.style.cursor === 'pointer') cv.style.cursor = 'default';
+        if (ponteiroAtual === 'pointer' || ponteiroAtual === 'zoom-in') ponteiro('default');
     }
     function conferirArmado(lx: number, ly: number, limiar: number) {
         ultimoPonto = [lx, ly];
         if (!armado && (!pontoDaTroca || Math.hypot(lx - pontoDaTroca[0], ly - pontoDaTroca[1]) > limiar)) armado = true;
+    }
+    // a área clicável sob o ponteiro, se os links estão armados. Os textos para ler não valem na faixa de fora da
+    // página, onde o canto da folha levanta: lá o clique sempre vira a página
+    function alvoSob(s: { x: number; fc: Face | null; u: number; v: number }) {
+        if (!armado) return null;
+        const a = alvoEm(s.fc, s.u, s.v);
+        return a && a.ler !== undefined && Math.abs(s.x) > W * 0.72 ? null : a;
     }
 
     function irPara(cap: number) {
@@ -1402,9 +1448,11 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         if (e.pointerType !== 'mouse') return;
         // sem botão: o cursor e a página que levanta (o link só acende armado)
         const s = sob(lx, ly);
-        const alvoAqui = armado ? alvoEm(s.fc, s.u, s.v) : null;
-        destacar(alvoAqui ? s.fc : null, alvoAqui && s.fc ? s.fc.alvos.indexOf(alvoAqui) : -1);
-        cv.style.cursor = alvoAqui ? 'pointer' : s.lado !== null ? 'grab' : camAlvo.zoom > 1.25 ? 'grab' : 'default';
+        const alvoAqui = alvoSob(s);
+        // os links acendem (a página é redesenhada); os textos só trocam o cursor. De perto, o clique volta ao livro
+        const link = alvoAqui && alvoAqui.ler === undefined ? alvoAqui : null;
+        destacar(link ? s.fc : null, link && s.fc ? s.fc.alvos.indexOf(link) : -1);
+        ponteiro(link ? 'pointer' : camAlvo.zoom > 1.25 ? 'zoom-out' : alvoAqui ? 'zoom-in' : s.lado !== null ? 'grab' : 'default');
         const livre = !folhas.some(f => f.anim) && camAlvo.zoom < 1.35 && !alvoAqui;
         const c = contagem();
         let quer = -1;
@@ -1467,14 +1515,14 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
                 if (peel.i === f.i) peel.e = 0;
                 peel.proximo = -1;
                 alvoContagem = c;
-                cv.style.cursor = 'grabbing';
+                ponteiro('grabbing');
                 o.aoInteragir();
                 return;
             }
         }
         if (camAlvo.zoom > 1.1) {
             toque.pan = true;
-            cv.style.cursor = 'grabbing';
+            ponteiro('grabbing');
         }
     }
 
@@ -1572,17 +1620,19 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         toque = null;
         if (arrasto) {
             soltarArrasto();
-            cv.style.cursor = 'grab';
+            ponteiro('grab');
             return;
         }
         if (t.movido) {
-            cv.style.cursor = camAlvo.zoom > 1.25 ? 'grab' : 'default';
+            ponteiro(camAlvo.zoom > 1.25 ? 'grab' : 'default');
             return;
         }
-        // um clique: um link da página (se o ponteiro se mexeu desde que ela apareceu), ou virar a página da metade clicada
+        // um clique: um link da página (se o ponteiro se mexeu desde que ela apareceu), um texto para ler de perto, ou
+        // virar a página da metade clicada. De perto, fora dos links, o clique volta ao livro inteiro
         const [lx, ly] = local(e);
         const s = sob(lx, ly);
-        const a = armado ? alvoEm(s.fc, s.u, s.v) : null;
+        const a = alvoSob(s);
+        if (camAlvo.zoom > 1.25 && (!a || a.ler !== undefined)) return sairDaLeitura();
         if (a?.cap !== undefined) return irPara(a.cap);
         if (a?.pagina !== undefined) {
             alvoContagem = contagemDaPagina(defs, a.pagina);
@@ -1594,6 +1644,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             o.aoInteragir();
             return;
         }
+        if (a?.ler !== undefined && s.lado !== null) return lerDePerto(s.lado, a);
         if (s.lado !== null && camAlvo.zoom < 1.25) virar(s.lado === 0 ? 1 : -1);
     }
 
@@ -1656,7 +1707,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const focado = document.activeElement === cv;
         if (e.key === 'ArrowRight') virar(1);
         else if (e.key === 'ArrowLeft') virar(-1);
-        else if (e.key === 'Escape' && camAlvo.zoom > 1.02) zoomPara(1, largCss / 2, altCss / 2);
+        else if (e.key === 'Escape' && camAlvo.zoom > 1.02) sairDaLeitura();
         else if (focado && (e.key === '+' || e.key === '=')) zoomPara(camAlvo.zoom * 1.5, largCss / 2, altCss / 2);
         else if (focado && e.key === '-') zoomPara(camAlvo.zoom / 1.5, largCss / 2, altCss / 2);
         else return;
@@ -1670,6 +1721,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     }
 
     cv.style.touchAction = 'pan-y';
+    cv.style.cursor = PONTEIROS.default;
     cv.addEventListener('pointerdown', aoApertar);
     cv.addEventListener('pointermove', aoMover);
     cv.addEventListener('pointerup', aoSoltar);
@@ -2092,6 +2144,8 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         if (alvoContagem !== alvoVisto) {
             alvoVisto = alvoContagem;
             desarmar();
+            // virou a folha lendo um texto de perto: volta ao livro inteiro
+            if (lendo) sairDaLeitura();
         }
         const rotulo = rotuloDe(contagem());
         const chave = `${rotulo}|${alvoContagem}`;
@@ -2163,7 +2217,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
 
     // para a verificação: o estado e atalhos de teste
     (window as unknown as { __livroRune?: unknown }).__livroRune = {
-        estado: () => ({ contagem: contagem(), alvo: alvoContagem, zoom: cam.zoom, N, rodando, rotulo: rotuloDe(contagem()), folhas: folhas.map(f => ({ phi: +f.phi.toFixed(3), lado: f.lado, nivel: [f.frente.nivel, f.verso.nivel] })) }),
+        estado: () => ({ contagem: contagem(), alvo: alvoContagem, zoom: cam.zoom, lendo, N, rodando, rotulo: rotuloDe(contagem()), folhas: folhas.map(f => ({ phi: +f.phi.toFixed(3), lado: f.lado, nivel: [f.frente.nivel, f.verso.nivel] })) }),
         irPara,
         virar,
         caracteres: () => (alvoContagem = folhaDosCaracteres(defs)),
