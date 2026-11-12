@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { iniciarLivro, type Controle, type Estado } from '../_lib/livro3d/motor';
-import { VARIAVEIS_DOS_PONTEIROS } from '../_lib/livro3d/ponteiros';
 
 // o livro do espécime, como na página antiga da fonte (a /nova/foeger-sans do portfolio-simulacao): o título digitado
 // vem antes (na página), aqui ficam o livro e, embaixo, as setas, as páginas abertas e o botão de baixar o PDF. O livro
@@ -67,12 +66,12 @@ export default function SecaoLivro() {
 
     return (
         <>
-            <section className="fx-livro" aria-label="O livro" style={VARIAVEIS_DOS_PONTEIROS}>
+            <section className="fx-livro" aria-label="O livro">
                 <canvas ref={tela} className="fx-livro-tela" tabIndex={0} aria-label="O espécime da Föeger Rune: clique na página ou arraste o canto para folhear" />
                 {/* sem tela de carregamento: o livro aparece quando fica pronto; só um erro, se houver, ocupa o lugar dele */}
                 {erro && <div className="fx-livro-carregando">{erro}</div>}
             </section>
-            <div className="fx-livro-controles" style={VARIAVEIS_DOS_PONTEIROS}>
+            <div className="fx-livro-controles">
                 <button type="button" className="fx-livro-seta" onClick={() => controle.current?.virar(-1)} disabled={!pronto || estado.inicio} aria-label="Página anterior">
                     ←
                 </button>

@@ -1228,8 +1228,8 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     const camAlvo: Cam = { cx: 0.5, cy: 0, zoom: 1 };
     // lendo um texto aproximado pelo clique (ver lerDePerto)
     let lendo = false;
-    // o ponteiro sobre o livro: os desenhados no traço da fonte (ponteiros.ts); guarda qual está, para só trocar quando
-    // muda
+    // o ponteiro sobre o livro (ponteiros.ts: a lupa desenhada no traço da fonte e, no resto, os do sistema); guarda
+    // qual está, para só trocar quando muda
     let ponteiroAtual: Ponteiro = 'default';
     function ponteiro(p: Ponteiro) {
         if (p === ponteiroAtual) return;

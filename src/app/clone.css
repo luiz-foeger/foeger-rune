@@ -1131,9 +1131,7 @@ html:has([data-clone]) {
     display: grid;
     place-items: center;
 }
-/* os ponteiros desenhados do livro (ponteiros.ts, nas variáveis que a seção põe) também nos controles embaixo dele */
 .fx-livro-controles {
-    cursor: var(--ponteiro-seta, default);
     position: relative;
     z-index: 1;
     display: flex;
@@ -1156,7 +1154,7 @@ html:has([data-clone]) {
     font-family: var(--ff-cut), sans-serif;
     font-size: max(16px, calc(38 * var(--u)));
     line-height: 1;
-    cursor: var(--ponteiro-mao, pointer);
+    cursor: pointer;
     transition:
         background-color 0.2s ease,
         opacity 0.2s ease;
@@ -1166,7 +1164,7 @@ html:has([data-clone]) {
 }
 .fx-livro-seta:disabled {
     opacity: 0.3;
-    cursor: var(--ponteiro-seta, default);
+    cursor: default;
 }
 .fx-livro-seta:focus-visible {
     outline: 2px solid var(--tinta);
@@ -1185,7 +1183,6 @@ html:has([data-clone]) {
     margin-left: calc(24 * var(--u));
     color: var(--tinta);
     text-decoration: none;
-    cursor: var(--ponteiro-mao, pointer);
 }
 .fx-livro-baixar i {
     width: max(20px, calc(48 * var(--u)));
