@@ -15,7 +15,6 @@ export default function SecaoLivro() {
     const controle = useRef<Controle | null>(null);
     const [perto, setPerto] = useState(false);
     const [pronto, setPronto] = useState(false);
-    const [mexeu, setMexeu] = useState(false);
     const [erro, setErro] = useState('');
     const [estado, setEstado] = useState<Estado>({ rotulo: 'Capa', inicio: true, fim: false });
 
@@ -44,7 +43,8 @@ export default function SecaoLivro() {
             cancelAnimationFrame(pedido);
             pedido = requestAnimationFrame(conferir);
         };
-        iniciarLivro(cv, { aoPronto: () => setPronto(true), aoInteragir: () => setMexeu(true), aoMudar: setEstado }, ctl.signal)
+        // (sem dica embaixo do livro, ninguém mais precisa saber da primeira interação)
+        iniciarLivro(cv, { aoPronto: () => setPronto(true), aoInteragir: () => {}, aoMudar: setEstado }, ctl.signal)
             .then(c => {
                 if (!c) return;
                 if (ctl.signal.aborted) return c.parar();
@@ -70,9 +70,6 @@ export default function SecaoLivro() {
                 <canvas ref={tela} className="fx-livro-tela" tabIndex={0} aria-label="O espécime da Föeger Rune: clique na página ou arraste o canto para folhear" />
                 {/* sem tela de carregamento: o livro aparece quando fica pronto; só um erro, se houver, ocupa o lugar dele */}
                 {erro && <div className="fx-livro-carregando">{erro}</div>}
-                <p className="fx-livro-dica" data-oculta={!pronto || mexeu}>
-                    Clique na página ou arraste o canto · Ctrl + roda aproxima
-                </p>
             </section>
             <div className="fx-livro-controles">
                 <button type="button" className="fx-livro-seta" onClick={() => controle.current?.virar(-1)} disabled={!pronto || estado.inicio} aria-label="Página anterior">

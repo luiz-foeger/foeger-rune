@@ -33,7 +33,8 @@
     /* os três tamanhos dos textos secundários (fora os títulos, as réguas das molduras e os números grandes):
        subtítulo (o nome do estilo no testador, o título do gráfico, as páginas do livro), secundário (as legendas, os
        nomes dos estilos, os botões, os números e nomes das barras, as notas) e rótulo (os textos técnicos dentro dos
-       cartões, as escalas, a dica do livro). Dentro dos SVGs dos cartões (1 unidade = 1 u), os mesmos números em px */
+       cartões, as escalas, o aviso de erro do livro). Dentro dos SVGs dos cartões (1 unidade = 1 u), os mesmos números
+       em px */
     --t-sub: max(12px, calc(26 * var(--u)));
     --t-sec: max(11px, calc(20 * var(--u)));
     --t-rot: max(9px, calc(14 * var(--u)));
@@ -1114,8 +1115,7 @@ html:has([data-clone]) {
     outline: 2px solid var(--p-quente);
     outline-offset: -2px;
 }
-.fx-livro-carregando,
-.fx-livro-dica {
+.fx-livro-carregando {
     position: absolute;
     margin: 0;
     color: color-mix(in srgb, var(--tinta, #111) 55%, transparent);
@@ -1130,17 +1130,6 @@ html:has([data-clone]) {
     inset: 0;
     display: grid;
     place-items: center;
-}
-.fx-livro-dica {
-    left: 50%;
-    bottom: calc(26 * var(--u));
-    transform: translateX(-50%);
-    line-height: 1.4;
-    white-space: nowrap;
-    transition: opacity 0.8s ease;
-}
-.fx-livro-dica[data-oculta='true'] {
-    opacity: 0;
 }
 .fx-livro-controles {
     position: relative;
@@ -1230,11 +1219,6 @@ html:has([data-clone]) {
     }
     .fx-livro-baixar {
         margin-left: 0;
-    }
-    .fx-livro-dica {
-        width: 88%;
-        text-align: center;
-        white-space: normal;
     }
 }
 
