@@ -1,9 +1,11 @@
 // o conteúdo do livro da página: o espécime da Föeger Rune, na ordem dos livros de verdade e contado como a vida de uma
-// pedra: a capa com a guarda lisa por dentro; as páginas de abertura (a falsa folha de rosto, o frontispício, a folha
-// de rosto, os créditos no verso dela, o sumário e a apresentação); os quatro capítulos (como as letras foram
-// construídas, os três estilos, as variações e a fonte do título ao texto); os caracteres; o colofão; e a contracapa,
-// também com a guarda por dentro. Cada assunto abre numa página da direita, com um papel vegetal por cima, impresso com
-// o desenho de construção dele; virado, o vegetal deita por cima da última página do assunto anterior. Os números e os
+// pedra, a partir da logo da Föeger, de onde a fonte nasceu: a capa com a guarda lisa por dentro; as páginas de
+// abertura (a falsa folha de rosto, o frontispício, a folha de rosto, os créditos no verso dela, o sumário e, numa
+// dupla, a logo peça por peça e a apresentação); os quatro capítulos (como as letras foram construídas, os três estilos,
+// as variações e a fonte do título ao texto); os caracteres; o colofão; e a contracapa, também com a guarda por dentro.
+// Cada assunto abre numa dupla: à esquerda, uma página de cor chapada com letras enormes; à direita, a introdução; e,
+// entre as duas, um papel vegetal impresso com o desenho de construção do assunto. As matérias são como as de um livro:
+// pranchas em moldura, com legenda, e o texto em colunas. Os números e os
 // fatos são os da prévia de 05/11 (311 glifos em cada estilo, as larguras de cada estilo, o revezamento das minúsculas,
 // o L do meio e o f do começo).
 import type { Familia } from './pincel';
@@ -16,17 +18,19 @@ export type Capitulo = {
     titulo: string;
     // o título em duas linhas, como na abertura: a primeira na grotesca leve, a segunda na Rune do capítulo
     linhas: [string, string];
-    // a Rune do título, da epígrafe e do número grande na página de texto
+    // a Rune do título, da epígrafe e da citação
     estilo: Familia;
-    // a frase do capítulo, na abertura
+    // a frase do capítulo, na introdução
     epigrafe: string;
-    // a visão geral, na abertura, e o texto da página que fecha o capítulo (o primeiro parágrafo em corpo grande)
+    // a visão geral, na introdução, e o texto das matérias (dois parágrafos na página da esquerda, um na da direita)
     visaoGeral: string;
     corpo: [string, string, string];
-    // quantas páginas o capítulo tem depois da abertura (sempre ímpar: ele fecha numa página da esquerda)
+    // quantas páginas o capítulo tem depois da introdução (sempre par: ele fecha numa página da direita, e a página de
+    // cor do capítulo seguinte fica à esquerda da introdução dele)
     materias: number;
-    // as seções da abertura: o nome, a página (contada a partir da abertura: 1 é a seguinte) e se aparece no sumário
+    // as seções da introdução: o nome, a página (contada a partir da introdução: 1 é a seguinte) e se aparece no sumário
     secoes: { nome: string; k: number; sumario?: boolean }[];
+    // a página de cor e a última do capítulo
     paginas?: [number, number];
 };
 
@@ -92,17 +96,16 @@ export const CAPITULOS: Capitulo[] = [
         linhas: ['A construção', 'das letras'],
         estilo: 'cut',
         epigrafe: 'Toda pedra começa bruta.',
-        visaoGeral: 'Toda letra começou num quadrado de um gabarito, desenhada à mão. Depois, cada uma foi refeita a partir do próprio desenho, só com retas, e ganhou o corte do cinzel nas quinas.',
+        visaoGeral: 'A Föeger Rune começou na logo da Föeger. Das letras dela veio a ideia de um alfabeto inteiro, desenhado à mão num gabarito e depois refeito só com retas, com o corte do cinzel nas quinas.',
         corpo: [
-            'O desenho à mão virou contorno, e as curvas da vetorização viraram retas. As alturas foram alinhadas sem esticar as letras, e o alfabeto caiu de 3.390 para 1.262 pontos sem perder o jeito da mão.',
+            'A logo já era feita de pedras: cada letra uma peça de retas, e os pingos do ö e o ponto, soltos. Dela veio a vontade de ir além da logo: as outras letras, os números e os sinais, no mesmo traço.',
+            'Cada letra foi desenhada à mão num gabarito, um quadrado por letra. O desenho virou contorno, e as curvas da vetorização viraram retas: o alfabeto caiu de 3.390 para 1.262 pontos sem perder o jeito da mão.',
             'Nas quinas, um corte reto, como o golpe de um cinzel. Por isso nenhuma letra é perfeitamente reta e nenhuma é igual à outra: de longe, a palavra parece um muro de pedras encaixadas; de perto, cada pedra tem o seu desenho.',
-            'Os acentos saíram das marcas do próprio desenho, e os sinais, de folhas desenhadas pelo autor. O nome também veio da pedra: runas são letras gravadas em pedra.',
         ],
-        materias: 3,
+        materias: 2,
         secoes: [
-            { nome: 'Os pontos de uma letra', k: 1, sumario: true },
-            { nome: 'O alfabeto da Cut', k: 2, sumario: true },
-            { nome: 'Como as letras foram feitas', k: 3 },
+            { nome: 'Maiúsculas e os pontos do a', k: 1, sumario: true },
+            { nome: 'Minúsculas e números', k: 2, sumario: true },
         ],
     },
     {
@@ -118,12 +121,11 @@ export const CAPITULOS: Capitulo[] = [
             'A Polished guarda o corte com as pontas lixadas e vai bem em títulos e textos curtos. A Worn é a mais macia: perde os ângulos, ganha volume e serve quando a pedra precisa parecer amiga.',
             'Quanto mais gasta, mais estreita: o A tem 801 unidades de largura na Cut, 749 na Polished e 710 na Worn. A mesma palavra ocupa menos linha a cada estilo.',
         ],
-        materias: 5,
+        materias: 4,
         secoes: [
             { nome: 'A Polished, de perto', k: 1 },
-            { nome: 'A mesma palavra nos três estilos', k: 3 },
-            { nome: 'As três larguras', k: 4, sumario: true },
-            { nome: 'Como cada estilo se gasta', k: 5 },
+            { nome: 'Os três desgastes', k: 3, sumario: true },
+            { nome: 'O R, um por cima do outro', k: 4 },
         ],
     },
     {
@@ -135,15 +137,14 @@ export const CAPITULOS: Capitulo[] = [
         epigrafe: 'Sonhei ontem que uma pedra rolava, rolava e não paraaava!',
         visaoGeral: 'Quem talha à mão não repete o golpe. Quando uma minúscula aparece de novo logo em seguida, a fonte troca o corte sozinha, e a palavra nunca fica com cara de carimbo.',
         corpo: [
-            'Cada minúscula tem até quatro cortes, que se revezam: o desenho de base, depois a variação dois, a três e a quatro, e de novo a base. O texto não muda; quem faz a troca é a própria fonte, pelas alternativas de contexto.',
+            'A ideia veio da logo: os dois e de Föeger foram desenhados diferentes, e o segundo virou a primeira variação do e. Daí, cada minúscula ganhou até quatro cortes.',
+            'Os cortes se revezam: o desenho de base, depois a variação dois, a três e a quatro, e de novo a base. O texto não muda; quem faz a troca é a própria fonte, pelas alternativas de contexto, nos três estilos.',
             'Duas letras ainda mudam conforme o lugar: o L ganha outro corte quando vem depois de outra letra, e o f tem um desenho próprio para o começo da palavra.',
-            'As trocas valem nos três estilos e em qualquer programa que ligue as alternativas de contexto, o que quase todos fazem sem pedir.',
         ],
-        materias: 3,
+        materias: 2,
         secoes: [
-            { nome: 'Os quatro cortes do s', k: 1 },
-            { nome: 'As letras repetidas', k: 2, sumario: true },
-            { nome: 'Como as trocas funcionam', k: 3 },
+            { nome: 'Sem e com as trocas', k: 1, sumario: true },
+            { nome: 'O L, o f e os dois e da logo', k: 2 },
         ],
     },
     {
@@ -159,12 +160,11 @@ export const CAPITULOS: Capitulo[] = [
             'Em corpo de texto, o desenho vira textura, pesada e irregular, que pede frases curtas e espaço entre as linhas.',
             'Os acentos são pedras à parte, pousadas por cima, e as frações, os números elevados e os símbolos do dia a dia vêm no mesmo traço.',
         ],
-        materias: 5,
+        materias: 4,
         secoes: [
             { nome: 'Em corpo de cartaz', k: 1 },
-            { nome: 'A mesma palavra em seis corpos', k: 3 },
-            { nome: 'A Rune em parágrafo', k: 4, sumario: true },
-            { nome: 'Onde a Rune funciona melhor', k: 5 },
+            { nome: 'Acentos e frações', k: 3, sumario: true },
+            { nome: 'Do cartaz ao texto', k: 4 },
         ],
     },
 ];
@@ -174,11 +174,12 @@ export const LIVRO = {
     edicao: 'Edição 01 — 2026',
     frase: 'Pedra que se gasta.',
     apresentacao:
-        'A Föeger Rune nasceu de um gabarito desenhado à mão, uma letra por quadrado. Cada letra foi refeita só com retas, com o corte reto do cinzel nas quinas: é a Cut. A mesma pedra, rolada no rio, deu a Polished, com as pontas lixadas, e a Worn, redonda. São três fontes inteiras, com 311 glifos em cada uma.',
+        'A Föeger Rune nasceu da logo da Föeger. Das letras dela vieram as outras, desenhadas à mão num gabarito, uma por quadrado, e refeitas só com retas, com o corte reto do cinzel nas quinas: é a Cut. A mesma pedra, rolada no rio, deu a Polished, com as pontas lixadas, e a Worn, redonda. São três fontes inteiras, com 311 glifos em cada uma.',
 };
 
 // as páginas do livro: cada folha tem a frente (a página da direita enquanto está à direita) e o verso (a da esquerda
-// depois de virada). As do capítulo: a abertura (a da direita, embaixo do vegetal) e as seguintes (k a partir de 0)
+// depois de virada). As do capítulo: a de cor, a introdução (a da direita, embaixo do vegetal) e as seguintes (k a partir
+// de 0)
 export type Pagina =
     | { tipo: 'capa' }
     | { tipo: 'guarda' }
@@ -188,7 +189,9 @@ export type Pagina =
     | { tipo: 'rosto' }
     | { tipo: 'creditos' }
     | { tipo: 'sumario' }
+    | { tipo: 'logo' }
     | { tipo: 'apresentacao' }
+    | { tipo: 'cor'; cap: number }
     | { tipo: 'abertura'; cap: number }
     | { tipo: 'materia'; cap: number; k: number }
     | { tipo: 'vegetal'; v: number }
@@ -207,21 +210,35 @@ export type Folha = { frente: Pagina; verso: Pagina; tipo: 'capa' | 'papel' | 'v
 export const EXTRAS: { apresentacao?: number; letras?: number; acentos?: number; sinais?: number; colofao?: number; paginas?: number } = {};
 
 export function montarFolhas(): Folha[] {
-    const f: Folha[] = [];
-    const vegetal = (v: number): Folha => ({ tipo: 'vegetal', frente: { tipo: 'vegetal', v }, verso: { tipo: 'vegetal', v } });
-    f.push({ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'guarda' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'falsa-rosto' }, verso: { tipo: 'frontispicio' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'rosto' }, verso: { tipo: 'creditos' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'sumario' }, verso: { tipo: 'apresentacao' } });
-    // cada capítulo: o vegetal, a abertura (com a primeira página no verso) e as folhas das outras, de duas em duas
+    // as páginas na ordem de leitura, com os vegetais onde eles entram (sempre entre duas folhas: depois de uma página da
+    // esquerda, antes de uma da direita)
+    const seq: (Pagina | { vegetal: number })[] = [
+        { tipo: 'falsa-rosto' },
+        { tipo: 'frontispicio' },
+        { tipo: 'rosto' },
+        { tipo: 'creditos' },
+        { tipo: 'sumario' },
+        { tipo: 'logo' },
+        { tipo: 'apresentacao' },
+    ];
     CAPITULOS.forEach((ch, cap) => {
-        f.push(vegetal(cap));
-        f.push({ tipo: 'papel', frente: { tipo: 'abertura', cap }, verso: { tipo: 'materia', cap, k: 0 } });
-        for (let k = 1; k < ch.materias; k += 2) f.push({ tipo: 'papel', frente: { tipo: 'materia', cap, k }, verso: { tipo: 'materia', cap, k: k + 1 } });
+        seq.push({ tipo: 'cor', cap }, { vegetal: cap }, { tipo: 'abertura', cap });
+        for (let k = 0; k < ch.materias; k++) seq.push({ tipo: 'materia', cap, k });
     });
-    f.push(vegetal(CAPITULOS.length));
-    f.push({ tipo: 'papel', frente: { tipo: 'letras' }, verso: { tipo: 'acentos' } });
-    f.push({ tipo: 'papel', frente: { tipo: 'sinais' }, verso: { tipo: 'colofao' } });
+    seq.push({ tipo: 'cor', cap: CAPITULOS.length }, { vegetal: CAPITULOS.length }, { tipo: 'letras' }, { tipo: 'acentos' }, { tipo: 'sinais' }, { tipo: 'colofao' });
+    const f: Folha[] = [{ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'guarda' } }];
+    let frente: Pagina | null = null;
+    for (const x of seq) {
+        if ('vegetal' in x) {
+            if (frente) throw new Error('o papel vegetal tem de ficar entre duas folhas');
+            f.push({ tipo: 'vegetal', frente: { tipo: 'vegetal', v: x.vegetal }, verso: { tipo: 'vegetal', v: x.vegetal } });
+        } else if (!frente) frente = x;
+        else {
+            f.push({ tipo: 'papel', frente, verso: x });
+            frente = null;
+        }
+    }
+    if (frente) throw new Error('o livro tem de fechar numa página da esquerda');
     f.push({ tipo: 'contracapa', frente: { tipo: 'guarda' }, verso: { tipo: 'contracapa' } });
     // números de página: a falsa folha de rosto é a 1; o papel vegetal não conta
     let n = 1;
@@ -235,10 +252,10 @@ export function montarFolhas(): Folha[] {
         return lado === 'frente' ? x.numFrente! : x.numVerso!;
     };
     CAPITULOS.forEach((c, cap) => {
-        const ini = pagina('abertura', 'frente', cap);
-        c.paginas = [ini, ini + c.materias];
+        const ini = pagina('cor', 'verso', cap);
+        c.paginas = [ini, ini + 1 + c.materias];
     });
-    EXTRAS.apresentacao = pagina('apresentacao', 'verso');
+    EXTRAS.apresentacao = pagina('logo', 'verso');
     EXTRAS.letras = pagina('letras', 'frente');
     EXTRAS.acentos = pagina('acentos', 'verso');
     EXTRAS.sinais = pagina('sinais', 'frente');
@@ -247,8 +264,8 @@ export function montarFolhas(): Folha[] {
     return f;
 }
 
-// quantas folhas virar para o capítulo i ficar aberto: a abertura à direita, limpa, com o vegetal já virado por cima da
-// página anterior
+// quantas folhas virar para o capítulo i ficar aberto: a introdução à direita, limpa, com o vegetal já virado por cima
+// da página de cor
 export function folhaDoCapitulo(folhas: Folha[], i: number) {
     return folhas.findIndex(x => x.frente.tipo === 'abertura' && x.frente.cap === i);
 }
