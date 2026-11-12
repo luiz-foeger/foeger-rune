@@ -950,66 +950,18 @@ function paginaDeCor(c: Ctx, cap: number) {
 }
 
 // a introdução do capítulo, na página da direita, embaixo do vegetal, como as dos livros de verdade. No alto, o número
-// do capítulo em mono e o título; a epígrafe em letra normal, como um subtítulo; e, no corpo do texto da apresentação,
-// as seções, como uma tabela de uma coluna com a página de cada uma, e a visão geral do capítulo. O título tem
-// versões (a página /versoes/titulo mostra todas lado a lado):
-// - atual: em duas linhas, a primeira na grotesca leve e a segunda na Rune do capítulo;
-// - numero: o número do capítulo enorme, na Rune e na cor do assunto (a da página de cor ao lado), e o título numa
-//   linha na grotesca leve;
-// - rune: as duas linhas na Rune do capítulo;
-// - negrito: a grotesca em negrito, com o quadrado da cor do assunto na frente, como a chave das tintas da folha de
-//   rosto;
-// - largura: a primeira linha pequena, na grotesca, e a segunda na Rune, ocupando a largura da página
-export type VersaoTitulo = 'atual' | 'numero' | 'rune' | 'negrito' | 'largura';
-const TITULO: VersaoTitulo = 'atual';
-
-// o título da introdução; devolve a linha de base da epígrafe
-function tituloDaAbertura(c: Ctx, cap: number, v: VersaoTitulo) {
-    const ch = CAPITULOS[cap];
-    const cor = CORES_DOS_ASSUNTOS[ch.id]();
-    const [l1, l2] = ch.linhas;
-    const rune = { fam: ch.estilo, peso: 400 };
-    if (v === 'numero') {
-        linha(c, String(ch.n), 14, 500, { tam: 500, ...rune, cor, semCalt: true });
-        linha(c, ch.titulo, 24, 620, { tam: Math.min(76, ajustar(c, ch.titulo, {}, 944)) });
-        return 700;
-    }
-    if (v === 'rune') {
-        const tam = Math.min(116, ajustar(c, l1, rune, 944), ajustar(c, l2, rune, 944));
-        linha(c, l1, 24, 330, { tam, ...rune });
-        linha(c, l2, 24, 452, { tam, ...rune });
-        return 600;
-    }
-    if (v === 'negrito') {
-        // o quadrado com a altura da maiúscula da grotesca (0,727 do corpo), como na folha de rosto
-        const negrito = { peso: 700 };
-        const tam = Math.min(100, ajustar(c, l1, negrito, 840), ajustar(c, l2, negrito, 840));
-        const lado = 0.727 * tam;
-        const x = 29 + lado + 0.26 * tam;
-        c.p.ret(29, 330 - lado, lado, lado, cor);
-        linha(c, l1, x, 330, { tam, ...negrito });
-        linha(c, l2, x, 330 + 1.12 * tam, { tam, ...negrito });
-        return 600;
-    }
-    if (v === 'largura') {
-        linha(c, l1, 26, 240, { tam: 64 });
-        const tam = ajustar(c, l2, rune, 944);
-        linha(c, l2, 29, 270 + MAIUSCULA * tam, { tam, ...rune });
-        return 270 + MAIUSCULA * tam + 150;
-    }
-    linha(c, l1, 22, 330, { tam: Math.min(118, ajustar(c, l1, {}, 944)) });
-    linha(c, l2, 26, 452, { tam: Math.min(112, ajustar(c, l2, rune, 944)), ...rune });
-    return 600;
-}
-
-function abertura(c: Ctx, cap: number, num?: number, v: VersaoTitulo = TITULO) {
+// do capítulo em mono; o número de novo, enorme, na Polished e na cor do assunto (a da página de cor ao lado), e o
+// título numa linha, na grotesca leve; a epígrafe em letra normal, como um subtítulo; e, no corpo do texto da
+// apresentação, as seções, como uma tabela de uma coluna com a página de cada uma, e a visão geral do capítulo
+function abertura(c: Ctx, cap: number, num?: number) {
     const ch = CAPITULOS[cap];
     const intro = (ch.paginas?.[0] ?? 0) + 1;
     fundo(c, PAPEL);
     fio(c, 29, 22, 973, 22);
     rotulo(c, `Capítulo ${ch.n}`, 29, 70, { cor: CINZA });
-    const yEpigrafe = tituloDaAbertura(c, cap, v);
-    paragrafo(c, ch.epigrafe, 29, yEpigrafe, 760, { tam: 40, entre: 50, peso: 300 });
+    linha(c, String(ch.n), 14, 500, { tam: 500, fam: 'polished', peso: 400, cor: CORES_DOS_ASSUNTOS[ch.id](), semCalt: true });
+    linha(c, ch.titulo, 24, 620, { tam: Math.min(76, ajustar(c, ch.titulo, {}, 944)) });
+    paragrafo(c, ch.epigrafe, 29, 700, 760, { tam: 40, entre: 50, peso: 300 });
     // as seções e a visão geral no corpo do texto da apresentação
     const ySecoes = 880;
     const passo = 56;
@@ -1025,11 +977,6 @@ function abertura(c: Ctx, cap: number, num?: number, v: VersaoTitulo = TITULO) {
     rotulo(c, 'Visão geral', 29, yVisao);
     paragrafoLido(c, ch.visaoGeral, 345, yVisao, 628, TEXTO);
     rodape(c, num, ch.titulo);
-}
-
-// uma introdução com uma das versões do título, para a página de comparação
-export function desenharAbertura(p: Pincel, cap: number, v: VersaoTitulo) {
-    abertura({ p, alvos: [] }, cap, (CAPITULOS[cap].paginas?.[0] ?? 0) + 1, v);
 }
 
 // as matérias de cada capítulo, como as de antes: na página da esquerda, a prancha em moldura no alto, a mostra na

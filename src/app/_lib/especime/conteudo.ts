@@ -16,9 +16,7 @@ export type Capitulo = {
     id: IdCapitulo;
     n: number;
     titulo: string;
-    // o título em duas linhas, como na abertura: a primeira na grotesca leve, a segunda na Rune do capítulo
-    linhas: [string, string];
-    // a Rune do título, da epígrafe e da citação
+    // a Rune da citação, na página da direita da matéria
     estilo: Familia;
     // a frase do capítulo, na introdução
     epigrafe: string;
@@ -93,7 +91,6 @@ export const CAPITULOS: Capitulo[] = [
         id: 'construcao',
         n: 1,
         titulo: 'A construção das letras',
-        linhas: ['A construção', 'das letras'],
         estilo: 'cut',
         epigrafe: 'Toda pedra começa bruta.',
         visaoGeral: 'A Föeger Rune começou na logo da Föeger. Das letras dela veio a ideia de um alfabeto inteiro, desenhado à mão num gabarito e depois refeito só com retas, com o corte do cinzel nas quinas.',
@@ -112,7 +109,6 @@ export const CAPITULOS: Capitulo[] = [
         id: 'estilos',
         n: 2,
         titulo: 'Os três estilos',
-        linhas: ['Os três', 'estilos'],
         estilo: 'polished',
         epigrafe: 'Pedra que rola não cria limo!',
         visaoGeral: 'Três desgastes da mesma pedra. A Cut tem as quinas vivas; a Polished rolou um pouco no rio; a Worn passou anos na correnteza e ficou redonda.',
@@ -132,7 +128,6 @@ export const CAPITULOS: Capitulo[] = [
         id: 'variacoes',
         n: 3,
         titulo: 'As variações',
-        linhas: ['As', 'variações'],
         estilo: 'worn',
         epigrafe: 'Sonhei ontem que uma pedra rolava, rolava e não paraaava!',
         visaoGeral: 'Quem talha à mão não repete o golpe. Quando uma minúscula aparece de novo logo em seguida, a fonte troca o corte sozinha, e a palavra nunca fica com cara de carimbo.',
@@ -152,7 +147,6 @@ export const CAPITULOS: Capitulo[] = [
         id: 'tamanhos',
         n: 4,
         titulo: 'Do título ao texto',
-        linhas: ['Do título', 'ao texto'],
         estilo: 'cut',
         epigrafe: 'Jane quer LP, fax, CD, giz, TV e bom whisky.',
         visaoGeral: 'Feita para títulos, cartazes e palavras curtas, a Rune aguenta o parágrafo em corpo grande. Grande, a pedra aparece inteira; pequena, vira textura.',
