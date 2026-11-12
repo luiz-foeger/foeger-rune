@@ -19,8 +19,10 @@ const ESP = 0.0016;
 const GROSSO = 0.014;
 const SOBRA_L = 1.02;
 const SOBRA_A = 1.026;
-// o raio dos cantos de fora da capa dura
-const RAIO_CAPA = 0.03;
+// o raio dos cantos de fora da capa dura e quanto a borda da tábua sai para fora (em frações da meia grossura: a
+// borda é quase reta, com as quinas arredondadas)
+const RAIO_CAPA = 0.012;
+const BOJO = 0.35;
 const PI = Math.PI;
 const FOV = (28 * PI) / 180;
 // o chão da cena: o plano da sombra do livro e da trama
@@ -274,14 +276,50 @@ const DESCARTE = `
     float cob = cobertura(vUv);
     if (cob <= 0.0) discard;`;
 // a capa dura tem os dois cantos de fora arredondados (os da lombada não: ali a capa dobra). O pixel da face além do
-// arco sai; a borda arredondada da tábua (VERT_BORDA) passa por fora dele e faz o contorno
+// arco sai; a borda da tábua (VERT_BORDA) passa por fora dele e faz o contorno
 const CANTOS = `
 uniform vec2 uTam;
-uniform float uRaio;
+uniform float uRaio, uFora;
 bool foraDoCanto(vec2 uv) {
     vec2 d = vec2(uv.x * uTam.x, abs(uv.y - 0.5) * uTam.y) - (vec2(uTam.x, 0.5 * uTam.y) - uRaio);
     return d.x > 0.0 && d.y > 0.0 && dot(d, d) > uRaio * uRaio;
+}
+// um ruído suave (de valor, com a interpolação suave), para as manchas do papel
+float sorteio(vec2 i) { return fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453); }
+float ruido(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(sorteio(i), sorteio(i + vec2(1.0, 0.0)), f.x), mix(sorteio(i + vec2(0.0, 1.0)), sorteio(i + vec2(1.0, 1.0)), f.x), f.y);
 }`;
+
+// a face de fora da capa dura (uFora), como a de um livro de verdade: o vinco da dobradiça junto da lombada (dois sulcos
+// rasos: a normal inclina nas paredes deles, que pegam a luz de um lado e ficam na sombra do outro, e o fundo escurece),
+// manchas largas e bem fracas do papel (sem grão: o papel não tinge igual) e a luz caindo um pouco para as bordas. A
+// direção da folha ao longo de X sai das derivadas da posição na tela (vale com a capa em qualquer ângulo)
+const CAPA_LUZ = `
+    float ao = 1.0;
+    if (uFora > 0.5) {
+        float x = vUv.x * uTam.x;
+        float dh = 0.0;
+        float sulco = 0.0;
+        for (int i = 0; i < 2; i++) {
+            float centro = i == 0 ? 0.048 : 0.066;
+            float g = exp(-pow((x - centro) / 0.004, 2.0));
+            dh += 2.0 * (x - centro) / (0.004 * 0.004) * g;
+            sulco += g;
+        }
+        dh *= 0.0018;
+        vec3 dpx = dFdx(vPos);
+        vec3 dpy = dFdy(vPos);
+        vec2 dux = dFdx(vUv);
+        vec2 duy = dFdy(vUv);
+        float det = dux.x * duy.y - dux.y * duy.x;
+        if (abs(det) > 1e-12) n = normalize(n - dh * normalize((dpx * duy.y - dpy * dux.y) / det));
+        ao = 1.0 - 0.12 * sulco;
+        c *= 0.985 + 0.03 * (0.6 * ruido(vUv * vec2(70.0, 105.0)) + 0.4 * ruido(vUv * vec2(170.0, 255.0)));
+        ao *= 1.0 - 0.06 * smoothstep(0.3, 0.75, length((vUv - 0.5) * vec2(1.0, 0.7)));
+    }`;
 
 const fragFolha = (dobra: boolean, capa = false) => `#version 300 es
 precision highp float;
@@ -302,11 +340,12 @@ void main() {
     bool fr = gl_FrontFacing;
     vec3 c = fr ? cf : cv;
     vec3 n = fr ? vN : -vN;
+    ${capa ? CAPA_LUZ : ''}
     float l = 0.70 + 0.34 * max(dot(n, uLuz), 0.0);
     float u = vUv.x;
     float calha = 1.0 - uCalha * (0.2 * (1.0 - smoothstep(0.0, 0.05, u)) + 0.07 * (1.0 - smoothstep(0.0, 0.2, u)));
     float borda = 1.0 - 0.07 * (1.0 - smoothstep(0.0, 0.003, 1.0 - u));
-    cor = vec4(c * l * calha * borda, cob);
+    cor = vec4(c * l * calha * borda${capa ? ' * ao' : ''}, cob);
 }`;
 
 const fragVegetal = (dobra: boolean) => `#version 300 es
@@ -373,12 +412,13 @@ void main() {
 
 // as bordas da capa dura: uma faixa em volta da folha, pelo contorno de cantos arredondados (o pé, o canto de baixo, a
 // borda da frente, o canto de cima, a cabeça e a lombada, nessa ordem, em aUv.x de 0 a 12: dois por trecho), da face
-// de dentro (aUv.y 0) até a de fora (aUv.y 1, a uDesloca dela). O perfil é um meio círculo com a grossura da tábua de
-// diâmetro, saindo meia grossura para fora: a borda é redonda, como o pano dobrado por cima da tábua, e encosta nas
-// duas faces sem quina (a normal começa na de uma e termina na da outra). A direção para fora vem da própria folha
-// deformada (vale com a capa em qualquer ângulo)
+// de dentro (aUv.y 0) até a de fora (aUv.y 1, a uDesloca dela). O perfil é meia elipse: a grossura da tábua de altura,
+// saindo BOJO da meia grossura para fora. A borda fica quase reta, com as quinas redondas, como o pano dobrado por cima
+// da tábua, e encosta nas duas faces sem quina (a normal começa na de uma e termina na da outra). A direção para fora
+// vem da própria folha deformada (vale com a capa em qualquer ângulo)
 const VERT_BORDA = `${DEFORMA}
 uniform float uDesloca, uRaio;
+const float BOJO = ${BOJO.toFixed(3)};
 out vec2 vUv;
 out vec3 vN;
 void main() {
@@ -405,9 +445,10 @@ void main() {
     float T = abs(uDesloca);
     float c = cos(PI * aUv.y);
     float sn = sin(PI * aUv.y);
-    vN = normalize(o * sn - m * c);
+    float B = BOJO * 0.5 * T;
+    vN = normalize(o * (0.5 * T * sn) - m * (B * c));
     vUv = q;
-    gl_Position = uVP * vec4(p + m * (0.5 * T * (1.0 - c)) + o * (0.5 * T * sn), 1.0);
+    gl_Position = uVP * vec4(p + m * (0.5 * T * (1.0 - c)) + o * (B * sn), 1.0);
 }`;
 
 // a borda tem a cor da face de fora junto dela (o pano da capa dura dobra por cima da tábua) e a luz da face (com a
@@ -1730,7 +1771,10 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         tex(0, texDe(f.frente), u.uFrente);
         tex(1, texDe(f.verso), u.uVerso);
         gl.uniform1f(u.uDesloca, 0);
-        if (f.rigida) gl.uniform1f(u.uRaio, RAIO_CAPA);
+        if (f.rigida) {
+            gl.uniform1f(u.uRaio, RAIO_CAPA);
+            gl.uniform1f(u.uFora, 0);
+        }
         if (f.vinco) gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
         desenharMalha(u, f);
         if (f.vinco) gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
@@ -1742,8 +1786,10 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     function desenharTabua(f: Sheet, u: Prog['u']) {
         const fora = f.frente.pagina.tipo === 'capa' ? 1 : -1;
         gl.uniform1f(u.uDesloca, fora * GROSSO);
+        gl.uniform1f(u.uFora, 1);
         desenharMalha(u, f);
         gl.uniform1f(u.uDesloca, 0);
+        gl.uniform1f(u.uFora, 0);
         const ub = usar(pBorda);
         gl.uniformMatrix4fv(ub.uVP, false, v.vp);
         gl.uniform3fv(ub.uLuz, LUZ);
