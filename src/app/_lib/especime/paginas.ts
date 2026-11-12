@@ -4,7 +4,7 @@
 // do tantan entram pranchas de letras da Föeger Rune nas cores dos estilos. Tudo passa pelo pincel (canvas para as
 // texturas, SVG para o PDF), e cada página devolve as áreas clicáveis (o sumário) em fração da página.
 import { CAPITULOS, COR, EXTRAS, LIVRO, type IdCapitulo, type Pagina } from './conteudo';
-import { medir, TINTA, type Estilo, type Familia, type Pincel } from './pincel';
+import { medir, pincelCanvas, TINTA, type Estilo, type Familia, type Familias, type Pincel } from './pincel';
 import { PALAVRAS, type Glifo } from '../glifos';
 import { ESTILO_MEDIDAS } from '../medidas';
 import { PECAS } from '../../_comp/LogoFoeger';
@@ -543,6 +543,98 @@ const tintaDaAbertura = (cap: number) => tintaSobre(FUNDO_ABERTURA[CAPITULOS[cap
 const tituloDe = (cap: number) => CAPITULOS[cap].sumario.join(' ');
 const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
 
+// ---------- a tinta da risografia ----------
+
+// a tinta granulada da risografia, como a das capas impressas assim (a do "Piquenique na estrada"): cada tinta é
+// desenhada à parte, com a borda suavizada, e, pixel a pixel, um ruído decide se ela pega. Na borda ela se desfaz em
+// pontinhos; no miolo, falha de vez em quando; e a cor ganha manchas largas, mais claras e mais escuras, como a tinta
+// que não assenta igual. As tintas são transparentes e multiplicam as de baixo: onde duas se cruzam, nasce uma terceira
+// cor, mais escura. Sai a página inteira, com o papel, sempre igual (sorteio com semente) e guardada, porque a página é
+// redesenhada várias vezes no livro; numa resolução menor que a da página, para o grão ficar grosso
+type Rgb = [number, number, number];
+type Tinta = { cor: Rgb; desenho: (p: Pincel) => void };
+const RISO_L = 820;
+const RISO_A = 1230;
+const RISOGRAFIAS = new Map<string, HTMLCanvasElement>();
+const rgbDe = (hex: string) => [0, 2, 4].map(i => parseInt(hex.replace('#', '').slice(i, i + 2), 16)) as Rgb;
+
+// quanto uma tinta pega em cada pixel (0 é o papel aparecendo) e o tom da mancha ali
+function tintaGranulada(fam: Familias, semente0: number, desenho: (p: Pincel) => void) {
+    const mascara = document.createElement('canvas');
+    mascara.width = RISO_L;
+    mascara.height = RISO_A;
+    desenho(pincelCanvas(mascara.getContext('2d')!, RISO_L / 1000, fam));
+    const borrada = document.createElement('canvas');
+    borrada.width = RISO_L;
+    borrada.height = RISO_A;
+    const g = borrada.getContext('2d', { willReadFrequently: true })!;
+    g.filter = 'blur(4px)';
+    g.drawImage(mascara, 0, 0);
+    const d = g.getImageData(0, 0, RISO_L, RISO_A).data;
+    const pega = new Float32Array(RISO_L * RISO_A);
+    const tom = new Float32Array(RISO_L * RISO_A);
+    let semente = semente0;
+    const sorteio = () => (semente = (semente * 16807) % 2147483647) / 2147483647;
+    // as manchas: uma grade bem pequena de ruído, lida com a interpolação suave (smoothstep), para áreas largas e
+    // macias (a grade fina e a interpolação reta deixavam as manchas com cara de quadradinhos)
+    const GX = 12;
+    const GY = 18;
+    const suave = (u: number) => u * u * (3 - 2 * u);
+    const grade = Array.from({ length: (GX + 1) * (GY + 1) }, sorteio);
+    const ponto = (i: number, j: number) => grade[j * (GX + 1) + i];
+    for (let y = 0; y < RISO_A; y++) {
+        const fy = (y / RISO_A) * GY;
+        const iy = Math.floor(fy);
+        const ty = suave(fy - iy);
+        for (let x = 0; x < RISO_L; x++) {
+            const i = y * RISO_L + x;
+            const cob = d[i * 4 + 3] / 255;
+            if (cob <= 0) continue;
+            const n = sorteio();
+            if (cob <= 0.04 + 0.92 * n || (cob > 0.97 && n > 0.975)) continue;
+            const fx = (x / RISO_L) * GX;
+            const ix = Math.floor(fx);
+            const tx = suave(fx - ix);
+            const m = (ponto(ix, iy) * (1 - tx) + ponto(ix + 1, iy) * tx) * (1 - ty) + (ponto(ix, iy + 1) * (1 - tx) + ponto(ix + 1, iy + 1) * tx) * ty;
+            // a mancha larga e o grão de cada pixel
+            tom[i] = 0.86 + 0.24 * m + (sorteio() - 0.5) * 0.14;
+            pega[i] = 0.78 + 0.22 * m;
+        }
+    }
+    return { pega, tom };
+}
+
+// as tintas no papel, cada uma multiplicando as de baixo
+function risografia(chave: string, fam: Familias, papel: Rgb, tintas: Tinta[]) {
+    const pronta = RISOGRAFIAS.get(chave);
+    if (pronta) return pronta;
+    const n = RISO_L * RISO_A;
+    const cor = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) cor.set(papel, i * 3);
+    tintas.forEach((t, k) => {
+        const { pega, tom } = tintaGranulada(fam, 11 + 12 * k, t.desenho);
+        for (let i = 0; i < n; i++) {
+            const a = pega[i];
+            if (!a) continue;
+            for (let ch = 0; ch < 3; ch++) cor[i * 3 + ch] *= 1 - a + (a * Math.min(255, t.cor[ch] * tom[i])) / 255;
+        }
+    });
+    const tela = document.createElement('canvas');
+    tela.width = RISO_L;
+    tela.height = RISO_A;
+    const g = tela.getContext('2d')!;
+    const img = g.createImageData(RISO_L, RISO_A);
+    for (let i = 0; i < n; i++) {
+        img.data[i * 4] = cor[i * 3];
+        img.data[i * 4 + 1] = cor[i * 3 + 1];
+        img.data[i * 4 + 2] = cor[i * 3 + 2];
+        img.data[i * 4 + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    RISOGRAFIAS.set(chave, tela);
+    return tela;
+}
+
 // ---------- as páginas ----------
 
 // a capa da frente, como as capas de livros de tipografia de verdade: uma ideia grande e o texto miúdo. As três
@@ -552,7 +644,7 @@ const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
 // marca no pé. O relevo seco fica só na contracapa: na frente ele sumia no pano. As outras propostas (com a tinta
 // granulada da risografia, em outros papéis, num rótulo colado ou com a cinta) estão no histórico
 const CREME = '#f1ece1';
-const comAlfa = (hex: string, a: number) => `rgba(${[0, 2, 4].map(i => parseInt(hex.replace('#', '').slice(i, i + 2), 16)).join(',')},${a})`;
+const comAlfa = (hex: string, a: number) => `rgba(${rgbDe(hex).join(',')},${a})`;
 
 // os quadradinhos e o fio de marca, no canto (x, y é o canto de cima à esquerda do grupo)
 function marcas(c: Ctx, x: number, y: number, cor: string) {
@@ -649,12 +741,28 @@ function falsaRosto(c: Ctx) {
     linha(c, LIVRO.titulo, 500, 470, { tam: 58, fam: 'cut', peso: 400, alinhar: 'center' });
 }
 
-// o frontispício: o R da Cut de perto, cortado pelas bordas como uma foto, claro no escuro, com a legenda no pé, como
-// as aberturas dos capítulos
+// o frontispício, a ilustração de frente para a folha de rosto, como nos livros: o R nos três estilos quase um em cima
+// do outro, fora de registro, cada um na tinta do seu estilo no site (o ocre da Cut, o azul da Polished e o verde da
+// Worn), em tinta granulada de risografia. Onde os três se cruzam, a tinta escurece; o que sobra de cada um nas bordas
+// é o desgaste de um estilo para o outro. A legenda no pé, como nas aberturas dos capítulos
 function frontispicio(c: Ctx) {
-    c.p.ret(0, 0, 1000, 1500, ESCURA);
-    linha(c, 'R', -70, 1190, { tam: 1500, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
-    legendaDe(c, ['Föeger Rune Cut', 'O R de perto'], PAPEL);
+    const tam = 860;
+    const estilos: Familia[] = ['cut', 'polished', 'worn'];
+    const cores = [COR.cut, COR.polished, COR.worn];
+    // o quanto cada passada sai do lugar (a do meio fica nele); o grupo centrado na largura e um pouco acima do meio
+    const desvios: [number, number][] = [
+        [-36, -21],
+        [0, 0],
+        [36, 21],
+    ];
+    const tintas = estilos.map((fam, i): Tinta => {
+        const x = 500 - largura(c, 'R', { tam, fam, peso: 400, semCalt: true }) / 2 + desvios[i][0];
+        const y = 720 + (MAIUSCULA * tam) / 2 + desvios[i][1];
+        return { cor: rgbDe(cores[i]), desenho: q => q.texto('R', x, y, { tam, fam, peso: 400, cor: '#000', semCalt: true }) };
+    });
+    // a chave leva as cores, que mudam com a paleta da página
+    c.p.imagem(risografia(`frontispicio-${PAPEL}-${cores.join('-')}`, c.p.fam, rgbDe(PAPEL), tintas), 0, 0, 1000, 1500, true);
+    legendaDe(c, ['Föeger Rune Cut, Polished e Worn', 'O R fora de registro'], CINZA);
 }
 
 function creditos(c: Ctx) {
@@ -687,24 +795,36 @@ function creditos(c: Ctx) {
     linha(c, '© 2026 Luiz Felipe Föeger. Todos os direitos reservados.', 29, 1440, { tam: 16.5, peso: 400 });
 }
 
-// a folha de rosto, como a dos livros de verdade: só o título, o subtítulo, o autor e, no pé, o selo da editora com a
-// edição e o ano. Sem cabeço nem frase (a frase do livro fica na contracapa). O título grande na Cut; o subtítulo na
-// grotesca leve, como os títulos das outras páginas; embaixo dele, os três estilos, cada nome no seu
+// a folha de rosto, de frente para o frontispício e no mesmo eixo dele, como as folhas de rosto clássicas: o título na
+// Cut e o subtítulo; embaixo, a chave das tintas do frontispício, como nas provas de impressão (um quadrado de cada
+// tinta, com o nome do estilo no próprio estilo); o autor mais abaixo e, no pé, o selo da editora com a edição e o ano.
+// Sem cabeço nem frase (a frase do livro fica na contracapa)
 function rosto(c: Ctx) {
     fundo(c, PAPEL);
-    linha(c, 'Föeger', 22, 340, { tam: 250, fam: 'cut', peso: 400 });
-    linha(c, 'Rune', 22, 580, { tam: 250, fam: 'cut', peso: 400 });
-    linha(c, 'Espécime tipográfico', 24, 730, { tam: 58 });
-    const nomes: [Familia, string][] = [['cut', 'Cut'], ['polished', 'Polished'], ['worn', 'Worn']];
-    let x = 29;
-    nomes.forEach(([fam, nome]) => {
-        const r = linha(c, nome, x, 818, { tam: 44, fam, peso: 400 });
-        x = r.x1 + 28;
+    const tam = ajustar(c, 'Föeger Rune', { fam: 'cut', peso: 400 }, 640);
+    linha(c, 'Föeger Rune', 500, 440, { tam, fam: 'cut', peso: 400, alinhar: 'center' });
+    linha(c, 'Espécime tipográfico', 500, 528, { tam: 42, alinhar: 'center' });
+    // a chave das tintas: o quadrado da altura da maiúscula e o nome, os três numa linha centrada
+    const tamNome = 30;
+    const lado = MAIUSCULA * tamNome;
+    const vao = 12;
+    const entre = 44;
+    const chaves: [Familia, string, string][] = [
+        ['cut', 'Cut', COR.cut],
+        ['polished', 'Polished', COR.polished],
+        ['worn', 'Worn', COR.worn],
+    ];
+    const largos = chaves.map(([fam, nome]) => lado + vao + largura(c, nome, { tam: tamNome, fam, peso: 400 }));
+    let x = 500 - (largos.reduce((s, l) => s + l, 0) + entre * (chaves.length - 1)) / 2;
+    const base = 650;
+    chaves.forEach(([fam, nome, cor], i) => {
+        c.p.ret(x, base - lado, lado, lado, cor);
+        linha(c, nome, x + lado + vao, base, { tam: tamNome, fam, peso: 400 });
+        x += largos[i] + entre;
     });
-    linha(c, 'Luiz Föeger', 27, 1180, { tam: 36, peso: 400 });
-    fio(c, 29, 1386, 973, 1386);
-    logo(c, 29, 1462, 56, TINTA);
-    rotulo(c, LIVRO.edicao, 973, 1460, { alinhar: 'right' });
+    linha(c, 'Luiz Föeger', 500, 1060, { tam: 36, peso: 400, alinhar: 'center' });
+    logo(c, 500, 1392, 40, TINTA, 'center');
+    rotulo(c, LIVRO.edicao, 500, 1450, { alinhar: 'center', cor: CINZA });
 }
 
 // o sumário em lista, numa página da direita depois dos créditos (p. 5), como o da versão Föeger Sans e como nos livros

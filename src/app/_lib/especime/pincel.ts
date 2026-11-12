@@ -29,6 +29,9 @@ export interface Pincel {
     recortar(x: number, y: number, l: number, a: number, desenho: () => void): void;
     girar(graus: number, cx: number, cy: number, desenho: () => void): void;
     limpar(): void;
+    // uma imagem pronta (um canvas desenhado à parte, como a tinta granulada do frontispício), esticada na caixa; opaca
+    // (sem nada transparente), no PDF ela vai em JPEG, bem mais leve que o PNG para uma imagem cheia de grão
+    imagem(fonte: HTMLCanvasElement, x: number, y: number, l: number, a: number, opaca?: boolean): void;
 }
 
 // ---------- o medidor ----------
@@ -213,6 +216,9 @@ export function pincelCanvas(g: CanvasRenderingContext2D, s: number, fam: Famili
         limpar() {
             g.clearRect(0, 0, 1000 * s, 1500 * s);
         },
+        imagem(fonte, x, y, l, a) {
+            g.drawImage(fonte, x * s, y * s, l * s, a * s);
+        },
     };
 }
 
@@ -285,6 +291,11 @@ export function pincelSvg(fam: Familias, id: string): Pincel & { svg: (fundo?: s
         },
         limpar() {
             partes.length = 0;
+        },
+        // no SVG do PDF, a imagem vai embutida
+        imagem(fonte, x, y, l, a, opaca) {
+            const dados = opaca ? fonte.toDataURL('image/jpeg', 0.9) : fonte.toDataURL('image/png');
+            partes.push(`<image href="${dados}" x="${n(x)}" y="${n(y)}" width="${n(l)}" height="${n(a)}" preserveAspectRatio="none"/>`);
         },
         svg: fundo =>
             `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1500" width="100%" height="100%" preserveAspectRatio="none" overflow="hidden">${defs.length ? `<defs>${defs.join('')}</defs>` : ''}${fundo ? `<rect width="1000" height="1500" fill="${fundo}"/>` : ''}${partes.join('')}</svg>`,
