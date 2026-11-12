@@ -1329,6 +1329,23 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         }
     }
 
+    // os links das páginas (as linhas do sumário) só valem depois que o ponteiro se mexe: quando a página pedida muda,
+    // eles se desarmam até o mouse andar uns pixels (ou o dedo tocar em outro lugar). Quem folheia clicando com o mouse
+    // parado não cai sem querer num link da página que acabou de aparecer embaixo dele: o clique continua virando a folha
+    let armado = true;
+    let ultimoPonto: readonly [number, number] | null = null;
+    let pontoDaTroca: readonly [number, number] | null = null;
+    function desarmar() {
+        armado = false;
+        pontoDaTroca = ultimoPonto;
+        destacar(null, -1);
+        if (cv.style.cursor === 'pointer') cv.style.cursor = 'default';
+    }
+    function conferirArmado(lx: number, ly: number, limiar: number) {
+        ultimoPonto = [lx, ly];
+        if (!armado && (!pontoDaTroca || Math.hypot(lx - pontoDaTroca[0], ly - pontoDaTroca[1]) > limiar)) armado = true;
+    }
+
     function irPara(cap: number) {
         alvoContagem = folhaDoCapitulo(defs, cap);
         o.aoInteragir();
@@ -1355,6 +1372,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
 
     function aoMover(e: PointerEvent) {
         const [lx, ly] = local(e);
+        conferirArmado(lx, ly, e.pointerType === 'mouse' ? 3 : 12);
         mouse.x = (lx / largCss) * 2 - 1;
         mouse.y = 1 - (ly / altCss) * 2;
         mouse.dentro = e.pointerType === 'mouse';
@@ -1382,9 +1400,9 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             return;
         }
         if (e.pointerType !== 'mouse') return;
-        // sem botão: o cursor e a página que levanta
+        // sem botão: o cursor e a página que levanta (o link só acende armado)
         const s = sob(lx, ly);
-        const alvoAqui = alvoEm(s.fc, s.u, s.v);
+        const alvoAqui = armado ? alvoEm(s.fc, s.u, s.v) : null;
         destacar(alvoAqui ? s.fc : null, alvoAqui && s.fc ? s.fc.alvos.indexOf(alvoAqui) : -1);
         cv.style.cursor = alvoAqui ? 'pointer' : s.lado !== null ? 'grab' : camAlvo.zoom > 1.25 ? 'grab' : 'default';
         const livre = !folhas.some(f => f.anim) && camAlvo.zoom < 1.35 && !alvoAqui;
@@ -1527,6 +1545,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     function aoApertar(e: PointerEvent) {
         if (e.button !== 0) return;
         const [lx, ly] = local(e);
+        conferirArmado(lx, ly, e.pointerType === 'mouse' ? 3 : 12);
         if (e.pointerType === 'touch') {
             dedos.set(e.pointerId, [lx, ly]);
             if (dedos.size === 2) {
@@ -1560,10 +1579,10 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             cv.style.cursor = camAlvo.zoom > 1.25 ? 'grab' : 'default';
             return;
         }
-        // um clique: o sumário, ou virar a página da metade clicada
+        // um clique: um link da página (se o ponteiro se mexeu desde que ela apareceu), ou virar a página da metade clicada
         const [lx, ly] = local(e);
         const s = sob(lx, ly);
-        const a = alvoEm(s.fc, s.u, s.v);
+        const a = armado ? alvoEm(s.fc, s.u, s.v) : null;
         if (a?.cap !== undefined) return irPara(a.cap);
         if (a?.pagina !== undefined) {
             alvoContagem = contagemDaPagina(defs, a.pagina);
@@ -2066,7 +2085,14 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         return nums.length === 2 ? `Páginas ${nums[0]}–${nums[1]} de ${TOTAL}` : `Página ${nums[0]} de ${TOTAL}`;
     }
     let ultimoAviso = '';
+    // a página pedida: quando ela muda (pelo clique, pelas setas, pela roda, por um link ou pela folha solta), os links
+    // das páginas se desarmam
+    let alvoVisto = alvoContagem;
     function avisar() {
+        if (alvoContagem !== alvoVisto) {
+            alvoVisto = alvoContagem;
+            desarmar();
+        }
         const rotulo = rotuloDe(contagem());
         const chave = `${rotulo}|${alvoContagem}`;
         if (chave === ultimoAviso) return;
