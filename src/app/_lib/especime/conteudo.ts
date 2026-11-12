@@ -141,10 +141,11 @@ export const CAPITULOS: Capitulo[] = [
             'Os cortes se revezam: o desenho de base, depois a variação dois, a três e a quatro, e de novo a base. O texto não muda; quem faz a troca é a própria fonte, pelas alternativas de contexto, nos três estilos.',
             'Duas letras ainda mudam conforme o lugar: o L ganha outro corte quando vem depois de outra letra, e o f tem um desenho próprio para o começo da palavra.',
         ],
-        materias: 2,
+        materias: 4,
         secoes: [
-            { nome: 'Sem e com as trocas', k: 1, sumario: true },
-            { nome: 'O L, o f e os dois e da logo', k: 2 },
+            { nome: 'Os quatro cortes do s', k: 1 },
+            { nome: 'Sem e com as trocas', k: 3, sumario: true },
+            { nome: 'O L, o f e os dois e da logo', k: 4 },
         ],
     },
     {

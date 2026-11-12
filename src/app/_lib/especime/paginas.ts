@@ -290,11 +290,11 @@ const AMOSTRA =
     'Toda pedra começa bruta. Quem talha à mão não repete o golpe, e a palavra nunca fica com cara de carimbo. Pedra que rola não cria limo, e água mole em pedra dura tanto bate até que fura.';
 
 const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: number) => void> = {
-    // os quatro cortes do s, um depois do outro, com o nome de cada glifo embaixo
+    // os quatro cortes do s, um depois do outro, com o nome de cada glifo embaixo (na página ou na dupla)
     ssss(c, x, y, l, a) {
         c.p.ret(x, y, l, a, COR.roxo);
         const claro = COR.claroFrio;
-        const pagina = a > l * 1.2;
+        const pagina = a > l * 0.7;
         const frac = pagina ? 0.9 : 0.86;
         const { tam, base } = centrado(c, 'ssss', 'worn', claro, x, y, l, a, { frac, altura: ALTURA_X, dy: pagina ? -40 : -a * 0.04 });
         const w = (t: string) => largura(c, t, { tam, fam: 'worn' });
@@ -850,30 +850,17 @@ function legendaDe(c: Ctx, l: [string, string], cor: string) {
 
 // ---------- os capítulos ----------
 
-// a página de cor que abre cada assunto, à esquerda da introdução (com o vegetal entre as duas): a cor chapada com o Aa
-// enorme no estilo do capítulo, cortado pela borda como uma foto de perto, e a legenda no pé. Nas variações, a página
-// dos quatro cortes do s; nos caracteres, o & claro no escuro
-const CORES_DOS_ASSUNTOS: Record<IdCapitulo, { fam: Familia; cor: () => string; legenda: [string, string] }> = {
-    construcao: { fam: 'cut', cor: () => COR.cut, legenda: ['Föeger Rune Cut', 'Quinas vivas'] },
-    estilos: { fam: 'polished', cor: () => COR.polished, legenda: ['Föeger Rune Polished', 'Pontas lixadas'] },
-    variacoes: { fam: 'worn', cor: () => COR.roxo, legenda: ['Föeger Rune Worn', 'Os quatro cortes do s'] },
-    tamanhos: { fam: 'worn', cor: () => COR.laranja, legenda: ['Föeger Rune Worn', 'Anos na correnteza'] },
+// a página de cor que abre cada assunto, à esquerda da introdução (com o vegetal entre as duas): só a cor chapada, que
+// vira o fundo do vegetal quando ele é virado por cima dela. Uma cor por assunto: o ocre da Cut, o azul da Polished, o
+// verde da Worn, a terracota e, nos caracteres, o azul fundo
+const CORES_DOS_ASSUNTOS: Record<IdCapitulo, () => string> = {
+    construcao: () => COR.cut,
+    estilos: () => COR.polished,
+    variacoes: () => COR.worn,
+    tamanhos: () => COR.laranja,
 };
 function paginaDeCor(c: Ctx, cap: number) {
-    if (cap >= CAPITULOS.length) {
-        fundo(c, ESCURA);
-        linha(c, '&', -60, 1180, { tam: 1250, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
-        legendaDe(c, ['Föeger Rune Cut', '311 glifos em cada estilo'], PAPEL);
-        return;
-    }
-    const id = CAPITULOS[cap].id;
-    const k = CORES_DOS_ASSUNTOS[id];
-    if (id === 'variacoes') prancha(c, 'ssss', 0, 0, 1000, 1500);
-    else {
-        fundo(c, k.cor());
-        linha(c, 'Aa', -34, 1095, { tam: 930, fam: k.fam, peso: 400, cor: tintaSobre(k.cor()) });
-    }
-    legendaDe(c, k.legenda, id === 'variacoes' ? COR.claroFrio : tintaSobre(k.cor()));
+    fundo(c, cap < CAPITULOS.length ? CORES_DOS_ASSUNTOS[CAPITULOS[cap].id]() : COR.roxo);
 }
 
 // a introdução do capítulo, na página da direita, embaixo do vegetal, como as dos livros de verdade. No alto, o número
@@ -1040,6 +1027,13 @@ function seixo(c: Ctx, lado: 0 | 1, num?: number) {
     else rodape(c, num, CAPITULOS[1].titulo, tinta);
 }
 
+// a dupla dos quatro cortes do s, claros no azul fundo, cruzando as duas páginas
+function quatroS(c: Ctx, lado: 0 | 1, num?: number) {
+    prancha(c, 'ssss', lado === 0 ? 0 : -1000, 0, 2000, 1500);
+    if (lado === 0) legendaDe(c, ['Föeger Rune Worn', 'Os quatro cortes do s'], COR.claroFrio);
+    else rodape(c, num, CAPITULOS[2].titulo, COR.claroFrio);
+}
+
 // a dupla do Ploc!: as onomatopeias de borda a borda nas duas páginas
 function ploc(c: Ctx, lado: 0 | 1, num?: number) {
     prancha(c, 'ploc', lado === 0 ? 0 : -1000, 0, 2000, 1500);
@@ -1052,7 +1046,7 @@ function ploc(c: Ctx, lado: 0 | 1, num?: number) {
 const MATERIAS: Record<IdCapitulo, ((c: Ctx, cap: number, num?: number) => void)[]> = {
     construcao: [artigoEsq, artigoDir],
     estilos: [(c, _, num) => seixo(c, 0, num), (c, _, num) => seixo(c, 1, num), artigoEsq, artigoDir],
-    variacoes: [artigoEsq, artigoDir],
+    variacoes: [(c, _, num) => quatroS(c, 0, num), (c, _, num) => quatroS(c, 1, num), artigoEsq, artigoDir],
     tamanhos: [(c, _, num) => ploc(c, 0, num), (c, _, num) => ploc(c, 1, num), artigoEsq, artigoDir],
 };
 
