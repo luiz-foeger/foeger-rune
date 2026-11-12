@@ -14,6 +14,11 @@ import { carregarFontes, familiasDe, pincelCanvas, type Familias } from '../espe
 const W = 1;
 const H = 1.5;
 const ESP = 0.0016;
+// a capa dura: a grossura da tábua (umas nove folhas) e quanto ela sobra em volta das folhas, na largura (só do lado de
+// fora; na lombada ela começa junto) e na altura (metade em cima, metade embaixo)
+const GROSSO = 0.014;
+const SOBRA_L = 1.02;
+const SOBRA_A = 1.026;
 const PI = Math.PI;
 const FOV = (28 * PI) / 180;
 // o chão da cena: o plano da sombra do livro e da trama
@@ -244,7 +249,9 @@ vec3 deforma(vec2 q, out vec3 n) {
 }
 `;
 
+// uDesloca: a folha empurrada pela normal (a face de fora da capa dura, GROSSO acima ou abaixo da de dentro)
 const VERT_FOLHA = `${DEFORMA}
+uniform float uDesloca;
 out vec2 vUv;
 out vec3 vN;
 out vec3 vPos;
@@ -252,6 +259,7 @@ void main() {
     vec3 n;
     vec2 q = uvDaMalha();
     vec3 p = deforma(q, n);
+    p += n * uDesloca;
     vUv = q;
     vN = n;
     vPos = p;
@@ -347,6 +355,49 @@ void main() {
     if (fora(vUv)) discard;
     float a = smoothstep(0.002, 0.03, vH) * exp(-vH * 1.3) * uForca;
     cor = vec4(a, a, a, a);
+}`;
+
+// as bordas da capa dura: uma faixa em volta da folha (o pé, a borda da frente, a cabeça e a lombada, nessa ordem, em
+// aUv.x de 0 a 8: dois por lado), da face de dentro (aUv.y 0) até a de fora (aUv.y 1, uDesloca pela normal). A luz vem
+// da direção da borda para fora da folha, achada pela própria folha deformada (vale com a capa em qualquer ângulo)
+const VERT_BORDA = `${DEFORMA}
+uniform float uDesloca;
+out vec2 vUv;
+out vec3 vN;
+void main() {
+    float k = floor(aUv.x * 0.5);
+    float s = aUv.x - 2.0 * k;
+    vec2 q;
+    vec2 fora;
+    if (k < 0.5) { q = vec2(s, 0.0); fora = vec2(0.0, -1.0); }
+    else if (k < 1.5) { q = vec2(1.0, s); fora = vec2(1.0, 0.0); }
+    else if (k < 2.5) { q = vec2(1.0 - s, 1.0); fora = vec2(0.0, 1.0); }
+    else { q = vec2(0.0, 1.0 - s); fora = vec2(-1.0, 0.0); }
+    vec3 n;
+    vec3 p = deforma(q, n);
+    vec3 n2;
+    vec3 dentro = deforma(q - fora * 0.01, n2);
+    vN = normalize(p - dentro);
+    vUv = q;
+    gl_Position = uVP * vec4(p + n * uDesloca * aUv.y, 1.0);
+}`;
+
+// a borda tem a cor da face de fora junto dela (o pano da capa dura dobra por cima da tábua), um pouco mais escura que
+// a face, porque fica de lado para a luz
+const FRAG_BORDA = `#version 300 es
+precision highp float;
+in vec2 vUv;
+in vec3 vN;
+uniform sampler2D uExterna;
+uniform float uEspelho;
+uniform vec3 uLuz;
+out vec4 cor;
+void main() {
+    vec2 q = clamp(vUv, vec2(0.006), vec2(0.994));
+    if (uEspelho > 0.5) q.x = 1.0 - q.x;
+    vec3 c = texture(uExterna, q).rgb;
+    float l = 0.6 + 0.34 * max(dot(normalize(vN), uLuz), 0.0);
+    cor = vec4(c * l, 1.0);
 }`;
 
 // um retângulo no plano de baixo do livro (a sombra dele)
@@ -539,11 +590,37 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     const pBorra = programa(gl, VERT_TELA, FRAG_BORRA);
     const pEscurece = programa(gl, VERT_TELA, FRAG_ESCURECE);
     const pFinal = programa(gl, VERT_TELA, FRAG_FINAL);
+    const pBorda = programa(gl, VERT_BORDA, FRAG_BORDA);
     const mFolha = malha(gl, 64, 32);
     // o cone da folha dobrada pelo ponteiro: uma coluna por geratriz (as do meio) e as duas faixas dos lados; cada coluna
     // vai de borda a borda da folha (o shader acha as pontas), então uma linha de quadrados basta
     const mCone = malha(gl, N_CONE, 1);
     const mPlano = malha(gl, 1, 1);
+    // as bordas da capa dura: os quatro lados, cada um em 32 pedaços (a capa pode estar curvada no meio do giro), com os
+    // vértices de cada lado só dele (a luz muda de um lado para o outro)
+    const mBorda = (() => {
+        const P = 32;
+        const uv: number[] = [];
+        const idx: number[] = [];
+        for (let k = 0; k < 4; k++) {
+            const base = uv.length / 2;
+            for (let i = 0; i <= P; i++) uv.push(2 * k + i / P, 0, 2 * k + i / P, 1);
+            for (let i = 0; i < P; i++) {
+                const a = base + 2 * i;
+                idx.push(a, a + 2, a + 1, a + 2, a + 3, a + 1);
+            }
+        }
+        const vao = gl.createVertexArray()!;
+        gl.bindVertexArray(vao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
+        gl.bindVertexArray(null);
+        return { vao, n: idx.length };
+    })();
     const vazio = gl.createVertexArray();
     const aniso = gl.getExtension('EXT_texture_filter_anisotropic');
 
@@ -1046,8 +1123,9 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         }
     }
 
-    const zDireita = (i: number) => (N - 1 - i) * ESP;
-    const zEsquerda = (i: number) => i * ESP;
+    // as pilhas começam em cima da tábua da capa de baixo (a de fora dela fica no zero)
+    const zDireita = (i: number) => (N - 1 - i) * ESP + GROSSO;
+    const zEsquerda = (i: number) => i * ESP + GROSSO;
     const zBase = (f: Sheet) => {
         const t = f.anim?.livre || f.vinco || (arrasto?.i === f.i && !f.rigida) ? f.zt : lim(f.phi / PI, 0, 1);
         return zDireita(f.i) + (zEsquerda(f.i) - zDireita(f.i)) * t;
@@ -1575,7 +1653,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         gl.uniform1f(u.uLarg, f.larg);
         gl.uniform1f(u.uInclina, f.inclina);
         gl.uniform1f(u.uZ, zBase(f) + (emMovimento(f) ? ESP * 0.5 : 0));
-        gl.uniform2f(u.uTam, f.rigida ? W * 1.012 : W, f.rigida ? H * 1.018 : H);
+        gl.uniform2f(u.uTam, f.rigida ? W * SOBRA_L : W, f.rigida ? H * SOBRA_A : H);
         const vc = f.vinco;
         gl.uniform1f(u.uDobrar, vc ? 1 : 0);
         if (vc) {
@@ -1614,9 +1692,29 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         poseUniforms(u, f);
         tex(0, texDe(f.frente), u.uFrente);
         tex(1, texDe(f.verso), u.uVerso);
+        gl.uniform1f(u.uDesloca, 0);
         if (f.vinco) gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
         desenharMalha(u, f);
         if (f.vinco) gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+        if (f.rigida) desenharTabua(f, u);
+    }
+    // a capa dura como tábua: a folha dela é a face de dentro (a guarda); a de fora é a mesma folha empurrada GROSSO
+    // pela normal (para cima na capa, que tem a arte na frente; para baixo na contracapa, que tem a arte no verso), e as
+    // bordas fecham as duas
+    function desenharTabua(f: Sheet, u: Prog['u']) {
+        const fora = f.frente.pagina.tipo === 'capa' ? 1 : -1;
+        gl.uniform1f(u.uDesloca, fora * GROSSO);
+        desenharMalha(u, f);
+        gl.uniform1f(u.uDesloca, 0);
+        const ub = usar(pBorda);
+        gl.uniformMatrix4fv(ub.uVP, false, v.vp);
+        gl.uniform3fv(ub.uLuz, LUZ);
+        poseUniforms(ub, f);
+        gl.uniform1f(ub.uDesloca, fora * GROSSO);
+        tex(0, texDe(fora > 0 ? f.frente : f.verso), ub.uExterna);
+        gl.uniform1f(ub.uEspelho, fora > 0 ? 0 : 1);
+        gl.bindVertexArray(mBorda.vao);
+        gl.drawElements(gl.TRIANGLES, mBorda.n, gl.UNSIGNED_SHORT, 0);
     }
     function tela(q: Quadro | null) {
         if (q) {
@@ -1705,7 +1803,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
         gl.disable(gl.DEPTH_TEST);
         const u = plano(pSombraLivro, [x0 - 0.7, -H / 2 - 0.7, x1 + 0.7, H / 2 + 0.7], CHAO);
-        gl.uniform4f(u.uLivro, x0, (-H / 2) * 1.018, x1, (H / 2) * 1.018);
+        gl.uniform4f(u.uLivro, x0, (-H / 2) * SOBRA_A, x1, (H / 2) * SOBRA_A);
         gl.bindVertexArray(mPlano.vao);
         gl.drawElements(gl.TRIANGLES, mPlano.n, gl.UNSIGNED_SHORT, 0);
         gl.disable(gl.BLEND);
