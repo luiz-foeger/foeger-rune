@@ -148,12 +148,12 @@ function paragrafoLido(c: Ctx, texto: string, x: number, y: number, larg: number
     return fim;
 }
 
-// o relevo seco da contracapa, no pano preto: a luz batendo na borda de baixo, a sombra da borda de cima e o miolo
-// prensado um pouco mais claro que o pano, com o brilho do pano apertado (no preto, um miolo mais escuro sumia)
+// o relevo seco da contracapa: a letra mais escura que o pano, com a luz batendo na borda de baixo (as três passadas:
+// a luz, a sombra da borda de cima e o miolo afundado)
 const RELEVO: [number, number, string][] = [
-    [1.4, 1.6, 'rgba(255,250,240,0.13)'],
-    [-0.8, -0.9, 'rgba(0,0,0,0.6)'],
-    [0, 0, 'rgba(255,250,240,0.05)'],
+    [1.4, 1.6, 'rgba(255,250,240,0.07)'],
+    [-0.8, -0.9, 'rgba(0,0,0,0.32)'],
+    [0, 0, 'rgba(0,0,0,0.16)'],
 ];
 function relevo(c: Ctx, t: string, x: number, y: number, o: Linha) {
     for (const [dx, dy, cor] of RELEVO) linha(c, t, x + dx, y + dy, { ...o, cor });
@@ -348,8 +348,11 @@ const RISO_A = 1230;
 const RISOGRAFIAS = new Map<string, HTMLCanvasElement>();
 const rgbDe = (hex: string) => [0, 2, 4].map(i => parseInt(hex.replace('#', '').slice(i, i + 2), 16)) as Rgb;
 
-// quanto uma tinta pega em cada pixel (0 é o papel aparecendo) e o tom da mancha ali
-function tintaGranulada(fam: Familias, semente0: number, desenho: (p: Pincel) => void) {
+// quanto uma tinta pega em cada pixel (0 é o papel aparecendo) e o tom da mancha ali. A tinta opaca, a que cobre o
+// papel escuro, assenta quase por igual, como na impressão de verdade: as manchas largas ficam bem leves (fortes, no
+// preto, elas viravam borrões escuros, porque onde a tinta pega menos o papel preto aparece) e ficam o grão fino e a
+// borda pontilhada
+function tintaGranulada(fam: Familias, semente0: number, desenho: (p: Pincel) => void, opaca = false) {
     const mascara = document.createElement('canvas');
     mascara.width = RISO_L;
     mascara.height = RISO_A;
@@ -381,14 +384,15 @@ function tintaGranulada(fam: Familias, semente0: number, desenho: (p: Pincel) =>
             const cob = d[i * 4 + 3] / 255;
             if (cob <= 0) continue;
             const n = sorteio();
-            if (cob <= 0.04 + 0.92 * n || (cob > 0.97 && n > 0.975)) continue;
+            // a falha da tinta no miolo, o papel aparecendo entre os grãos (no papel escuro, a metade: lá ela contrasta mais)
+            if (cob <= 0.04 + 0.92 * n || (cob > 0.97 && n > (opaca ? 0.988 : 0.975))) continue;
             const fx = (x / RISO_L) * GX;
             const ix = Math.floor(fx);
             const tx = suave(fx - ix);
             const m = (ponto(ix, iy) * (1 - tx) + ponto(ix + 1, iy) * tx) * (1 - ty) + (ponto(ix, iy + 1) * (1 - tx) + ponto(ix + 1, iy + 1) * tx) * ty;
             // a mancha larga e o grão de cada pixel
-            tom[i] = 0.86 + 0.24 * m + (sorteio() - 0.5) * 0.14;
-            pega[i] = 0.78 + 0.22 * m;
+            tom[i] = opaca ? 0.96 + 0.07 * m + (sorteio() - 0.5) * 0.06 : 0.86 + 0.24 * m + (sorteio() - 0.5) * 0.14;
+            pega[i] = opaca ? 0.95 + 0.05 * m : 0.78 + 0.22 * m;
         }
     }
     return { pega, tom };
@@ -400,10 +404,18 @@ function risografia(chave: string, fam: Familias, papel: Rgb, tintas: Tinta[], m
     if (pronta) return pronta;
     const n = RISO_L * RISO_A;
     const cor = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) cor.set(papel, i * 3);
+    const cobre = modo === 'cobre';
+    // o papel escuro com um grão bem fraco, como o das fibras do papel de verdade (sorteio com semente, sempre igual)
+    let semente = 5;
+    const sorteio = () => (semente = (semente * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < n; i++) {
+        const fibra = cobre ? (sorteio() - 0.5) * 5 : 0;
+        cor[i * 3] = papel[0] + fibra;
+        cor[i * 3 + 1] = papel[1] + fibra;
+        cor[i * 3 + 2] = papel[2] + fibra;
+    }
     tintas.forEach((t, k) => {
-        const { pega, tom } = tintaGranulada(fam, 11 + 12 * k, t.desenho);
-        const cobre = modo === 'cobre';
+        const { pega, tom } = tintaGranulada(fam, 11 + 12 * k, t.desenho, cobre);
         for (let i = 0; i < n; i++) {
             const a = (cobre ? 0.86 : 1) * pega[i];
             if (!a) continue;
@@ -470,6 +482,7 @@ function capa(c: Ctx) {
 }
 
 // a contracapa, do mesmo pano preto da capa: o nome no meio, a frase do livro e o selo da editora no pé, tudo em relevo
+// seco, bem discreto no preto
 function contracapa(c: Ctx) {
     c.p.ret(0, 0, 1000, 1500, PRETO);
     relevo(c, 'Föeger Rune', 500, 770, { tam: 76, fam: 'cut', peso: 400, alinhar: 'center' });
