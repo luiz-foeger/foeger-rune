@@ -4,11 +4,10 @@
 // dupla, a logo peça por peça e a apresentação); os quatro capítulos (como as letras foram construídas, os três estilos,
 // as variações e a fonte do título ao texto); os caracteres; o colofão; e a contracapa, também com a guarda por dentro.
 // Cada assunto abre numa dupla: à esquerda, uma página de cor chapada com letras enormes; à direita, a introdução; e,
-// entre as duas, um papel vegetal impresso com o desenho de construção do assunto. As matérias são como as de um livro:
-// pranchas em moldura, com legenda, e o texto em colunas. Os números e os
-// fatos são os da prévia de 05/11 (311 glifos em cada estilo, as larguras de cada estilo, o revezamento das minúsculas,
+// entre as duas, um papel vegetal impresso com o desenho de construção do assunto. As matérias seguem as páginas dos
+// espécimes de fundição (a referência é o livro da Studio Feixen): uma dupla por assunto, com a letra grande, caixas
+// com o nome do que mostram e os números de verdade da fonte. Os números e os fatos são os da prévia de 05/11 (311 glifos em cada estilo, as larguras de cada estilo, o revezamento das minúsculas,
 // o L do meio e o f do começo).
-import type { Familia } from './pincel';
 
 export type IdCapitulo = 'construcao' | 'estilos' | 'variacoes' | 'tamanhos';
 export type Capitulo = {
@@ -16,11 +15,9 @@ export type Capitulo = {
     id: IdCapitulo;
     n: number;
     titulo: string;
-    // a Rune da citação, na página da direita da matéria
-    estilo: Familia;
     // a frase do capítulo, na introdução
     epigrafe: string;
-    // a visão geral, na introdução, e o texto das matérias (dois parágrafos na página da esquerda, um na da direita)
+    // a visão geral, na introdução, e os três textos que as matérias usam (nas legendas e junto das amostras)
     visaoGeral: string;
     corpo: [string, string, string];
     // quantas páginas o capítulo tem depois da introdução (sempre par: ele fecha numa página da direita, e a página de
@@ -91,7 +88,6 @@ export const CAPITULOS: Capitulo[] = [
         id: 'construcao',
         n: 1,
         titulo: 'A construção das letras',
-        estilo: 'cut',
         epigrafe: 'Toda pedra começa bruta.',
         visaoGeral: 'A Föeger Rune começou na logo da Föeger. Das letras dela veio a ideia de um alfabeto inteiro, desenhado à mão num gabarito e depois refeito só com retas, com o corte do cinzel nas quinas.',
         corpo: [
@@ -99,17 +95,16 @@ export const CAPITULOS: Capitulo[] = [
             'Cada letra foi desenhada à mão num gabarito, um quadrado por letra. O desenho virou contorno, e as curvas da vetorização viraram retas: o alfabeto caiu de 3.390 para 1.262 pontos sem perder o jeito da mão.',
             'Nas quinas, um corte reto, como o golpe de um cinzel. Por isso nenhuma letra é perfeitamente reta e nenhuma é igual à outra: de longe, a palavra parece um muro de pedras encaixadas; de perto, cada pedra tem o seu desenho.',
         ],
-        materias: 2,
+        materias: 4,
         secoes: [
-            { nome: 'Maiúsculas e os pontos do a', k: 1, sumario: true },
-            { nome: 'Minúsculas e números', k: 2, sumario: true },
+            { nome: 'Pontos de construção', k: 1, sumario: true },
+            { nome: 'As linhas e os pontos', k: 3, sumario: true },
         ],
     },
     {
         id: 'estilos',
         n: 2,
         titulo: 'Os três estilos',
-        estilo: 'polished',
         epigrafe: 'Pedra que rola não cria limo!',
         visaoGeral: 'Três desgastes da mesma pedra. A Cut tem as quinas vivas; a Polished rolou um pouco no rio; a Worn passou anos na correnteza e ficou redonda.',
         corpo: [
@@ -117,18 +112,17 @@ export const CAPITULOS: Capitulo[] = [
             'A Polished guarda o corte com as pontas lixadas e vai bem em títulos e textos curtos. A Worn é a mais macia: perde os ângulos, ganha volume e serve quando a pedra precisa parecer amiga.',
             'Quanto mais gasta, mais estreita: o A tem 801 unidades de largura na Cut, 749 na Polished e 710 na Worn. A mesma palavra ocupa menos linha a cada estilo.',
         ],
-        materias: 4,
+        materias: 6,
         secoes: [
-            { nome: 'A Polished, de perto', k: 1 },
-            { nome: 'Os três desgastes', k: 3, sumario: true },
-            { nome: 'O R, um por cima do outro', k: 4 },
+            { nome: 'Os três estilos juntos', k: 1 },
+            { nome: 'Visão geral dos estilos', k: 3, sumario: true },
+            { nome: 'O desgaste de perto', k: 5 },
         ],
     },
     {
         id: 'variacoes',
         n: 3,
         titulo: 'As variações',
-        estilo: 'worn',
         epigrafe: 'Sonhei ontem que uma pedra rolava, rolava e não paraaava!',
         visaoGeral: 'Quem talha à mão não repete o golpe. Quando uma minúscula aparece de novo logo em seguida, a fonte troca o corte sozinha, e a palavra nunca fica com cara de carimbo.',
         corpo: [
@@ -136,18 +130,17 @@ export const CAPITULOS: Capitulo[] = [
             'Os cortes se revezam: o desenho de base, depois a variação dois, a três e a quatro, e de novo a base. O texto não muda; quem faz a troca é a própria fonte, pelas alternativas de contexto, nos três estilos.',
             'Duas letras ainda mudam conforme o lugar: o L ganha outro corte quando vem depois de outra letra, e o f tem um desenho próprio para o começo da palavra.',
         ],
-        materias: 4,
+        materias: 6,
         secoes: [
             { nome: 'Os quatro cortes do s', k: 1 },
-            { nome: 'Sem e com as trocas', k: 3, sumario: true },
-            { nome: 'O L, o f e os dois e da logo', k: 4 },
+            { nome: 'As trocas', k: 3, sumario: true },
+            { nome: 'Os quatro cortes do e', k: 5 },
         ],
     },
     {
         id: 'tamanhos',
         n: 4,
         titulo: 'Do título ao texto',
-        estilo: 'cut',
         epigrafe: 'Jane quer LP, fax, CD, giz, TV e bom whisky.',
         visaoGeral: 'Feita para títulos, cartazes e palavras curtas, a Rune aguenta o parágrafo em corpo grande. Grande, a pedra aparece inteira; pequena, vira textura.',
         corpo: [
@@ -155,11 +148,13 @@ export const CAPITULOS: Capitulo[] = [
             'Em corpo de texto, o desenho vira textura, pesada e irregular, que pede frases curtas e espaço entre as linhas.',
             'Os acentos são pedras à parte, pousadas por cima, e as frações, os números elevados e os símbolos do dia a dia vêm no mesmo traço.',
         ],
-        materias: 4,
+        materias: 10,
         secoes: [
             { nome: 'Em corpo de cartaz', k: 1 },
-            { nome: 'Acentos e frações', k: 3, sumario: true },
-            { nome: 'Do cartaz ao texto', k: 4 },
+            { nome: 'Cascata de tamanhos', k: 3, sumario: true },
+            { nome: 'Palavras e números', k: 5 },
+            { nome: 'Acentos, frações e sinais', k: 7 },
+            { nome: 'Exemplos de texto', k: 9, sumario: true },
         ],
     },
 ];

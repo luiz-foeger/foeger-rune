@@ -27,6 +27,8 @@ export interface Pincel {
     // o pano da capa: a cor e uma trama de listras bem fraca
     pano(cor: string): void;
     recortar(x: number, y: number, l: number, a: number, desenho: () => void): void;
+    // recorta por um caminho qualquer, em unidades da página (o vidro da lupa)
+    recortarCaminho(d: string, desenho: () => void): void;
     girar(graus: number, cx: number, cy: number, desenho: () => void): void;
     limpar(): void;
     // uma imagem pronta (um canvas desenhado à parte, como a tinta granulada do frontispício), esticada na caixa; opaca
@@ -205,6 +207,14 @@ export function pincelCanvas(g: CanvasRenderingContext2D, s: number, fam: Famili
             desenho();
             g.restore();
         },
+        recortarCaminho(d, desenho) {
+            g.save();
+            g.scale(s, s);
+            g.clip(new Path2D(d));
+            g.scale(1 / s, 1 / s);
+            desenho();
+            g.restore();
+        },
         girar(graus, cx, cy, desenho) {
             g.save();
             g.translate(cx * s, cy * s);
@@ -280,6 +290,13 @@ export function pincelSvg(fam: Familias, id: string): Pincel & { svg: (fundo?: s
         recortar(x, y, l, a, desenho) {
             const c = novoId('corte');
             defs.push(`<clipPath id="${c}"><rect x="${n(x)}" y="${n(y)}" width="${n(l)}" height="${n(a)}"/></clipPath>`);
+            partes.push(`<g clip-path="url(#${c})">`);
+            desenho();
+            partes.push('</g>');
+        },
+        recortarCaminho(d, desenho) {
+            const c = novoId('corte');
+            defs.push(`<clipPath id="${c}"><path d="${d}"/></clipPath>`);
             partes.push(`<g clip-path="url(#${c})">`);
             desenho();
             partes.push('</g>');

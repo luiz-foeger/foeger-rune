@@ -6,6 +6,8 @@
 import { CAPITULOS, COR, EXTRAS, LIVRO, VEGETAIS, type IdCapitulo, type Pagina } from './conteudo';
 import { medir, pincelCanvas, TINTA, type Estilo, type Familia, type Familias, type Pincel } from './pincel';
 import { PALAVRAS, type Glifo } from '../glifos';
+import { PALAVRAS_EXTRA } from '../glifos-extra';
+import { ESTILO_MEDIDAS } from '../medidas';
 import { PECAS } from '../../_comp/LogoFoeger';
 
 // o que o clique faz: ir ao capítulo (cap), às tabelas dos caracteres, a uma página qualquer (pagina) ou aproximar um
@@ -75,8 +77,8 @@ function rodape(c: Ctx, num: number | undefined, texto: string, cor?: string) {
 }
 const fundo = (c: Ctx, cor: string) => c.p.ret(0, 0, 1000, 1500, cor);
 
-type Paragrafo = { tam: number; entre: number; fam?: Familia; peso?: number; cor?: string; justificar?: boolean; recuo?: number; alinhar?: 'left' | 'right' | 'center' };
-const estiloP = (o: Paragrafo): Estilo => ({ fam: o.fam ?? 'ui', tam: o.tam, peso: o.peso ?? 400, cor: o.cor ?? TINTA });
+type Paragrafo = { tam: number; entre: number; fam?: Familia; peso?: number; cor?: string; justificar?: boolean; recuo?: number; alinhar?: 'left' | 'right' | 'center'; semCalt?: boolean };
+const estiloP = (o: Paragrafo): Estilo => ({ fam: o.fam ?? 'ui', tam: o.tam, peso: o.peso ?? 400, cor: o.cor ?? TINTA, semCalt: o.semCalt });
 
 function quebrar(c: Ctx, palavras: string[], larg: number, recuo: number, e: Estilo) {
     const esp = medir(c.p.fam, ' ', e);
@@ -255,7 +257,7 @@ function centrado(c: Ctx, t: string, fam: Familia, cor: string, x: number, y: nu
 // ---------- as letras desenhadas pelo contorno (glifos.ts, da Cut) ----------
 
 function glifoDe(palavra: string, ch: string): Glifo {
-    return PALAVRAS[palavra].glifos.find(g => g.ch === ch)!;
+    return (PALAVRAS[palavra] ?? PALAVRAS_EXTRA[palavra]).glifos.find(g => g.ch === ch)!;
 }
 
 // um glifo posto com a origem (linha de base, começo do avanço) em (x, y) e o corpo tam
@@ -271,22 +273,7 @@ function vertices(c: Ctx, g: Glifo, x: number, y: number, tam: number, r: number
 
 // ---------- as pranchas (no lugar das fotos) ----------
 
-type Prancha =
-    | 'ssss'
-    | 'seixo'
-    | 'ploc'
-    | 'maiusculas'
-    | 'minusculas'
-    | 'numeros'
-    | 'tres-pedras'
-    | 'r-desgaste'
-    | 'tanto'
-    | 'trocas'
-    | 'l-f'
-    | 'dois-e'
-    | 'acentos'
-    | 'tamanhos'
-    | 'em-paragrafo';
+type Prancha = 'ssss' | 'ploc';
 
 // a cascata do vegetal da régua: o corpo e a linha de base de cada "Pedra", da maior para a menor, na caixa CASCATA
 function linhasDaCascata(c: Ctx, y: number, l: number, a: number) {
@@ -312,10 +299,6 @@ function linhasNaCaixa(c: Ctx, linhas: string[], fam: Familia, cor: string, x: n
     return tam;
 }
 
-// a Rune em parágrafo (a faixa do pé do capítulo 4)
-const AMOSTRA =
-    'Toda pedra começa bruta. Quem talha à mão não repete o golpe, e a palavra nunca fica com cara de carimbo. Pedra que rola não cria limo, e água mole em pedra dura tanto bate até que fura.';
-
 const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: number) => void> = {
     // os quatro cortes do s, um depois do outro, com o nome de cada glifo embaixo (na página ou na dupla)
     ssss(c, x, y, l, a) {
@@ -332,162 +315,19 @@ const PRANCHAS: Record<Prancha, (c: Ctx, x: number, y: number, l: number, a: num
             const meio = x0 + (prefixo[i] + prefixo[i + 1]) / 2;
             const yr = base + (pagina ? 90 : a * 0.12);
             c.p.fio(meio, base + (pagina ? 26 : a * 0.03), meio, yr - (pagina ? 26 : a * 0.05), { cor: claro, esp: pagina ? 1.6 : 1.2 });
-            rotulo(c, nome, meio, yr, { alinhar: 'center', cor: claro, tam: pagina ? 15 : Math.max(9, a * 0.032) });
+            valor(c, nome, meio, yr, { alinhar: 'center', cor: claro, tam: pagina ? 15 : Math.max(9, a * 0.032) });
         });
-    },
-    // a palavra enorme nas duas páginas, no azul da Polished
-    seixo(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, COR.polished);
-        const tam = ajustar(c, 'Seixo', { fam: 'polished' }, l * 0.9);
-        linha(c, 'Seixo', x + l / 2, y + a * 0.68, { tam, fam: 'polished', peso: 400, cor: tintaSobre(COR.polished), alinhar: 'center' });
     },
     // as onomatopeias na Polished, de borda a borda das duas páginas
     ploc(c, x, y, l, a) {
         c.p.ret(x, y, l, a, COR.polished);
         linhasNaCaixa(c, ['Ploc! Tum!', 'Crás, Bum!'], 'polished', tintaSobre(COR.polished), x, y, l, a, { frac: 0.9, entre: 1.05, alinhar: 'left' });
     },
-    maiusculas(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#e4e1da');
-        linhasNaCaixa(c, ['ABCDEFGHI', 'JKLMNOPQR', 'STUVWXYZ'], 'cut', ESCURA, x, y, l, a, { semCalt: true, entre: 1.08, frac: 0.86, alinhar: 'left' });
-    },
-    minusculas(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#e4e1da');
-        linhasNaCaixa(c, ['abcdefghi', 'jklmnopqr', 'stuvwxyz'], 'cut', ESCURA, x, y, l, a, { semCalt: true, entre: 1.2, frac: 0.86, alinhar: 'left' });
-    },
-    // os números e alguns símbolos, claros no escuro (a faixa do pé)
-    numeros(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, ESCURA);
-        const tam = ajustar(c, '0123456789', { fam: 'cut', semCalt: true }, l * 0.9);
-        linha(c, '0123456789', x + l * 0.05, y + a * 0.44, { tam, fam: 'cut', peso: 400, cor: PAPEL, semCalt: true });
-        const simbolos = '★ ♥ → ✓ ½ ¾ €';
-        const ts = Math.min(tam * 0.72, ajustar(c, simbolos, { fam: 'cut', semCalt: true }, l * 0.9));
-        linha(c, simbolos, x + l * 0.05, y + a * 0.44 + tam * 1.25, { tam: ts, fam: 'cut', peso: 400, cor: COR.cut, semCalt: true });
-    },
-    // a mesma palavra nos três estilos: cada um mais estreito que o anterior
-    'tres-pedras'(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, COR.tintaPolished);
-        const tam = ajustar(c, 'Pedra', { fam: 'cut' }, l * 0.66);
-        const entre = Math.min(tam * 1.02, (a * 0.86) / 3);
-        const y0 = y + (a - (MAIUSCULA * tam + 2 * entre)) / 2 + MAIUSCULA * tam;
-        ESTILOS.forEach(([fam, nome], i) => {
-            const yy = y0 + i * entre;
-            const r = linha(c, 'Pedra', x + l * 0.26, yy, { tam, fam, peso: 400, cor: ESCURA });
-            rotulo(c, nome, x + l * 0.05, yy - MAIUSCULA * tam * 0.5 + 5, { tam: Math.max(9, a * 0.026) });
-            c.p.fio(r.x1 + 8, yy - MAIUSCULA * tam * 0.5, x + l - 14, yy - MAIUSCULA * tam * 0.5, { cor: 'rgba(27,26,24,0.35)', esp: 1 }, 3);
-        });
-    },
-    // o R nos três desgastes, um por cima do outro: a Cut cheia, as outras pelo contorno
-    'r-desgaste'(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#e4e1da');
-        const tam = Math.min(ajustar(c, 'R', { fam: 'cut' }, l * 0.62), (a * 0.72) / MAIUSCULA);
-        const w = largura(c, 'R', { tam, fam: 'cut' });
-        const x0 = x + (l - w) / 2;
-        const base = y + a / 2 + (MAIUSCULA * tam) / 2;
-        linha(c, 'R', x0, base, { tam, fam: 'cut', peso: 400, cor: '#cfcac1' });
-        c.p.contornoTexto('R', x0, base, { fam: 'polished', tam }, { cor: COR.roxo, esp: 1.6 });
-        c.p.contornoTexto('R', x0, base, { fam: 'worn', tam }, { cor: COR.wornEscuro, esp: 1.6 });
-        const tl = Math.max(9, a * 0.026);
-        const chaves: [string, string][] = [['Cut', '#a39d93'], ['Polished', COR.roxo], ['Worn', COR.wornEscuro]];
-        chaves.forEach(([nome, cor], i) => {
-            const yy = y + a - 22 - (chaves.length - 1 - i) * tl * 1.6;
-            c.p.ret(x + 18, yy - tl * 0.75, tl * 0.8, tl * 0.8, cor);
-            rotulo(c, nome, x + 18 + tl * 1.3, yy, { tam: tl, cor: ESCURA });
-        });
-    },
-    // o ditado na Worn, no verde (a faixa do pé)
-    tanto(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, COR.worn);
-        linhasNaCaixa(c, ['Tanto bate até', 'que fura!'], 'worn', tintaSobre(COR.worn), x, y, l, a, { frac: 0.9, entre: 1.08, alinhar: 'left' });
-    },
-    // as mesmas letras sem e com as trocas: em cima, sempre o mesmo corte; embaixo, quatro cortes
-    trocas(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, COR.tintaFrio);
-        const t = 'ssss eeee';
-        const tam = ajustar(c, t, { fam: 'worn' }, l * 0.8);
-        const tl = Math.max(9, a * 0.026);
-        [true, false].forEach((sem, i) => {
-            const base = y + a * (i === 0 ? 0.4 : 0.78);
-            rotulo(c, sem ? 'Sem as trocas' : 'Com as trocas', x + l * 0.1, base - ALTURA_X * tam - tl * 1.4, { tam: tl, cor: COR.frioEscuro });
-            linha(c, t, x + l * 0.1, base, { tam, fam: 'worn', peso: 400, cor: ESCURA, semCalt: sem });
-        });
-    },
-    // o L do meio e o f do começo
-    'l-f'(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#e4e1da');
-        const tl = Math.max(9, a * 0.026);
-        const metade = l / 2;
-        const casos: [string, string][] = [['AL', 'L do meio'], ['fé', 'f do começo']];
-        casos.forEach(([t, nome], i) => {
-            const xi = x + i * metade;
-            const { base } = centrado(c, t, 'worn', ESCURA, xi, y, metade, a, { frac: 0.7, dy: -a * 0.05 });
-            rotulo(c, nome, xi + metade / 2, base + a * 0.13, { alinhar: 'center', tam: tl });
-        });
-        c.p.fio(x + metade, y + a * 0.12, x + metade, y + a * 0.88, { cor: 'rgba(27,26,24,0.3)', esp: 1 }, 3);
-    },
-    // os dois e da logo, cada um com o giro que tem nela: o segundo virou a primeira variação do e (a faixa do pé)
-    'dois-e'(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, COR.tintaFrio);
-        rotulo(c, 'Os dois e da logo', x + 29, y + 56, { cor: COR.frioEscuro });
-        rotulo(c, 'A primeira variação', x + l - 29, y + 56, { cor: COR.frioEscuro, alinhar: 'right' });
-        const pecas = [PECAS[4], PECAS[6]];
-        const caixas = pecas.map(([d]) => {
-            const pts = pontosDaPeca(d);
-            const xs = pts.map(p => p[0]);
-            const ys = pts.map(p => p[1]);
-            return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
-        });
-        const alto = Math.max(...caixas.map(k => k.y1 - k.y0));
-        const k = (a * 0.56) / alto;
-        pecas.forEach(([d, , , r], i) => {
-            const cx = x + l * (i === 0 ? 0.3 : 0.7);
-            const cy = y + a * 0.52;
-            const b = caixas[i];
-            const px = cx - k * (b.x0 + b.x1) * 0.5;
-            const py = cy - k * (b.y0 + b.y1) * 0.5;
-            c.p.girar(r, cx, cy, () => c.p.caminho(d, px, py, k, ESCURA));
-            rotulo(c, i === 0 ? 'e' : 'e.v2', cx, y + a - 34, { alinhar: 'center', cor: COR.frioEscuro });
-        });
-    },
-    acentos(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, COR.tintaQuente);
-        linhasNaCaixa(c, ['ÁÂÃÀÇÉÊÍ', 'ÓÔÕÚÜÑ', 'áâãçéêíóôõú', '½ ¼ ¾ ¹ ² ³'], 'cut', ESCURA, x, y, l, a, { semCalt: true, entre: 1.16, frac: 0.84, alinhar: 'left' });
-    },
-    // a mesma palavra em seis corpos, com o corpo de cada linha em mono
-    tamanhos(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#e4e1da');
-        const corpos = [1, 0.7, 0.5, 0.36, 0.26, 0.19];
-        const maior = Math.min(ajustar(c, 'Pedra', { fam: 'cut' }, l * 0.62), (a * 0.82) / (corpos.reduce((s, k) => s + k, 0) * 1.08));
-        const tl = Math.max(9, a * 0.026);
-        let yy = y + a * 0.09;
-        for (const k of corpos) {
-            const tam = maior * k;
-            yy += tam * 1.08;
-            linha(c, 'Pedra', x + l * 0.24, yy, { tam, fam: 'cut', peso: 400, cor: ESCURA });
-            rotulo(c, `${Math.round(tam)}`, x + l * 0.06, yy, { tam: tl, cor: CINZA });
-        }
-    },
-    // a Rune em corpo de texto (a faixa do pé do capítulo 4)
-    'em-paragrafo'(c, x, y, l, a) {
-        c.p.ret(x, y, l, a, '#e4e1da');
-        rotulo(c, 'A Rune em parágrafo', x + 29, y + 56, { cor: CINZA });
-        rotulo(c, 'Corpo 30', x + l - 29, y + 56, { cor: CINZA, alinhar: 'right' });
-        paragrafo(c, AMOSTRA, x + 29, y + 130, l - 58, { tam: 30, entre: 41, fam: 'cut', peso: 400 });
-    },
 };
 
 // uma prancha numa caixa da página, cortada pela caixa e pela página
 function prancha(c: Ctx, k: Prancha, x: number, y: number, l: number, a: number) {
     c.p.recortar(Math.max(0, x), Math.max(0, y), Math.min(1000, x + l) - Math.max(0, x), Math.min(1500, y + a) - Math.max(0, y), () => PRANCHAS[k](c, x, y, l, a));
-}
-
-// a prancha com moldura fina e a legenda em mono embaixo (a da matéria)
-function moldura(c: Ctx, k: Prancha, x: number, y: number, l: number, a: number, legenda: [string, string]) {
-    c.p.ret(x, y, l, a, PAPEL);
-    prancha(c, k, x + 3, y + 3, l - 6, a - 56);
-    c.p.borda(x, y, l, a, { cor: FIO, esp: 1.3 });
-    fio(c, x, y + a - 53, x + l, y + a - 53);
-    rotulo(c, legenda[0], x + 14, y + a - 21, { tam: 11.5, cor: CINZA });
-    rotulo(c, legenda[1], x + l - 14, y + a - 21, { tam: 11.5, cor: CINZA, alinhar: 'right' });
 }
 
 const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
@@ -973,171 +813,788 @@ function abertura(c: Ctx, cap: number, num?: number) {
         fio(c, 345, y + 20, 973, y + 20);
     });
     paraLer(c, 345, ySecoes - TEXTO.tam, 973, ySecoes + (ch.secoes.length - 1) * passo + 20, TEXTO.tam);
-    const yVisao = 1130;
+    const yVisao = Math.max(1130, ySecoes + ch.secoes.length * passo + 90);
     rotulo(c, 'Visão geral', 29, yVisao);
     paragrafoLido(c, ch.visaoGeral, 345, yVisao, 628, TEXTO);
     rodape(c, num, ch.titulo);
 }
 
-// as matérias de cada capítulo, como as de antes: na página da esquerda, a prancha em moldura no alto, a mostra na
-// coluna da direita e o texto embaixo; na da direita, o texto no alto, a prancha em moldura ao lado, a citação no meio e
-// a faixa no pé. As pranchas, as legendas, a faixa e a citação de cada capítulo
-const ARTIGOS: Record<IdCapitulo, { esq: Prancha; legendaEsq: [string, string]; dir: Prancha; legendaDir: [string, string]; pe: Prancha; fundoPe: () => string; citacao: string }> = {
-    construcao: {
-        esq: 'maiusculas',
-        legendaEsq: ['Maiúsculas', 'Cut, sem as trocas'],
-        dir: 'minusculas',
-        legendaDir: ['Minúsculas', 'Cut, sem as trocas'],
-        pe: 'numeros',
-        fundoPe: () => ESCURA,
-        citacao: 'Toda letra começou num quadrado.',
-    },
-    estilos: {
-        esq: 'tres-pedras',
-        legendaEsq: ['Pedra', 'Três desgastes'],
-        dir: 'r-desgaste',
-        legendaDir: ['R', 'Um por cima do outro'],
-        pe: 'tanto',
-        fundoPe: () => COR.worn,
-        citacao: 'Quanto mais gasta, mais estreita.',
-    },
-    variacoes: {
-        esq: 'trocas',
-        legendaEsq: ['Worn', 'Sem e com as trocas'],
-        dir: 'l-f',
-        legendaDir: ['L e f', 'Pelo lugar na palavra'],
-        pe: 'dois-e',
-        fundoPe: () => COR.tintaFrio,
-        citacao: 'Nenhuma pedra sai igual à outra.',
-    },
-    tamanhos: {
-        esq: 'acentos',
-        legendaEsq: ['Acentos e frações', 'Cut'],
-        dir: 'tamanhos',
-        legendaDir: ['Do cartaz ao texto', 'Seis corpos'],
-        pe: 'em-paragrafo',
-        fundoPe: () => '#e4e1da',
-        citacao: 'Ôh, é só açaí!',
-    },
-};
+// ---------- as matérias dos capítulos ----------
 
-// o nome da seção da página (a da introdução que aponta para ela)
-const secaoDaPagina = (cap: number, num?: number) => {
-    const ch = CAPITULOS[cap];
-    const k = (num ?? 0) - ((ch.paginas?.[0] ?? 0) + 1);
-    return ch.secoes.find(s => s.k === k)?.nome ?? ch.titulo;
-};
+// as matérias seguem as páginas dos espécimes de fundição (a referência é o livro da Studio Feixen): cada dupla trata
+// de um assunto só, com o cabeçalho em duas colunas na cor de destaque (a fonte e o estilo à esquerda, o assunto à
+// direita), a letra grande, caixas com o nome do que mostram e os números de verdade da fonte
 
-// a coluna da direita da página da esquerda da matéria: uma mostra da fonte, diferente em cada capítulo
-function mostra(c: Ctx, cap: number) {
-    const x = 548;
-    const l = 425;
-    const id = CAPITULOS[cap].id;
-    if (id === 'construcao') {
-        // o a da Cut pelo contorno, com os pontos como estão no arquivo da fonte
-        const g = glifoDe('Rolado', 'a');
-        const tam = 640;
-        const gx = x + (l - g.avanco * (tam / 1000)) / 2;
-        const base = 640;
-        fio(c, x, base, x + l, base, '#b9b7b0', 1);
-        fio(c, x, base - 545 * (tam / 1000), x + l, base - 545 * (tam / 1000), '#b9b7b0', 1);
-        contorno(c, g, gx, base, tam, COR.cut, { cor: TINTA, esp: 1.4 });
-        vertices(c, g, gx, base, tam, 6, PAPEL, TINTA);
-        rotulo(c, 'Linha de base', x + l, base + 30, { tam: 11, cor: CINZA, alinhar: 'right' });
-        rotulo(c, 'Altura do x', x + l, base - 545 * (tam / 1000) - 14, { tam: 11, cor: CINZA, alinhar: 'right' });
-        const pontos = g.pedras.reduce((s, p) => s + p.vertices.reduce((t, v) => t + v.length, 0), 0);
-        paragrafoLido(c, `O a da Cut com os ${pontos} pontos do contorno: só retas, uma por golpe.`, x, 730, l, { tam: 18.5, entre: 23.5 });
-    } else if (id === 'estilos') {
-        // a palavra nos três estilos, com a largura de cada uma em unidades da fonte
-        rotulo(c, 'A mesma palavra, mais estreita a cada estilo', x, 160, { cor: CINZA });
-        const tam = ajustar(c, 'Rune', { fam: 'cut' }, 360);
-        ESTILOS.forEach(([fam, nome], i) => {
-            const y = 330 + i * 200;
-            linha(c, 'Rune', x, y, { tam, fam, peso: 400 });
-            const unidades = Math.round(largura(c, 'Rune', { tam: 1000, fam }));
-            rotulo(c, nome, x, y + 36, { tam: 11, cor: CINZA });
-            rotulo(c, `${unidades} unidades`, x + l, y + 36, { tam: 11, alinhar: 'right', cor: CINZA });
-            fio(c, x, y + 50, x + l, y + 50);
-        });
-    } else if (id === 'variacoes') {
-        // o revezamento de algumas minúsculas, cada uma em quatro cortes
-        rotulo(c, 'Quatro cortes de cada', x, 140, { cor: CINZA });
-        ['aaaa', 'eeee', 'gggg', 'oooo', 'rrrr', 'ssss'].forEach((t, i) => {
-            const y = 250 + i * 104;
-            linha(c, t, x, y, { tam: 82, fam: 'worn', peso: 400 });
-            fio(c, x, y + 26, x + l, y + 26);
-        });
-        paragrafoLido(c, 'A primeira de cada linha é o desenho de base; as outras três entram sozinhas, na ordem, quando a letra se repete.', x, 900, l, { tam: 18.5, entre: 23.5 });
-    } else {
-        // os acentos, pedras à parte, em maiúsculas e em minúsculas
-        rotulo(c, 'Pedras à parte', x, 160, { cor: CINZA });
-        const tam = ajustar(c, 'ÔÉÃ', { fam: 'cut', semCalt: true }, l);
-        linha(c, 'ÔÉÃ', x, 420, { tam, fam: 'cut', peso: 400, semCalt: true });
-        linha(c, 'ôéã', x, 720, { tam, fam: 'cut', peso: 400, semCalt: true, cor: COR.laranja });
+// os pontos de tipografia de um corpo da página no PDF (a folha tem 396 pt de largura para 1000 unidades)
+const pt = (tam: number) => `${Math.round(tam * 0.396)} pt`;
+const GRADE = '#e3e1db';
+const FAIXA = '#dcdad3';
+// os tons claros dos realces, um por estilo (o ocre da Cut, o azul da Polished, o verde da Worn) e o cinza
+const REALCES = ['#f2dfb4', '#d9e1f4', '#d3eadf', '#e2e0da'];
+
+// o cabeçalho da matéria: duas colunas, cada uma com uma ou duas linhas (x0 desloca o que é desenhado de uma vez nas
+// duas páginas da dupla)
+function cabeca(c: Ctx, esq: string[], dir: string[], x0 = 0) {
+    const o: Linha = { tam: 44, peso: 400, cor: COR.laranja };
+    esq.forEach((t, i) => linha(c, t, x0 + 27, 112 + i * 47, o));
+    dir.forEach((t, i) => linha(c, t, x0 + 500, 112 + i * 47, o));
+}
+
+// o rodapé das matérias: o nome do livro à esquerda e o do capítulo à direita
+const rodapeDaMateria = (c: Ctx, cap: number, num?: number) => rodape(c, num, num !== undefined && num % 2 === 1 ? CAPITULOS[cap].titulo : LIVRO.titulo);
+
+// um valor junto dos rótulos (o mono deles, mas sem a caixa alta, que trocava o σ por Σ)
+const valor = (c: Ctx, t: string, x: number, y: number, o: { alinhar?: 'left' | 'right' | 'center'; cor?: string; tam?: number } = {}) =>
+    linha(c, t, x, y, { tam: o.tam ?? 12.5, fam: 'mono', peso: 400, espaco: 0.05, cor: o.cor, alinhar: o.alinhar });
+
+// os nomes de uma amostra, em cima dela: o do que ela mostra à esquerda e o outro na coluna do meio (nas caixas da
+// largura da página, como o cabeçalho) ou no fim da linha
+function nomesDaAmostra(c: Ctx, esq: string, dir: string, x: number, y: number, l: number, meio = l > 700) {
+    linha(c, esq, x, y, { tam: 20, peso: 500 });
+    if (dir) linha(c, dir, meio ? x + 471 : x + l, y, { tam: 20, peso: 500, alinhar: meio ? 'left' : 'right' });
+}
+
+// uma caixa de amostra, como as dos espécimes: os nomes em cima e a moldura fina
+function caixaDeAmostra(c: Ctx, x: number, y: number, l: number, a: number, esq: string, dir = '') {
+    nomesDaAmostra(c, esq, dir, x, y - 14, l);
+    c.p.borda(x, y, l, a, { cor: TINTA, esp: 1.3 });
+}
+
+// a linha-guia de uma caixa (a base, a altura do x), com os traços que saem dos lados, como nos espécimes
+function guia(c: Ctx, x: number, l: number, y: number) {
+    fio(c, x, y, x + l, y, GRADE, 1.2);
+    fio(c, x - 14, y, x, y, TINTA, 1.2);
+    fio(c, x + l, y, x + l + 14, y, TINTA, 1.2);
+}
+
+// um retângulo de cantos redondos, em unidades da página (a pílula das etiquetas e a marca da Polished)
+const retRedondo = (x: number, y: number, l: number, a: number, r: number) =>
+    `M${x + r} ${y}H${x + l - r}A${r} ${r} 0 0 1 ${x + l} ${y + r}V${y + a - r}A${r} ${r} 0 0 1 ${x + l - r} ${y + a}H${x + r}A${r} ${r} 0 0 1 ${x} ${y + a - r}V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`;
+
+// a etiqueta de borda redonda (o corpo de uma linha, o nome de um corte), com o meio da altura em y; devolve a largura
+function etiqueta(c: Ctx, t: string, x: number, y: number, o: { alinhar?: 'left' | 'center' | 'right'; cor?: string; fundo?: string } = {}) {
+    const e: Linha = { tam: 17, peso: 500, cor: o.cor ?? TINTA };
+    const l = largura(c, t, e) + 24;
+    const x0 = o.alinhar === 'right' ? x - l : o.alinhar === 'center' ? x - l / 2 : x;
+    c.p.caminho(retRedondo(x0, y - 15, l, 30, 15), 0, 0, 1, o.fundo ?? PAPEL, { cor: o.cor ?? TINTA, esp: 1.3 });
+    linha(c, t, x0 + 12, y + 6, e);
+    return l;
+}
+
+// a marca de cada estilo, como a quina dele: o quadrado da Cut, o quadrado de cantos redondos da Polished e o círculo
+// da Worn
+function marcaDoEstilo(c: Ctx, fam: Familia, x: number, y: number, lado: number, cor: string) {
+    if (fam === 'worn') c.p.circulo(x + lado / 2, y + lado / 2, lado / 2, cor);
+    else if (fam === 'polished') c.p.caminho(retRedondo(x, y, lado, lado, lado * 0.3), 0, 0, 1, cor);
+    else c.p.ret(x, y, lado, lado, cor);
+}
+
+// a cota: a medida entre dois pontos, com os traços nas pontas e o número embaixo
+function cota(c: Ctx, x0: number, x1: number, y: number, t: string, cor = TINTA) {
+    fio(c, x0, y, x1, y, cor, 1.2);
+    fio(c, x0, y - 10, x0, y + 10, cor, 1.2);
+    fio(c, x1, y - 10, x1, y + 10, cor, 1.2);
+    linha(c, t, (x0 + x1) / 2, y + 34, { tam: 20, peso: 500, cor, alinhar: 'center' });
+}
+
+// onde cada letra de uma linha começa e acaba, já com as trocas da fonte (a largura do pedaço que vem antes dela)
+function posicoes(c: Ctx, t: string, o: Linha) {
+    const letras = Array.from(t);
+    const xs = letras.map((_, i) => (i ? largura(c, letras.slice(0, i).join(''), o) : 0));
+    xs.push(largura(c, t, o));
+    return letras.map((ch, i) => ({ ch, x0: xs[i], x1: xs[i + 1] }));
+}
+
+// a caixa dos pontos de uma letra, em unidades da fonte, com x a partir da origem dela e y para baixo
+function caixaDaLetra(g: Glifo) {
+    const pontos = g.pedras.flatMap(pd => pd.vertices.flat());
+    const xs = pontos.map(([x]) => x - g.x);
+    const ys = pontos.map(([, y]) => y);
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys), pontos: pontos.length };
+}
+
+// a lupa, a mesma do ponteiro do livro: o vidro e o aro lascados (faces de tamanhos diferentes, como as letras da Cut)
+// e o cabo à parte, a 45°, separado do aro por uma fresta; dentro, o desenho aumentado
+const QUINAS_DA_LUPA: [number, number][] = [
+    [0, 1.011],
+    [33, 0.978],
+    [64, 1.022],
+    [98, 0.989],
+    [131, 1.016],
+    [163, 0.973],
+    [196, 1.011],
+    [229, 0.984],
+    [262, 1.022],
+    [295, 0.989],
+    [328, 1],
+];
+const lascado = (cx: number, cy: number, r: number) =>
+    QUINAS_DA_LUPA.map(([g, k]) => [cx + r * k * Math.cos((g * Math.PI) / 180), cy + r * k * Math.sin((g * Math.PI) / 180)] as [number, number]);
+const poligono = (pontos: [number, number][]) => `M${pontos.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join('L')}Z`;
+function lupa(c: Ctx, cx: number, cy: number, r: number, dentro: () => void) {
+    const vidro = lascado(cx, cy, r);
+    c.p.recortarCaminho(poligono(vidro), () => {
+        c.p.ret(cx - r * 1.1, cy - r * 1.1, r * 2.2, r * 2.2, PAPEL);
+        dentro();
+    });
+    const aro = r * 0.075;
+    c.p.caminho(poligono(lascado(cx, cy, r + aro)) + poligono([...vidro].reverse()), 0, 0, 1, TINTA);
+    const meia = (r * 0.085) / Math.SQRT2;
+    const ponto = (d: number) => [cx + d / Math.SQRT2, cy + d / Math.SQRT2];
+    const [ax, ay] = ponto(r + aro + r * 0.06);
+    const [bx, by] = ponto(r + aro + r * 0.68);
+    c.p.caminho(
+        poligono([
+            [ax - meia, ay + meia],
+            [ax + meia, ay - meia],
+            [bx + meia, by - meia],
+            [bx - meia, by + meia],
+        ]),
+        0,
+        0,
+        1,
+        TINTA,
+    );
+}
+
+// ---- capítulo 1: a construção das letras ----
+
+// os pontos de construção de uma letra da Cut, na página inteira: a letra na grade, com as faixas da base e da altura
+// do x, os pontos do arquivo da fonte e, junto de cada um, as coordenadas dele (em unidades do eme, com y para cima,
+// como no arquivo), sempre para fora do anel do ponto: nos furos, elas ficam na tinta, onde há espaço
+function pontosDeConstrucao(c: Ctx, cap: number, num: number | undefined, g: Glifo, nome: string, texto: string) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Pontos de', `construção – ${nome}`]);
+    const [x, y, l, a] = [29, 236, 944, 1090];
+    for (let gx = x + 59; gx < x + l - 1; gx += 59) fio(c, gx, y, gx, y + a, GRADE, 1);
+    for (let gy = y + 59; gy < y + a - 1; gy += 59) fio(c, x, gy, x + l, gy, GRADE, 1);
+    const k = 1.3;
+    const base = y + a - 130;
+    const caixa = caixaDaLetra(g);
+    const ox = 500 - (k * (caixa.x0 + caixa.x1)) / 2;
+    const linhas: [number, string][] = [
+        [0, 'Linha de base 0'],
+        [545, 'Altura do x 545'],
+    ];
+    for (const [v, nomeLinha] of linhas) {
+        const yy = base - v * k;
+        c.p.ret(x, yy - 11, l, 22, FAIXA);
+        guia(c, x, l, yy);
+        rotulo(c, nomeLinha, x + 14, yy - 22, { cor: CINZA });
     }
+    c.p.borda(x, y, l, a, { cor: TINTA, esp: 1.3 });
+    contorno(c, g, ox, base, k * 1000, COR.cut, { cor: TINTA, esp: 2.2 });
+    for (const pd of g.pedras)
+        pd.vertices.forEach(anel => {
+            const mx = anel.reduce((s, [vx]) => s + vx, 0) / anel.length;
+            const my = anel.reduce((s, [, vy]) => s + vy, 0) / anel.length;
+            for (const [vx, vy] of anel) {
+                let [dx, dy] = [vx - mx, vy - my];
+                const d = Math.hypot(dx, dy) || 1;
+                [dx, dy] = [dx / d, dy / d];
+                const px = ox + (vx - g.x) * k + dx * 26;
+                const py = base + vy * k + dy * 26 + 5;
+                linha(c, `${vx - g.x},${-vy}`, px, py, { tam: 15, fam: 'mono', peso: 400, alinhar: dx > 0.35 ? 'left' : dx < -0.35 ? 'right' : 'center' });
+            }
+        });
+    vertices(c, g, ox, base, k * 1000, 8, PAPEL, TINTA);
+    paragrafoLido(c, texto, x, y + a + 48, l, { tam: 22, entre: 28 });
+    rodapeDaMateria(c, cap, num);
 }
 
-const CORPO: Paragrafo = { tam: 18.5, entre: 23.5, justificar: true, recuo: 84 };
-
-function artigoEsq(c: Ctx, cap: number, num?: number) {
-    const ch = CAPITULOS[cap];
-    const a = ARTIGOS[ch.id];
+// as linhas da fonte, numa palavra com acento e descendente, e os números da construção
+function linhasDaFonte(c: Ctx, cap: number, num?: number) {
     fundo(c, PAPEL);
-    moldura(c, a.esq, 29, 27, 459, 444, a.legendaEsq);
-    fio(c, 519, 27, 519, 1478);
-    rotulo(c, secaoDaPagina(cap, num), 973, 47, { alinhar: 'right', cor: CINZA });
-    linha(c, ch.titulo, 973, 84, { tam: 32, peso: 400, alinhar: 'right' });
-    paragrafoLido(c, ch.corpo[0], 29, 795, 459, CORPO);
-    const n = contarLinhas(c, ch.corpo[1], 459, CORPO);
-    paragrafoLido(c, ch.corpo[1], 29, Math.max(1140, 1436 - (n - 1) * CORPO.entre), 459, CORPO);
-    mostra(c, cap);
-    rodape(c, num, LIVRO.titulo);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['As linhas', 'da fonte']);
+    const palavra = PALAVRAS['Água'];
+    const k = 760 / palavra.largura;
+    const ox = 213;
+    const base = 660;
+    const acento = -Math.min(...glifoDe('Água', 'Á').pedras.flatMap(pd => pd.vertices.flat()).map(([, vy]) => vy));
+    const linhas: [string, number][] = [
+        ['Topo do acento', acento],
+        ['Maiúscula', 760],
+        ['Altura do x', 545],
+        ['Linha de base', 0],
+        ['Descendente', -210],
+    ];
+    for (const [nome, v] of linhas) {
+        const yy = base - v * k;
+        fio(c, 29, yy, 973, yy, v === 0 ? TINTA : '#bdbab2', v === 0 ? 1.5 : 1.1);
+        rotulo(c, nome, 29, yy - 9, { cor: CINZA });
+        rotulo(c, String(v).replace('-', '−'), 190, yy - 9, { alinhar: 'right' });
+    }
+    for (const g of palavra.glifos) contorno(c, g, ox + g.x * k, base, k * 1000, TINTA);
+    // os números da construção, grandes, na Cut, cada um com o nome na coluna do meio
+    const numeros: [string, string][] = [
+        ['1000', 'unidades por eme'],
+        ['311', 'glifos em cada estilo'],
+        ['1.262', 'pontos no alfabeto da Cut'],
+    ];
+    numeros.forEach(([n, nome], i) => {
+        const base = 900 + i * 140;
+        linha(c, n, 22, base, { tam: 130, fam: 'cut', peso: 400 });
+        linha(c, nome, 500, base, { ...TEXTO, peso: 400 });
+        fio(c, 29, base + 30, 973, base + 30);
+    });
+    paragrafoLido(c, CAPITULOS[cap].corpo[1], 29, 1290, 944, TEXTO);
+    rodapeDaMateria(c, cap, num);
 }
 
-function artigoDir(c: Ctx, cap: number, num?: number) {
-    const ch = CAPITULOS[cap];
-    const a = ARTIGOS[ch.id];
+// os pontos de cada letra, numa grade de cartões, todas no mesmo corpo
+function pontosPorLetra(c: Ctx, cap: number, num?: number) {
     fundo(c, PAPEL);
-    paragrafoLido(c, ch.corpo[2], 29, 62, 459, CORPO);
-    moldura(c, a.dir, 514, 27, 459, 444, a.legendaDir);
-    // a citação na Rune do capítulo, centrada entre a prancha e a faixa do pé
-    const cit: Paragrafo = { tam: 54, entre: 60, fam: ch.estilo, peso: 400, alinhar: 'center' };
-    const n = contarLinhas(c, a.citacao, 700, cit);
-    paragrafo(c, a.citacao, 150, 770 - ((n - 1) * cit.entre) / 2, 700, cit);
-    prancha(c, a.pe, 0, 999, 1000, 501);
-    const cor = tintaSobre(a.fundoPe());
-    rodape(c, num, ch.titulo, cor === ESCURA ? undefined : cor);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Pontos', 'por letra']);
+    const letras: [string, string][] = [
+        ['A', 'A'],
+        ['Ei!', 'E'],
+        ['H', 'H'],
+        ['R', 'R'],
+        ['S', 'S'],
+        ['Y', 'Y'],
+        ['Rolado', 'a'],
+        ['b', 'b'],
+        ['Rune', 'e'],
+        ['g', 'g'],
+        ['n', 'n'],
+        ['Seixo', 'o'],
+    ];
+    const vao = 22;
+    const lc = (944 - 2 * vao) / 3;
+    const ac = (1100 - 3 * vao) / 4;
+    const tam = 190;
+    letras.forEach(([palavra, ch], i) => {
+        const g = glifoDe(palavra, ch);
+        const b = caixaDaLetra(g);
+        const cx = 29 + (i % 3) * (lc + vao);
+        const cy = 236 + Math.floor(i / 3) * (ac + vao);
+        c.p.borda(cx, cy, lc, ac, { cor: TINTA, esp: 1.2 });
+        linha(c, ch, cx + 16, cy + 34, { tam: 20, peso: 500 });
+        linha(c, `${b.pontos} pontos`, cx + lc - 16, cy + 34, { tam: 20, peso: 500, alinhar: 'right', cor: CINZA });
+        const k = tam / 1000;
+        const base = cy + ac - 54;
+        const ox = cx + lc / 2 - (k * (b.x0 + b.x1)) / 2;
+        contorno(c, g, ox, base, tam, TINTA);
+        vertices(c, g, ox, base, tam, 4.5, PAPEL, TINTA);
+    });
+    const pontos = ESTILO_MEDIDAS.find(m => m.nome === 'Pontos por letra')!.valores;
+    paragrafoLido(
+        c,
+        `Na Cut, uma letra tem em média ${pontos[0]} pontos; na Polished, ${pontos[1]}; na Worn, ${pontos[2]}. As retas da Cut viram curvas nas outras duas, e cada curva pede mais pontos.`,
+        29,
+        1384,
+        944,
+        { tam: 22, entre: 28 },
+    );
+    rodapeDaMateria(c, cap, num);
 }
 
-// a dupla do Seixo: a palavra enorme cruzando as duas páginas, com a legenda na da esquerda e o número na da direita
-function seixo(c: Ctx, lado: 0 | 1, num?: number) {
-    prancha(c, 'seixo', lado === 0 ? 0 : -1000, 0, 2000, 1500);
-    const tinta = tintaSobre(COR.polished);
-    if (lado === 0) legendaDe(c, ['Föeger Rune Polished', 'Rolada no rio'], tinta);
-    else rodape(c, num, CAPITULOS[1].titulo, tinta);
+// ---- capítulo 2: os três estilos ----
+
+// a colagem dos três estilos, de borda a borda da dupla: cartões sobrepostos com letras grandes nos três estilos e nas
+// cores do livro, os pontos da Cut, a quina de cada estilo, a lupa e as etiquetas
+function colagem(c: Ctx, cap: number, lado: 0 | 1, num?: number) {
+    const x0 = lado === 0 ? 0 : -1000;
+    fundo(c, PAPEL);
+    cabeca(c, ['Os três estilos'], [], x0);
+    cabeca(c, ['Uma pedra, três desgastes'], [], x0 + 1000);
+    const cartao = (x: number, y: number, l: number, a: number, cor = PAPEL) => {
+        c.p.ret(x0 + x, y, l, a, cor);
+        c.p.borda(x0 + x, y, l, a, { cor: TINTA, esp: 1.5 });
+    };
+    const palavra = (t: string, fam: Familia, cor: string, x: number, base: number, l: number) => {
+        const tam = ajustar(c, t, { fam }, l);
+        linha(c, t, x0 + x, base, { tam, fam, peso: 400, cor });
+        return tam;
+    };
+    // o S da Cut, com os pontos
+    cartao(30, 200, 520, 600);
+    const s = glifoDe('S', 'S');
+    contorno(c, s, x0 + 110, 720, 600, COR.worn, { cor: TINTA, esp: 2 });
+    vertices(c, s, x0 + 110, 720, 600, 7, PAPEL, TINTA);
+    etiqueta(c, 'Cut', x0 + 52, 236);
+    // Ag na Polished
+    cartao(560, 170, 520, 380);
+    palavra('Ag', 'polished', COR.laranja, 600, 470, 440);
+    etiqueta(c, 'Polished', x0 + 1050, 200, { alinhar: 'right' });
+    // Seixo na Worn
+    cartao(1110, 190, 560, 300);
+    palavra('Seixo', 'worn', COR.polished, 1150, 400, 480);
+    // a quina de cada estilo
+    cartao(1700, 160, 270, 520);
+    ESTILOS.forEach(([fam, nome, cor], i) => {
+        marcaDoEstilo(c, fam, x0 + 1760, 210 + i * 150, 110, cor());
+        rotulo(c, nome, x0 + 1890, 260 + i * 150, { alinhar: 'center' });
+        valor(c, `σ ${ESTILO_MEDIDAS[0].valores[i]}`, x0 + 1890, 284 + i * 150, { alinhar: 'center', cor: CINZA });
+    });
+    // Rolado! na Polished, passando da borda do cartão
+    cartao(150, 700, 960, 330);
+    palavra('Rolado!', 'polished', COR.cut, 190, 960, 880);
+    // o R nos três estilos, um por cima do outro
+    cartao(1150, 540, 520, 560);
+    const tamR = 600;
+    const xr = x0 + 1410 - largura(c, 'R', { tam: tamR, fam: 'cut' }) / 2;
+    linha(c, 'R', xr, 1010, { tam: tamR, fam: 'cut', peso: 400, cor: REALCES[0] });
+    c.p.contornoTexto('R', xr, 1010, { fam: 'polished', tam: tamR }, { cor: COR.roxo, esp: 2.4 });
+    c.p.contornoTexto('R', xr, 1010, { fam: 'worn', tam: tamR }, { cor: COR.wornEscuro, esp: 2.4 });
+    etiqueta(c, 'Um por cima do outro', x0 + 1170, 570);
+    // ssss na Worn, claro no azul fundo
+    cartao(1700, 720, 270, 380, COR.roxo);
+    palavra('ss', 'worn', COR.claroFrio, 1725, 990, 220);
+    etiqueta(c, 's e s.v2', x0 + 1835, 1060, { alinhar: 'center', cor: COR.claroFrio, fundo: COR.roxo });
+    // o g e o a, de perto, na lupa
+    cartao(40, 1080, 520, 370);
+    palavra('ga', 'worn', COR.roxo, 80, 1370, 440);
+    cartao(600, 1090, 520, 360);
+    const a = glifoDe('Rolado', 'a');
+    const [ax, ay, at] = [650, 1410, 500];
+    contorno(c, a, x0 + ax, ay, at, COR.polished, { cor: TINTA, esp: 2 });
+    vertices(c, a, x0 + ax, ay, at, 6, PAPEL, TINTA);
+    const [lx, ly, lm] = [900, 1190, 2.4];
+    lupa(c, x0 + lx, ly, 105, () => {
+        contorno(c, a, x0 + lx + lm * (ax - lx), ly + lm * (ay - ly), at * lm, COR.polished, { cor: TINTA, esp: 3 });
+        vertices(c, a, x0 + lx + lm * (ax - lx), ly + lm * (ay - ly), at * lm, 12, PAPEL, TINTA);
+    });
+    // Ploc! na Worn, no fim
+    cartao(1160, 1160, 810, 290);
+    palavra('Ploc! Tum!', 'worn', COR.laranja, 1195, 1370, 740);
+    etiqueta(c, '311 glifos', x0 + 1950, 1190, { alinhar: 'right' });
+    rodapeDaMateria(c, cap, num);
 }
+
+// a visão geral dos três estilos, como a lista das famílias nos espécimes: o nome de cada um, enorme, no próprio estilo
+// e na cor dele, com a marca da quina e os números do desgaste; embaixo, o A dos três com a largura de cada um e o texto
+function visaoGeral(c: Ctx, cap: number, lado: 0 | 1, num?: number) {
+    const x0 = lado === 0 ? 0 : -1000;
+    const ch = CAPITULOS[cap];
+    fundo(c, PAPEL);
+    cabeca(c, ['Visão geral'], [], x0);
+    cabeca(c, ['3 estilos × 311 glifos'], [], x0 + 1000);
+    const tam = Math.min(...ESTILOS.map(([fam, nome]) => ajustar(c, `Rune ${nome}`, { fam }, 1560)));
+    const lado0 = ALTURA_X * tam * 0.8;
+    const medidas = ['Desfoque', 'Recuo das quinas', 'Pontos por letra'].map(n => ESTILO_MEDIDAS.find(m => m.nome === n)!);
+    ESTILOS.forEach(([fam, nome, cor], i) => {
+        const base = 420 + i * 280;
+        marcaDoEstilo(c, fam, x0 + 29, base - ALTURA_X * tam * 0.5 - lado0 / 2, lado0, cor());
+        const r = linha(c, `Rune ${nome}`, x0 + 29 + lado0 + 22, base, { tam, fam, peso: 400, cor: cor() });
+        medidas.forEach((m, j) => {
+            const yy = base - MAIUSCULA * tam + 14 + j * 24;
+            rotulo(c, m.nome, r.x1 + 20, yy);
+            valor(c, `${m.antes ? m.unidade + ' ' : ''}${m.valores[i]}${!m.antes && m.unidade ? ' ' + m.unidade : ''}`, r.x1 + 230, yy, { alinhar: 'right' });
+        });
+    });
+    // o A nos três estilos, cada um com a largura dele
+    nomesDaAmostra(c, 'O A nos três estilos', 'largura em unidades do eme', x0 + 29, 1110, 944);
+    let xa = x0 + 40;
+    ESTILOS.forEach(([fam, , cor]) => {
+        const w = largura(c, 'A', { tam: 260, fam });
+        linha(c, 'A', xa, 1340, { tam: 260, fam, peso: 400, cor: cor() });
+        cota(c, xa, xa + w, 1372, `${Math.round((w / 260) * 1000)} u`);
+        xa += w + 70;
+    });
+    paragrafoLido(c, ch.corpo[0], x0 + 1029, 1160, 944, TEXTO);
+    rodapeDaMateria(c, cap, num);
+}
+
+// o desgaste de perto: o R dos três estilos, um por cima do outro, e a lupa numa quina, onde a Polished e a Worn recuam
+function desgasteDePerto(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut, Polished e Worn'], ['O desgaste', 'de perto']);
+    const tam = 1000;
+    const ox = 96;
+    const base = 1300;
+    const camadas = (x: number, y: number, t: number, esp: number) => {
+        linha(c, 'R', x, y, { tam: t, fam: 'cut', peso: 400, cor: REALCES[3] });
+        c.p.contornoTexto('R', x, y, { fam: 'cut', tam: t }, { cor: '#9d988e', esp });
+        c.p.contornoTexto('R', x, y, { fam: 'polished', tam: t }, { cor: COR.roxo, esp });
+        c.p.contornoTexto('R', x, y, { fam: 'worn', tam: t }, { cor: COR.wornEscuro, esp });
+    };
+    camadas(ox, base, tam, 2.4);
+    // a quina de cima do bojo, aumentada três vezes na lupa, logo acima dela
+    const [px, py] = [ox + 692, base - 633];
+    const [cx, cy, r, m] = [770, 420, 165, 3];
+    c.p.circulo(px, py, r / m, null, { cor: TINTA, esp: 1.4 });
+    fio(c, px, py - r / m, cx, cy + r * 1.08, TINTA, 1.4);
+    lupa(c, cx, cy, r, () => {
+        camadas(cx + m * (ox - px), cy + m * (base - py), tam * m, 3.2);
+        c.p.quadrado(cx, cy, 7, PAPEL, { cor: TINTA, esp: 1.4 });
+    });
+    const recuo = ESTILO_MEDIDAS.find(mm => mm.nome === 'Recuo das quinas')!.valores;
+    const chaves: [string, string, string][] = [
+        ['Cut', '#9d988e', 'a quina viva'],
+        ['Polished', COR.roxo, `recua ${recuo[1]} u`],
+        ['Worn', COR.wornEscuro, `recua ${recuo[2]} u`],
+    ];
+    chaves.forEach(([nome, cor, nota], i) => {
+        const yy = 290 + i * 40;
+        c.p.ret(29, yy - 15, 18, 18, cor);
+        linha(c, nome, 60, yy, { tam: 22, peso: 500 });
+        linha(c, nota, 190, yy, { tam: 22, cor: CINZA });
+    });
+    rodapeDaMateria(c, cap, num);
+}
+
+// as seis medidas do desgaste no alfabeto inteiro, com os números grandes, cada um no próprio estilo e na cor dele
+function noAlfabetoInteiro(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut, Polished e Worn'], ['No alfabeto', 'inteiro']);
+    const colunas = [480, 727, 973];
+    ESTILOS.forEach(([, nome], j) => linha(c, nome, colunas[j], 262, { tam: 20, peso: 500, alinhar: 'right' }));
+    fio(c, 29, 282, 973, 282, TINTA, 1.3);
+    const nomesDasUnidades: Record<string, string> = { σ: 'em unidades do eme', u: 'em unidades do eme' };
+    ESTILO_MEDIDAS.forEach((m, i) => {
+        const base = 420 + i * 175;
+        linha(c, m.nome, 29, base - 52, { tam: 24, peso: 500 });
+        if (nomesDasUnidades[m.unidade]) linha(c, `${m.unidade}, ${nomesDasUnidades[m.unidade]}`, 29, base - 22, { tam: 20, cor: CINZA });
+        m.valores.forEach((v, j) => linha(c, String(v), colunas[j], base, { tam: 110, fam: ESTILOS[j][0], peso: 400, cor: ESTILOS[j][2](), alinhar: 'right' }));
+        fio(c, 29, base + 34, 973, base + 34);
+    });
+    paragrafoLido(c, CAPITULOS[cap].corpo[1], 29, 1430 - 2 * TEXTO.entre, 944, TEXTO);
+    rodapeDaMateria(c, cap, num);
+}
+
+// ---- capítulo 3: as variações ----
 
 // a dupla dos quatro cortes do s, claros no azul fundo, cruzando as duas páginas
-function quatroS(c: Ctx, lado: 0 | 1, num?: number) {
+function quatroS(c: Ctx, cap: number, lado: 0 | 1, num?: number) {
     prancha(c, 'ssss', lado === 0 ? 0 : -1000, 0, 2000, 1500);
     if (lado === 0) legendaDe(c, ['Föeger Rune Worn', 'Os quatro cortes do s'], COR.claroFrio);
-    else rodape(c, num, CAPITULOS[2].titulo, COR.claroFrio);
+    else rodape(c, num, CAPITULOS[cap].titulo, COR.claroFrio);
 }
 
+// as trocas, como os recursos dos espécimes: sem e com as trocas, o L do meio e o f do começo, com cada corte trocado
+// em destaque
+function asTrocas(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Worn'], ['Recursos', 'As trocas']);
+    const [x, l] = [29, 944];
+    const t = 'aaaa eeee ssss';
+    const o: Linha = { tam: ajustar(c, t, { fam: 'worn' }, l - 90), fam: 'worn', peso: 400 };
+    const altura = ALTURA_X * o.tam;
+    // sem as trocas, o mesmo corte sempre
+    caixaDeAmostra(c, x, 250, l, 230, 'Sem as trocas', 'o mesmo corte sempre');
+    const b1 = 250 + 115 + altura / 2;
+    guia(c, x, l, b1);
+    linha(c, t, x + 45, b1, { ...o, semCalt: true });
+    // com as trocas: a segunda, a terceira e a quarta letra de cada grupo trocam de corte
+    caixaDeAmostra(c, x, 550, l, 230, 'Com as trocas', 'base, v2, v3 e v4');
+    const b2 = 550 + 115 + altura / 2;
+    guia(c, x, l, b2);
+    let anterior = '';
+    let vez = 0;
+    for (const p of posicoes(c, t, o)) {
+        vez = p.ch === anterior ? vez + 1 : 0;
+        anterior = p.ch;
+        if (p.ch !== ' ' && vez > 0) c.p.ret(x + 45 + p.x0, b2 - altura - 26, p.x1 - p.x0, altura + 52, REALCES[vez - 1]);
+    }
+    linha(c, t, x + 45, b2, o);
+    // o L do meio e o f do começo
+    const casos: [string, string, string, number, string, number, string][] = [
+        ['LULA', 'O L do meio', 'depois de outra letra', 2, 'L do meio', -1, ''],
+        ['festa café', 'O f do começo', 'quando a palavra não tem outro f', 0, 'f do começo', 8, 'f de sempre'],
+    ];
+    casos.forEach(([palavra, esq, dir, i1, e1, i2, e2], j) => {
+        const y = 850 + j * 300;
+        caixaDeAmostra(c, x, y, l, 260, esq, dir);
+        const ow: Linha = { tam: Math.min(170, ajustar(c, palavra, { fam: 'worn' }, l * 0.7)), fam: 'worn', peso: 400 };
+        const base = y + 212;
+        const ps = posicoes(c, palavra, ow);
+        const xp = x + 45;
+        const realce = (i: number, nome: string, tom: string) => {
+            const p = ps[i];
+            c.p.ret(xp + p.x0, base - MAIUSCULA * ow.tam - 18, p.x1 - p.x0, MAIUSCULA * ow.tam + 36, tom);
+            etiqueta(c, nome, xp + (p.x0 + p.x1) / 2, base - MAIUSCULA * ow.tam - 36, { alinhar: 'center' });
+        };
+        realce(i1, e1, REALCES[0]);
+        if (i2 >= 0) realce(i2, e2, REALCES[3]);
+        linha(c, palavra, xp, base, ow);
+    });
+    rodapeDaMateria(c, cap, num);
+}
+
+// as trocas num texto: o mesmo parágrafo sem e com elas
+function trocasEmTexto(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Worn'], ['Recursos', 'Em texto']);
+    const texto =
+        'Assim que a correnteza passa, a pedra perde a pressa: rola, arrasta, assenta. Nesse vaivém, cada letra repetida ganha outro corte, e a palavra não fica com cara de carimbo.';
+    const o: Paragrafo = { tam: 46, entre: 58, fam: 'worn', peso: 400 };
+    const linhas = contarLinhas(c, texto, 944 - 80, o);
+    const a = linhas * o.entre + 70;
+    caixaDeAmostra(c, 29, 250, 944, a, 'Sem as trocas', `Worn ${pt(o.tam)}`);
+    paragrafo(c, texto, 69, 250 + 40 + o.tam * 0.8, 864, { ...o, semCalt: true });
+    const y2 = 250 + a + 90;
+    caixaDeAmostra(c, 29, y2, 944, a, 'Com as trocas', `Worn ${pt(o.tam)}`);
+    paragrafoLido(c, texto, 69, y2 + 40 + o.tam * 0.8, 864, o);
+    paragrafoLido(c, `${CAPITULOS[cap].corpo[1]} ${CAPITULOS[cap].corpo[2]}`, 29, y2 + a + 80, 944, { tam: 22, entre: 28 });
+    rodapeDaMateria(c, cap, num);
+}
+
+// os quatro cortes do e, cada um numa caixa, com os pontos e quantos são
+function quatroCortesDoE(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Os quatro', 'cortes do e']);
+    const es: [string, string, string][] = [
+        ['Rune', 'e', 'e, o desenho de base'],
+        ['#e.v2', '#e.v2', 'e.v2'],
+        ['#e.v3', '#e.v3', 'e.v3'],
+        ['#e.v4', '#e.v4', 'e.v4'],
+    ];
+    const tam = 640;
+    es.forEach(([palavra, ch, nome], i) => {
+        const g = glifoDe(palavra, ch);
+        const b = caixaDaLetra(g);
+        const bx = 29 + (i % 2) * 485;
+        const by = 250 + Math.floor(i / 2) * 545;
+        caixaDeAmostra(c, bx, by, 459, 470, nome, `${b.pontos} pontos`);
+        const base = by + 470 - 70;
+        guia(c, bx, 459, base);
+        guia(c, bx, 459, base - ALTURA_X * tam);
+        const k = tam / 1000;
+        const ox = bx + 459 / 2 - (k * (b.x0 + b.x1)) / 2;
+        contorno(c, g, ox, base, tam, COR.worn, { cor: TINTA, esp: 2 });
+        vertices(c, g, ox, base, tam, 6, PAPEL, TINTA);
+    });
+    paragrafoLido(c, CAPITULOS[cap].corpo[0], 29, 1350, 944, { tam: 22, entre: 28 });
+    rodapeDaMateria(c, cap, num);
+}
+
+// a troca nos três estilos: eeee em cada um, com o nome de cada corte embaixo
+function trocaNosTresEstilos(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut, Polished e Worn'], ['A troca nos', 'três estilos']);
+    const tam = Math.min(...ESTILOS.map(([fam]) => ajustar(c, 'eeee', { fam }, 900)));
+    const cortes = ['e', 'e.v2', 'e.v3', 'e.v4'];
+    ESTILOS.forEach(([fam, nome, cor], i) => {
+        const base = 590 + i * 380;
+        linha(c, nome, 29, base - ALTURA_X * tam - 60, { tam: 20, peso: 500 });
+        linha(c, 'eeee', 29, base, { tam, fam, peso: 400, cor: cor() });
+        posicoes(c, 'eeee', { tam, fam }).forEach((p, j) => valor(c, cortes[j], 29 + (p.x0 + p.x1) / 2, base + 50, { alinhar: 'center', cor: CINZA, tam: 15 }));
+    });
+    rodapeDaMateria(c, cap, num);
+}
+
+// ---- capítulo 4: do título ao texto ----
+
 // a dupla do Ploc!: as onomatopeias de borda a borda nas duas páginas
-function ploc(c: Ctx, lado: 0 | 1, num?: number) {
+function ploc(c: Ctx, cap: number, lado: 0 | 1, num?: number) {
     prancha(c, 'ploc', lado === 0 ? 0 : -1000, 0, 2000, 1500);
     const tinta = tintaSobre(COR.polished);
     if (lado === 0) legendaDe(c, ['Föeger Rune Polished', 'Em corpo de cartaz'], tinta);
-    else rodape(c, num, CAPITULOS[3].titulo, tinta);
+    else rodape(c, num, CAPITULOS[cap].titulo, tinta);
+}
+
+// a cascata de tamanhos, como nos espécimes: o texto em corpo pequeno no alto e a mesma palavra diminuindo, com o
+// corpo de cada linha na etiqueta e os números no fim da linha
+function cascataEsq(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Cascata', 'de tamanhos']);
+    const ch = CAPITULOS[cap];
+    const o: Paragrafo = { tam: 18.5, entre: 24, fam: 'cut', peso: 400 };
+    nomesDaAmostra(c, 'Cut', pt(o.tam), 29, 236, 459, false);
+    paragrafoLido(c, ch.corpo[0], 29, 272, 459, o);
+    nomesDaAmostra(c, 'Cut', pt(o.tam), 514, 236, 459, false);
+    paragrafoLido(c, ch.corpo[1], 514, 272, 459, o);
+    const maior = ajustar(c, 'Pedra', { fam: 'cut' }, 944);
+    const linhas: [number, string][] = [
+        [1, ''],
+        [0.64, '1'],
+        [0.47, '23'],
+        [0.35, '456'],
+        [0.26, '7890'],
+        [0.19, '12345'],
+        [0.14, '678901'],
+    ];
+    let base = 420;
+    linhas.forEach(([f, n], i) => {
+        const tam = maior * f;
+        base += MAIUSCULA * tam + (i ? 0.24 * tam : 0);
+        const r = linha(c, 'Pedra', 29, base, { tam, fam: 'cut', peso: 400 });
+        if (n) linha(c, n, 973, base, { tam, fam: 'cut', peso: 400, alinhar: 'right' });
+        if (i === 0) etiqueta(c, pt(tam), 973, base - MAIUSCULA * tam - 34, { alinhar: 'right' });
+        else etiqueta(c, pt(tam), r.x1 + 18, base - MAIUSCULA * tam + 18);
+    });
+    rodapeDaMateria(c, cap, num);
+}
+
+// a página da direita da cascata: a palavra em maiúsculas diminuindo e uma coluna de números na borda
+function cascataDir(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Cascata', 'de tamanhos']);
+    const maior = ajustar(c, 'SEIXO', { fam: 'cut' }, 860);
+    const fatores = [1, 0.8, 0.64, 0.51, 0.41, 0.33, 0.27];
+    let base = 236;
+    let ultima = 0;
+    fatores.forEach((f, i) => {
+        const tam = maior * f;
+        base += MAIUSCULA * tam + (i ? 0.2 * tam : 0);
+        linha(c, 'SEIXO', 29, base, { tam, fam: 'cut', peso: 400 });
+        ultima = tam;
+    });
+    linha(c, '311', 973, base, { tam: ultima, fam: 'cut', peso: 400, alinhar: 'right' });
+    // a coluna de números, de dois algarismos, num sorteio fixo
+    let semente = 7;
+    const sorteio = () => (semente = (semente * 16807) % 2147483647) / 2147483647;
+    for (let y = 300; y < base - MAIUSCULA * ultima - 40; y += 27) linha(c, String(Math.floor(sorteio() * 100)).padStart(2, '0'), 973, y, { tam: 22, fam: 'cut', peso: 400, alinhar: 'right' });
+    rodapeDaMateria(c, cap, num);
+}
+
+// palavras e números, como nos espécimes: nomes de pedras e números de dois algarismos, no mesmo corpo, num estilo
+const PEDRAS: [string, string][] = [
+    ['Basalto', '34'],
+    ['Granito', '56'],
+    ['Ardósia', '15'],
+    ['Quartzo', '87'],
+    ['Mármore', '29'],
+    ['Arenito', '31'],
+    ['Calcário', '40'],
+    ['Gnaisse', '62'],
+];
+function palavrasENumeros(c: Ctx, cap: number, num: number | undefined, fam: Familia, nome: string) {
+    fundo(c, PAPEL);
+    const passo = 150;
+    const tam = 132;
+    cabeca(c, ['Föeger Rune', nome], ['Palavras e números', `${Math.round(tam * 0.396)}/${pt(passo)}`]);
+    PEDRAS.forEach(([p, n], i) => {
+        const base = 330 + i * passo;
+        linha(c, p, 26, base, { tam, fam, peso: 400 });
+        linha(c, n, 973, base, { tam, fam, peso: 400, alinhar: 'right' });
+    });
+    rodapeDaMateria(c, cap, num);
+}
+
+// os acentos, pedras à parte: a frase com eles em destaque e as letras acentuadas
+const ACENTUADAS = 'ÁÀÂÃÄÅÇÉÈÊËÍÌÎÏÑÓÒÔÕÖÚÙÛÜÝáàâãäåçéèêëíìîïñóòôõöúùûüýÿ';
+function acentosEmDestaque(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Recursos', 'Acentos']);
+    const frase = 'Ôh, é só açaí!';
+    const o: Linha = { tam: ajustar(c, frase, { fam: 'cut' }, 850), fam: 'cut', peso: 400 };
+    caixaDeAmostra(c, 29, 250, 944, 290, 'Pedras à parte', 'o acento pousa por cima da letra');
+    const base = 250 + 290 - 56;
+    guia(c, 29, 944, base);
+    guia(c, 29, 944, base - MAIUSCULA * o.tam);
+    let primeira = true;
+    for (const p of posicoes(c, frase, o)) {
+        if (!ACENTUADAS.includes(p.ch)) continue;
+        c.p.ret(70 + p.x0, base - 1.02 * o.tam, p.x1 - p.x0, 1.02 * o.tam + 26, REALCES[0]);
+        if (primeira) etiqueta(c, 'pedra à parte', 70 + p.x0, base - 1.02 * o.tam - 22);
+        primeira = false;
+    }
+    linha(c, frase, 70, base, o);
+    const grupos: [string, string[]][] = [
+        ['Maiúsculas', ['ÁÀÂÃÄÅ ÇÉÈÊË', 'ÍÌÎÏ ÑÓÒÔÕÖ', 'ÚÙÛÜ ÝŸ']],
+        ['Minúsculas', ['áàâãäå çéèêë', 'íìîï ñóòôõö', 'úùûü ýÿ']],
+    ];
+    grupos.forEach(([nome, linhas], j) => {
+        const y = 620 + j * 410;
+        const letras = linhas.join('').replace(/ /g, '').length;
+        caixaDeAmostra(c, 29, y, 944, 360, nome, `${letras} letras`);
+        const tam = Math.min(...linhas.map(t => ajustar(c, t, { fam: 'cut', semCalt: true }, 850)));
+        linhas.forEach((t, i) => linha(c, t, 70, y + 118 + i * 108, { tam: Math.min(tam, 104), fam: 'cut', peso: 400, semCalt: true }));
+    });
+    rodapeDaMateria(c, cap, num);
+}
+
+// as frações, os números elevados e os sinais
+function fracoesESinais(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Recursos', 'Frações e sinais']);
+    const caixas: [string, string, string[], number][] = [
+        ['Frações prontas', 'um glifo só para cada uma', ['1/2 → ½  1/4 → ¼  3/4 → ¾'], 250],
+        ['Números elevados', 'no alto da linha', ['m²  x³  1º  2ª  nº'], 590],
+        ['Sinais', 'no mesmo traço das letras', ['★ ♥ ✓ → ← ↑ ↓', '@ & % € $ £ ¥ §', '© ® ™ ≠ ≤ ≥ ∞ ±'], 930],
+    ];
+    for (const [esq, dir, linhas, y] of caixas) {
+        const a = linhas.length > 1 ? 400 : 250;
+        caixaDeAmostra(c, 29, y, 944, a, esq, dir);
+        const tam = Math.min(140, ...linhas.map(t => ajustar(c, t, { fam: 'cut', semCalt: true }, 850)));
+        const entre = linhas.length > 1 ? (a - 60) / linhas.length : 0;
+        linhas.forEach((t, i) => linha(c, t, 70, linhas.length > 1 ? y + 40 + MAIUSCULA * tam + i * entre : y + a / 2 + (MAIUSCULA * tam) / 2, { tam, fam: 'cut', peso: 400, semCalt: true }));
+    }
+    paragrafoLido(c, CAPITULOS[cap].corpo[2], 29, 1384, 944, { tam: 22, entre: 28 });
+    rodapeDaMateria(c, cap, num);
+}
+
+// os exemplos de texto: blocos em corpos cada vez menores, nos três estilos, com o estilo e o corpo em cima de cada um
+const AMOSTRAS = {
+    palavra: 'Rochedo',
+    titulo: 'Cada pedra guarda o caminho que fez até aqui.',
+    caixaAlta: 'O rio não tem pressa: gasta a pedra um grão de cada vez, até a quina virar curva.',
+    abertura:
+        'Quem anda à beira do rio reconhece as pedras pelo toque: as novas arranham, as antigas escorregam na mão. Entre uma e outra, passaram anos de água e areia.',
+    polished:
+        'Toda pedra de rio já foi lasca. Caiu de um barranco com as quinas vivas e foi levada pela água, batendo nas outras, até perder as pontas. A Polished é esse meio do caminho: ainda dá para ver o corte, mas a mão já não se machuca.',
+    worn: 'A Worn é a pedra que passou tempo demais na correnteza. Ficou redonda, lisa e um pouco menor do que era: o desgaste come a borda primeiro e só depois chega ao miolo. Por isso as letras dela parecem macias, e algumas aberturas quase se fecham quando o corpo é grande.',
+    cut: 'A Cut é a pedra recém-talhada. Cada letra foi desenhada à mão num gabarito e refeita só com retas, com um corte reto do cinzel em cada quina. Nenhuma reta é perfeita e nenhuma letra é igual à outra, e é isso que faz uma palavra inteira parecer um muro de pedras encaixadas, e não um carimbo.',
+    colunas: [
+        'Em corpo pequeno, a pedra vira textura. As quinas somem no tamanho de um parágrafo e o que fica é o ritmo: letras um pouco tortas, de alturas que não batem, encostadas umas nas outras. Para ler bem assim, ajuda deixar mais espaço entre as linhas e preferir frases curtas.',
+        'Cada estilo é uma fonte inteira, com os 311 glifos refeitos, e não um efeito por cima da letra. O desgaste também mexe na largura: quanto mais gasta, mais estreita fica a letra, e a mesma frase ocupa menos linha na Worn do que na Cut.',
+        'Quando a mesma minúscula aparece duas vezes seguidas, a fonte troca o corte da segunda sozinha. São até quatro desenhos para cada letra, que se revezam na ordem, como golpes diferentes do mesmo cinzel.',
+    ],
+};
+// um bloco de amostra: o estilo e o corpo em cima e o texto embaixo; devolve onde ele acaba
+function blocoDeTexto(c: Ctx, x: number, y: number, l: number, fam: Familia, texto: string, o: { tam: number; entre: number }) {
+    const nome = ESTILOS.find(([f]) => f === fam)![1];
+    nomesDaAmostra(c, nome, pt(o.tam), x, y, l, false);
+    const fim = paragrafoLido(c, texto, x, y + 16 + MAIUSCULA * o.tam, l, { tam: o.tam, entre: o.entre, fam, peso: 400 });
+    return fim - o.entre + 0.25 * o.tam;
+}
+function exemplosEsq(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut, Polished e Worn'], ['Exemplos', 'de texto']);
+    const tamP = ajustar(c, AMOSTRAS.palavra, { fam: 'cut' }, 944);
+    nomesDaAmostra(c, 'Cut', pt(tamP), 29, 236, 944, false);
+    linha(c, AMOSTRAS.palavra, 24, 252 + MAIUSCULA * tamP, { tam: tamP, fam: 'cut', peso: 400 });
+    let y = 252 + MAIUSCULA * tamP + 90;
+    y = blocoDeTexto(c, 29, y, 944, 'polished', AMOSTRAS.titulo, { tam: 96, entre: 100 }) + 74;
+    y = blocoDeTexto(c, 29, y, 944, 'worn', AMOSTRAS.caixaAlta.toUpperCase(), { tam: 58, entre: 64 }) + 70;
+    blocoDeTexto(c, 29, y, 944, 'cut', AMOSTRAS.abertura, { tam: 37, entre: 46 });
+    rodapeDaMateria(c, cap, num);
+}
+function exemplosDir(c: Ctx, cap: number, num?: number) {
+    fundo(c, PAPEL);
+    cabeca(c, ['Föeger Rune', 'Cut, Polished e Worn'], ['Exemplos', 'de texto']);
+    let y = blocoDeTexto(c, 29, 236, 944, 'polished', AMOSTRAS.polished, { tam: 40, entre: 51 }) + 70;
+    y = blocoDeTexto(c, 29, y, 944, 'worn', AMOSTRAS.worn, { tam: 33, entre: 43 }) + 70;
+    y = blocoDeTexto(c, 29, y, 944, 'cut', AMOSTRAS.cut, { tam: 26, entre: 34 }) + 70;
+    const colunas: [Familia, number, number][] = [
+        ['cut', 20, 26.5],
+        ['polished', 18, 24],
+        ['worn', 17, 22.5],
+    ];
+    colunas.forEach(([fam, tam, entre], i) => blocoDeTexto(c, 29 + i * 326, y, 292, fam, AMOSTRAS.colunas[i], { tam, entre }));
+    rodapeDaMateria(c, cap, num);
 }
 
 // as páginas de cada capítulo depois da introdução, alternando esquerda e direita (a última, sempre a da direita)
 const MATERIAS: Record<IdCapitulo, ((c: Ctx, cap: number, num?: number) => void)[]> = {
-    construcao: [artigoEsq, artigoDir],
-    estilos: [(c, _, num) => seixo(c, 0, num), (c, _, num) => seixo(c, 1, num), artigoEsq, artigoDir],
-    variacoes: [(c, _, num) => quatroS(c, 0, num), (c, _, num) => quatroS(c, 1, num), artigoEsq, artigoDir],
-    tamanhos: [(c, _, num) => ploc(c, 0, num), (c, _, num) => ploc(c, 1, num), artigoEsq, artigoDir],
+    construcao: [
+        (c, cap, num) => {
+            const g = glifoDe('Rolado', 'a');
+            pontosDeConstrucao(c, cap, num, g, 'a', `O a da Cut tem ${caixaDaLetra(g).pontos} pontos, e todos se ligam por retas: na Cut não há curva nenhuma. As coordenadas são as do arquivo da fonte, em unidades do eme de 1000, com a linha de base no zero.`);
+        },
+        (c, cap, num) => {
+            const g = glifoDe('n', 'n');
+            pontosDeConstrucao(c, cap, num, g, 'n', `O n tem ${caixaDaLetra(g).pontos} pontos. ${CAPITULOS[cap].corpo[2]}`);
+        },
+        linhasDaFonte,
+        pontosPorLetra,
+    ],
+    estilos: [(c, cap, num) => colagem(c, cap, 0, num), (c, cap, num) => colagem(c, cap, 1, num), (c, cap, num) => visaoGeral(c, cap, 0, num), (c, cap, num) => visaoGeral(c, cap, 1, num), desgasteDePerto, noAlfabetoInteiro],
+    variacoes: [(c, cap, num) => quatroS(c, cap, 0, num), (c, cap, num) => quatroS(c, cap, 1, num), asTrocas, trocasEmTexto, quatroCortesDoE, trocaNosTresEstilos],
+    tamanhos: [
+        (c, cap, num) => ploc(c, cap, 0, num),
+        (c, cap, num) => ploc(c, cap, 1, num),
+        cascataEsq,
+        cascataDir,
+        (c, cap, num) => palavrasENumeros(c, cap, num, 'cut', 'Cut'),
+        (c, cap, num) => palavrasENumeros(c, cap, num, 'worn', 'Worn'),
+        acentosEmDestaque,
+        fracoesESinais,
+        exemplosEsq,
+        exemplosDir,
+    ],
 };
 
 // ---------- os papéis vegetais ----------
@@ -1219,10 +1676,10 @@ function vegetal(c: Ctx, v: number) {
                 c.p.borda(cx + 4, cy + 4, LADO_LETRA - 8, LADO_LETRA - 8, { cor: 'rgba(31,31,29,0.55)', esp: 1.2 });
                 const base = cy + LADO_LETRA / 2 + (MAIUSCULA * LETRAS.tam) / 2;
                 fio(c, cx + 12, base, cx + LADO_LETRA - 12, base, 'rgba(31,31,29,0.3)', 1);
-                if (lista[i]) rotulo(c, lista[i], cx + 12, cy + 24, { tam: 10, cor: traco });
+                if (lista[i]) valor(c, lista[i], cx + 12, cy + 24, { tam: 11, cor: traco });
             }
         }
-        linha(c, 'Toda letra começou num quadrado.', 500, 1300, { tam: 40, fam: 'cut', peso: 400, cor: TINTA, alinhar: 'center' });
+        linha(c, 'Toda letra começou num quadrado.', 500, 1412, { tam: 40, fam: 'cut', peso: 400, cor: TINTA, alinhar: 'center' });
     }
     const nome = v < CAPITULOS.length ? `Capítulo ${CAPITULOS[v].n} · ${CAPITULOS[v].titulo}` : 'Os caracteres';
     rotulo(c, nome, 29, 1468, { cor: CINZA });
@@ -1230,14 +1687,15 @@ function vegetal(c: Ctx, v: number) {
 
 // ---------- os caracteres ----------
 
-// a tabela dos caracteres: cada um numa casa, com fios finos entre as casas
+// a tabela dos caracteres: cada um numa casa, com fios finos entre as casas, quantos são no título e, nas casas
+// grandes, o código de cada um no canto, como numa ficha
 function tabela(c: Ctx, titulo: string, chars: string, y: number, o: { colunas?: number; tam?: number; alto?: number } = {}) {
     const colunas = o.colunas ?? 14;
     const l = 944 / colunas;
     const a = o.alto ?? 70;
     const tam = o.tam ?? 40;
-    rotulo(c, titulo, 29, y);
     const lista = Array.from(chars);
+    rotulo(c, `${titulo} · ${lista.length}`, 29, y);
     const linhas = Math.ceil(lista.length / colunas);
     const y0 = y + 18;
     for (let j = 0; j <= linhas; j++) fio(c, 29, y0 + j * a, 973, y0 + j * a);
@@ -1245,17 +1703,18 @@ function tabela(c: Ctx, titulo: string, chars: string, y: number, o: { colunas?:
         const cx = 29 + (i % colunas) * l + l / 2;
         const yy = y0 + Math.floor(i / colunas) * a;
         linha(c, ch, cx, yy + a / 2 + (MAIUSCULA * tam) / 2, { tam, fam: 'cut', peso: 400, alinhar: 'center', semCalt: true });
+        if (l >= 90) valor(c, `U+${ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`, cx - l / 2 + 9, yy + a - 10, { tam: 9.5, cor: CINZA });
     });
     return y0 + linhas * a;
 }
 
-// as duas tabelas das letras, em casas quadradas de nove colunas (o vegetal do gabarito, por cima, desenha as mesmas
+// as duas tabelas das letras, em casas quadradas de oito colunas (o vegetal do gabarito, por cima, desenha as mesmas
 // casas): o título, os caracteres e onde cada tabela começa
-const LETRAS = { colunas: 9, tam: 58 };
+const LETRAS = { colunas: 8, tam: 72 };
 const LADO_LETRA = 944 / LETRAS.colunas;
 function tabelasDasLetras() {
     const maiusculas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const y = 300;
+    const y = 262;
     const fim = y + 18 + Math.ceil(maiusculas.length / LETRAS.colunas) * LADO_LETRA;
     return [
         { titulo: 'Maiúsculas', chars: maiusculas, y },
@@ -1266,25 +1725,25 @@ function tabelasDasLetras() {
 // as letras, embaixo do vegetal do gabarito
 function letras(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    linha(c, 'Letras', 22, 190, { tam: 92 });
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Os caracteres', 'Letras']);
     for (const t of tabelasDasLetras()) tabela(c, t.titulo, t.chars, t.y, { colunas: LETRAS.colunas, tam: LETRAS.tam, alto: LADO_LETRA });
     rodape(c, num, 'Os caracteres');
 }
 
 function acentos(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    linha(c, 'Acentos', 22, 190, { tam: 92 });
-    const y = tabela(c, 'Maiúsculas', 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŒŠŸŽ', 300, { colunas: 10, tam: 50, alto: 92 });
-    tabela(c, 'Minúsculas e outras', 'àáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿıœšžßƒªºµ', y + 60, { colunas: 10, tam: 50, alto: 92 });
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Os caracteres', 'Acentos']);
+    const y = tabela(c, 'Maiúsculas', 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŒŠŸŽ', 262, { colunas: 10, tam: 58, alto: 106 });
+    tabela(c, 'Minúsculas e outras', 'àáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿıœšžßƒªºµ', y + 60, { colunas: 10, tam: 58, alto: 106 });
     rodape(c, num, LIVRO.titulo);
 }
 
 function sinais(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    linha(c, 'Sinais', 22, 190, { tam: 92 });
-    let y = tabela(c, 'Números e frações', '0123456789¹²³¼½¾', 300, { colunas: 8, tam: 50, alto: 92 });
-    y = tabela(c, 'Pontuação', '.,:;…!¡?¿\'"‘’‚“”„«»‹›()[]{}/\\|¦-–—_•·¶§†‡#&@*%‰', y + 60);
-    tabela(c, 'Símbolos', '$¢£¤¥€+−±×÷=≠≈<>≤≥∞¬^~˜¨´¸`ˆ©®™№°←↑→↓★♥✓', y + 60);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['Os caracteres', 'Sinais']);
+    let y = tabela(c, 'Números e frações', '0123456789¹²³¼½¾', 262, { colunas: 8, tam: 60, alto: 110 });
+    y = tabela(c, 'Pontuação', '.,:;…!¡?¿\'"‘’‚“”„«»‹›()[]{}/\\|¦-–—_•·¶§†‡#&@*%‰', y + 60, { alto: 78, tam: 44 });
+    tabela(c, 'Símbolos', '$¢£¤¥€+−±×÷=≠≈<>≤≥∞¬^~˜¨´¸`ˆ©®™№°←↑→↓★♥✓', y + 60, { alto: 78, tam: 44 });
     rodape(c, num, 'Os caracteres');
 }
 
