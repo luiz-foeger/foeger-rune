@@ -65,12 +65,12 @@ const rgb = (hex: string): Rgb => {
 
 // os papéis vegetais, um antes de cada assunto: o desenho impresso nele e a cor do papel. O das variações tem a cor do
 // tom frio claro da paleta (lida por lerCores); os outros, a do papel vegetal comum
-export type DesenhoVegetal = 'construcao' | 'contornos' | 'cortes' | 'regua' | 'gabarito';
+export type DesenhoVegetal = 'construcao' | 'contornos' | 'cortes' | 'texto' | 'gabarito';
 export const VEGETAIS: { desenho: DesenhoVegetal; tinta: Rgb }[] = [
     { desenho: 'construcao', tinta: [246, 245, 241] },
     { desenho: 'contornos', tinta: [246, 245, 241] },
     { desenho: 'cortes', tinta: [221, 227, 243] },
-    { desenho: 'regua', tinta: [246, 245, 241] },
+    { desenho: 'texto', tinta: [246, 245, 241] },
     { desenho: 'gabarito', tinta: [246, 245, 241] },
 ];
 
@@ -89,7 +89,7 @@ export const CAPITULOS: Capitulo[] = [
         n: 1,
         titulo: 'A construção das letras',
         epigrafe: 'Toda pedra começa bruta.',
-        visaoGeral: 'A Föeger Rune começou na logo da Föeger. Das letras dela veio a ideia de um alfabeto inteiro, desenhado à mão num gabarito e depois refeito só com retas, com o corte do cinzel nas quinas.',
+        visaoGeral: 'Cada letra da Cut é um polígono: pontos ligados por retas, com o corte do cinzel nas quinas. Aqui estão as linhas que todas as letras respeitam, quantos pontos cada uma tem e, de perto, as coordenadas do a e do n.',
         corpo: [
             'A logo já era feita de pedras: cada letra uma peça de retas, e os pingos do ö e o ponto, soltos. Dela veio a vontade de ir além da logo: as outras letras, os números e os sinais, no mesmo traço.',
             'Cada letra foi desenhada à mão num gabarito, um quadrado por letra. O desenho virou contorno, e as curvas da vetorização viraram retas: o alfabeto caiu de 3.390 para 1.262 pontos sem perder o jeito da mão.',
@@ -97,8 +97,8 @@ export const CAPITULOS: Capitulo[] = [
         ],
         materias: 4,
         secoes: [
-            { nome: 'Pontos de construção', k: 1, sumario: true },
-            { nome: 'As linhas e os pontos', k: 3, sumario: true },
+            { nome: 'As linhas e os pontos', k: 1, sumario: true },
+            { nome: 'Pontos de construção', k: 3, sumario: true },
         ],
     },
     {
@@ -148,13 +148,12 @@ export const CAPITULOS: Capitulo[] = [
             'Em corpo de texto, o desenho vira textura, pesada e irregular, que pede frases curtas e espaço entre as linhas.',
             'Os acentos são pedras à parte, pousadas por cima, e as frações, os números elevados e os símbolos do dia a dia vêm no mesmo traço.',
         ],
-        materias: 10,
+        materias: 8,
         secoes: [
             { nome: 'Em corpo de cartaz', k: 1 },
-            { nome: 'Cascata de tamanhos', k: 3, sumario: true },
-            { nome: 'Palavras e números', k: 5 },
-            { nome: 'Acentos, frações e sinais', k: 7 },
-            { nome: 'Exemplos de texto', k: 9, sumario: true },
+            { nome: 'Palavras e números', k: 3 },
+            { nome: 'Acentos, frações e sinais', k: 5, sumario: true },
+            { nome: 'Exemplos de texto', k: 7, sumario: true },
         ],
     },
 ];
