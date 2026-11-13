@@ -148,12 +148,12 @@ function paragrafoLido(c: Ctx, texto: string, x: number, y: number, larg: number
     return fim;
 }
 
-// o relevo seco da capa: a letra mais escura que o pano, com a luz batendo na borda de baixo (as três passadas: a luz,
-// a sombra da borda de cima e o miolo afundado)
+// o relevo seco da contracapa, no pano preto: a luz batendo na borda de baixo, a sombra da borda de cima e o miolo
+// prensado um pouco mais claro que o pano, com o brilho do pano apertado (no preto, um miolo mais escuro sumia)
 const RELEVO: [number, number, string][] = [
-    [1.4, 1.6, 'rgba(255,250,240,0.07)'],
-    [-0.8, -0.9, 'rgba(0,0,0,0.32)'],
-    [0, 0, 'rgba(0,0,0,0.16)'],
+    [1.4, 1.6, 'rgba(255,250,240,0.13)'],
+    [-0.8, -0.9, 'rgba(0,0,0,0.6)'],
+    [0, 0, 'rgba(255,250,240,0.05)'],
 ];
 function relevo(c: Ctx, t: string, x: number, y: number, o: Linha) {
     for (const [dx, dy, cor] of RELEVO) linha(c, t, x + dx, y + dy, { ...o, cor });
@@ -337,8 +337,9 @@ const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
 // a tinta granulada da risografia, como a das capas impressas assim (a do "Piquenique na estrada"): cada tinta é
 // desenhada à parte, com a borda suavizada, e, pixel a pixel, um ruído decide se ela pega. Na borda ela se desfaz em
 // pontinhos; no miolo, falha de vez em quando; e a cor ganha manchas largas, mais claras e mais escuras, como a tinta
-// que não assenta igual. As tintas são transparentes e multiplicam as de baixo: onde duas se cruzam, nasce uma terceira
-// cor, mais escura. Sai a página inteira, com o papel, sempre igual (sorteio com semente) e guardada, porque a página é
+// que não assenta igual. No papel claro, as tintas são transparentes e multiplicam as de baixo: onde duas se cruzam,
+// nasce uma terceira cor, mais escura. No papel escuro, a tinta cobre, como a tinta opaca, e deixa passar só um pouco
+// da de baixo (multiplicada, ela sumiria no preto). Sai a página inteira, com o papel, sempre igual (sorteio com semente) e guardada, porque a página é
 // redesenhada várias vezes no livro; numa resolução menor que a da página, para o grão ficar grosso
 type Rgb = [number, number, number];
 type Tinta = { cor: Rgb; desenho: (p: Pincel) => void };
@@ -393,8 +394,8 @@ function tintaGranulada(fam: Familias, semente0: number, desenho: (p: Pincel) =>
     return { pega, tom };
 }
 
-// as tintas no papel, cada uma multiplicando as de baixo
-function risografia(chave: string, fam: Familias, papel: Rgb, tintas: Tinta[]) {
+// as tintas no papel, cada uma multiplicando as de baixo ou cobrindo-as
+function risografia(chave: string, fam: Familias, papel: Rgb, tintas: Tinta[], modo: 'multiplica' | 'cobre' = 'multiplica') {
     const pronta = RISOGRAFIAS.get(chave);
     if (pronta) return pronta;
     const n = RISO_L * RISO_A;
@@ -402,10 +403,15 @@ function risografia(chave: string, fam: Familias, papel: Rgb, tintas: Tinta[]) {
     for (let i = 0; i < n; i++) cor.set(papel, i * 3);
     tintas.forEach((t, k) => {
         const { pega, tom } = tintaGranulada(fam, 11 + 12 * k, t.desenho);
+        const cobre = modo === 'cobre';
         for (let i = 0; i < n; i++) {
-            const a = pega[i];
+            const a = (cobre ? 0.86 : 1) * pega[i];
             if (!a) continue;
-            for (let ch = 0; ch < 3; ch++) cor[i * 3 + ch] *= 1 - a + (a * Math.min(255, t.cor[ch] * tom[i])) / 255;
+            for (let ch = 0; ch < 3; ch++) {
+                const tinta = Math.min(255, t.cor[ch] * tom[i]);
+                const j = i * 3 + ch;
+                cor[j] = cobre ? cor[j] * (1 - a) + tinta * a : cor[j] * (1 - a + (a * tinta) / 255);
+            }
         }
     });
     const tela = document.createElement('canvas');
@@ -428,12 +434,13 @@ function risografia(chave: string, fam: Familias, papel: Rgb, tintas: Tinta[]) {
 
 // a capa da frente, como as capas de livros de tipografia de verdade: uma ideia grande e o texto miúdo. As três
 // passadas do R, uma por estilo (Cut, Polished e Worn), descendo em diagonal no meio da capa, cada uma na cor do estilo
-// no site (o ocre, o azul e o verde), chapadas e um pouco transparentes, para o cruzamento delas aparecer, sobre o azul
-// fundo do site; o autor e o título no alto, os quadradinhos de marca no canto, como nos espécimes das fundições, e a
-// marca no pé. O relevo seco fica só na contracapa: na frente ele sumia no pano. As outras propostas (com a tinta
-// granulada da risografia, em outros papéis, num rótulo colado ou com a cinta) estão no histórico
+// no site (o ocre, o azul e o verde), em tinta granulada de risografia que cobre (um pouco transparente, para o
+// cruzamento delas aparecer), sobre o pano preto; o autor e o título no alto, os quadradinhos de marca no canto, como
+// nos espécimes das fundições, e a marca no pé. O relevo seco fica só na contracapa: na frente ele sumia no pano. As
+// outras propostas (em outros papéis, num rótulo colado, com a cinta ou chapadas no azul fundo) estão no histórico
 const CREME = '#f1ece1';
-const comAlfa = (hex: string, a: number) => `rgba(${rgbDe(hex).join(',')},${a})`;
+// o pano preto da capa dura, um pouco quente
+const PRETO = '#151413';
 
 // os quadradinhos e o fio de marca, no canto (x, y é o canto de cima à esquerda do grupo)
 function marcas(c: Ctx, x: number, y: number, cor: string) {
@@ -444,7 +451,6 @@ function marcas(c: Ctx, x: number, y: number, cor: string) {
 }
 
 function capa(c: Ctx) {
-    c.p.ret(0, 0, 1000, 1500, COR.frioEscuro);
     // o grupo das três centrado na largura e na altura entre o título e a marca do pé
     const tam = 760;
     const [dx, dy] = [168, 150];
@@ -454,16 +460,18 @@ function capa(c: Ctx) {
     const alto = MAIUSCULA * tam + 2 * dy;
     const x0 = 500 - largo / 2;
     const base0 = 822 - alto / 2 + MAIUSCULA * tam;
-    estilos.forEach((fam, i) => linha(c, 'R', x0 + i * dx, base0 + i * dy, { tam, fam, peso: 400, cor: comAlfa(cores[i], 0.86), semCalt: true }));
+    const tintas = estilos.map((fam, i): Tinta => ({ cor: rgbDe(cores[i]), desenho: q => q.texto('R', x0 + i * dx, base0 + i * dy, { tam, fam, peso: 400, cor: '#000', semCalt: true }) }));
+    // a chave leva as cores, que mudam com a paleta da página
+    c.p.imagem(risografia(`capa-${PRETO}-${cores.join('-')}`, c.p.fam, rgbDe(PRETO), tintas, 'cobre'), 0, 0, 1000, 1500, true);
     linha(c, 'Luiz Föeger', 64, 110, { tam: 26, peso: 600, cor: CREME });
     linha(c, 'Föeger Rune: espécime tipográfico', 64, 230, { tam: 36, peso: 700, cor: CREME });
     marcas(c, 826, 90, CREME);
     logo(c, 936, 1440, 36, CREME, 'right');
 }
 
-// a contracapa, do mesmo azul da capa: o nome no meio, a frase do livro e o selo da editora no pé, tudo em relevo
+// a contracapa, do mesmo pano preto da capa: o nome no meio, a frase do livro e o selo da editora no pé, tudo em relevo
 function contracapa(c: Ctx) {
-    c.p.ret(0, 0, 1000, 1500, COR.frioEscuro);
+    c.p.ret(0, 0, 1000, 1500, PRETO);
     relevo(c, 'Föeger Rune', 500, 770, { tam: 76, fam: 'cut', peso: 400, alinhar: 'center' });
     relevo(c, LIVRO.frase, 500, 860, { tam: 34, fam: 'polished', peso: 400, alinhar: 'center' });
     logoEmRelevo(c, 500, 1436, 46, 'center');
