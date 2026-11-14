@@ -90,7 +90,7 @@
     overflow: hidden;
 }
 
-/* o painel aberto (as seções sem régua: a frase, os recursos): sem moldura, réguas nem letras dos lados;
+/* o painel aberto (as seções sem régua: a frase): sem moldura, réguas nem letras dos lados;
    a trama é um pedaço que passa um pouco da área e some nas bordas, de cantos redondos, como o chão do livro. As linhas
    continuam nos mesmos lugares da trama dos outros painéis */
 .fx-painel[data-aberto] .fx-tela {
@@ -739,7 +739,7 @@ html[data-trocando] [data-visivel] > .fx-mascara > .fx-mascara-linha {
 
 
 
-/* 7. a seção escura e os recursos */
+/* 7. a seção escura (a página "Na prática"): as quatro letras grandes e o texto das variações */
 .fx-escura {
     --fundo: #111111;
     --borda: #6a6a6a;
@@ -830,59 +830,6 @@ html[data-trocando] [data-visivel] > .fx-mascara > .fx-mascara-linha {
     background: var(--cor-botao, #111);
     color: #fff;
 }
-.fx-recursos-dupla {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-}
-.fx-recurso {
-    position: relative;
-    height: 100%;
-}
-.fx-recurso[data-largo] {
-    position: absolute;
-    inset: 0;
-}
-.fx-recurso-cabeca {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: calc(40 * var(--u));
-    display: grid;
-    grid-template-columns: calc(101 * var(--u)) calc(122 * var(--u)) auto;
-    align-items: center;
-    padding-left: calc(39 * var(--u));
-    font-size: var(--t-sec);
-    line-height: 1;
-    white-space: nowrap;
-}
-.fx-recurso-cabeca[data-largo] {
-    grid-template-columns: calc(177 * var(--u)) calc(472 * var(--u)) auto;
-}
-.fx-recurso-letras {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(40 * var(--u));
-    bottom: 0;
-    display: grid;
-    place-items: center;
-    font-size: calc(280 * var(--u));
-    line-height: 1;
-    text-box: trim-both cap alphabetic;
-    white-space: nowrap;
-}
-.fx-recurso-letras[data-minusculas] {
-    text-box: trim-both ex alphabetic;
-}
-.fx-recurso-letras[data-largo] {
-    font-size: calc(250 * var(--u));
-}
-.fx-fracao {
-    margin: 0 0.18em;
-}
 
 /* 8. o hero com a palavra que se gasta (o cabeçalho é o 11, no fim) */
 html:has([data-clone]) {
@@ -923,9 +870,6 @@ html:has([data-clone]) {
 .fx-hero-cena {
     position: absolute;
     inset: 0;
-}
-.fx-recurso-letras[data-fracoes] {
-    font-size: calc(180 * var(--u));
 }
 
 /* no celular (até 899 px): a página tem 2 colunas de módulo (885 u, mais as margens das letras dos lados); os painéis
@@ -1055,17 +999,6 @@ html:has([data-clone]) {
     .fx-variacoes-metade + .fx-variacoes-metade {
         border-left: 0;
         border-top: 1px dashed #5a5a5a;
-    }
-
-    /* os recursos largos */
-    .fx-recurso-cabeca[data-largo] {
-        grid-template-columns: calc(150 * var(--u)) calc(250 * var(--u)) auto;
-    }
-    .fx-recurso-letras[data-largo] {
-        font-size: calc(115 * var(--u));
-    }
-    .fx-recurso-letras[data-fracoes] {
-        font-size: calc(80 * var(--u));
     }
 
 }
@@ -5751,4 +5684,99 @@ html[data-paleta='azul'] [data-clone] {
    (o clip não cria rolagem, e o sticky da arte do playground continua funcionando) */
 .fx-palco-moldura {
     overflow-x: clip;
+}
+
+/* 27. as variações (SecaoVariacoes.tsx): as trocas do calt, cada uma num painel com o nome e a frase no alto à
+   esquerda, a chave "Sem | Com" à direita (o mesmo sublinhado dos grupos dos caracteres, na cor do painel) e as
+   letras no meio, na Cut; ligada, cada letra trocada fica na cor do painel */
+.fx-var {
+    position: absolute;
+    inset: 0;
+}
+.fx-var-cabeca {
+    position: absolute;
+    left: calc(39 * var(--u));
+    right: calc(39 * var(--u));
+    top: calc(36 * var(--u));
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: calc(30 * var(--u));
+}
+.fx-var-nome {
+    margin: 0;
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sub);
+    font-weight: 600;
+    line-height: 1;
+}
+.fx-var-texto {
+    margin: calc(12 * var(--u)) 0 0;
+    font-size: var(--t-sec);
+    font-weight: 500;
+    line-height: 1.3;
+    opacity: 0.6;
+    text-wrap: pretty;
+}
+.fx-var-chave {
+    display: flex;
+    flex: none;
+    gap: calc(24 * var(--u));
+}
+.fx-var-opcao {
+    padding: 0 0 calc(8 * var(--u));
+    border: 0;
+    border-bottom: max(1px, calc(2 * var(--u))) solid transparent;
+    background: none;
+    color: var(--tinta);
+    font-family: var(--ff-ui), sans-serif;
+    font-size: var(--t-sec);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+}
+.fx-var-opcao[data-ativo='true'] {
+    color: var(--cor-troca);
+    border-bottom-color: currentColor;
+}
+.fx-var-letras {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(120 * var(--u));
+    bottom: calc(20 * var(--u));
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3em;
+    font-family: var(--ff-cut);
+    font-size: calc(220 * var(--u));
+    line-height: 1;
+    white-space: nowrap;
+}
+.fx-var-grupo {
+    text-box: trim-both cap alphabetic;
+}
+.fx-var-letras[data-minusculas] .fx-var-grupo {
+    text-box: trim-both ex alphabetic;
+}
+.fx-var-letras [data-troca] {
+    transition: color 0.3s ease;
+}
+.fx-var-letras[data-ligado] [data-troca] {
+    color: var(--cor-troca);
+}
+@media (max-width: 899px) {
+    /* no celular, as letras repetidas descem em três linhas, uma por letra */
+    .fx-var[data-largo] .fx-var-letras {
+        flex-direction: column;
+        gap: 0.32em;
+        top: calc(190 * var(--u));
+        font-size: calc(200 * var(--u));
+    }
+    .fx-var-letras {
+        top: calc(150 * var(--u));
+        font-size: calc(190 * var(--u));
+    }
 }

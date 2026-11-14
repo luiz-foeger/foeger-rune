@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import Painel from './Painel';
 import Seta from './Seta';
 import { familiaDe } from './Faixa';
 import { RUNE, VARIACOES } from '../_lib/conteudo';
 import { useVisivel } from '../_lib/movimento';
 
-// a seção escura (as quatro letras grandes e o texto que troca de caixa) e os recursos da fonte com os botões de
-// ligar e desligar: as variações das letras repetidas, o L do meio e o f do começo (calt) e as frações prontas.
+// a seção escura da página "Na prática": as quatro letras grandes e o texto que troca de caixa (as variações das letras
+// repetidas só existem nas minúsculas). As variações da home, com a chave de ligar e desligar, ficam em SecaoVariacoes.tsx.
 const u = (n: number) => `calc(${n} * var(--u))`;
 
 // um sorteio fixo, para as cores e as posições serem as mesmas a cada visita
@@ -108,131 +108,5 @@ export function TextoVariacoes() {
                 </div>
             </div>
         </Painel>
-    );
-}
-
-// ——— os recursos ———
-type Parte = { t: string; destaque?: boolean };
-type Recurso = { tag: string; nome: string; partes: Parte[]; cor: string; estilo?: CSSProperties };
-const CARTAS: Recurso[][] = [
-    [
-        { tag: 'calt', nome: 'Variação do s', partes: [{ t: 's' }, { t: 's', destaque: true }], cor: 'var(--p-worn)' },
-        { tag: 'calt', nome: 'Variação do e', partes: [{ t: 'e' }, { t: 'e', destaque: true }], cor: 'var(--p-frio)' },
-    ],
-    [
-        { tag: 'calt', nome: 'L do meio', partes: [{ t: 'A' }, { t: 'L', destaque: true }], cor: 'var(--p-quente)' },
-        { tag: 'calt', nome: 'f do começo', partes: [{ t: 'f', destaque: true }, { t: 'é' }], cor: 'var(--p-worn)' },
-    ],
-];
-
-function Pares({ partes, ligado, cor, cinza = '#bdbdbd' }: { partes: Parte[]; ligado: boolean; cor: string; cinza?: string }) {
-    return (
-        <span style={{ fontFeatureSettings: `"calt" ${ligado ? 1 : 0}` }}>
-            {partes.map((p, i) => (
-                <span key={i} style={{ color: p.destaque ? (ligado ? cor : 'var(--tinta)') : cinza }}>
-                    {p.t}
-                </span>
-            ))}
-        </span>
-    );
-}
-
-function Botoes({ ligado, cor, desligado, ligadoRotulo, estilo }: { ligado: boolean; cor: string; desligado: ReactNode; ligadoRotulo: ReactNode; estilo: CSSProperties }) {
-    return (
-        <div className="fx-alterna" style={estilo} aria-hidden>
-            <div className="fx-janela-barra">
-                <span>×</span>
-                <span>»</span>
-            </div>
-            <span className="fx-alterna-botao" data-ativo={!ligado || undefined} style={{ '--cor-botao': 'var(--tinta)' } as CSSProperties}>
-                {desligado}
-            </span>
-            <span className="fx-alterna-botao" data-ativo={ligado || undefined} style={{ '--cor-botao': cor } as CSSProperties}>
-                {ligadoRotulo}
-            </span>
-            <Seta style={{ left: u(30), top: u(ligado ? 70 : 26), transition: 'top 0.3s ease' }} />
-        </div>
-    );
-}
-
-function CartaRecurso({ r, ligado }: { r: Recurso; ligado: boolean }) {
-    const fonte = { fontFamily: 'var(--ff-cut)' };
-    return (
-        <div className="fx-recurso">
-            <div className="fx-recurso-cabeca">
-                <span>{r.tag}</span>
-                <span>{ligado ? 'Ligado' : 'Desligado'}</span>
-                <span>{r.nome}</span>
-            </div>
-            <div className="fx-recurso-letras" data-minusculas={r.partes.every(p => p.t === p.t.toLowerCase()) || undefined} style={fonte}>
-                <Pares partes={r.partes} ligado={ligado} cor={r.cor} />
-            </div>
-            <Botoes
-                ligado={ligado}
-                cor={r.cor}
-                estilo={{ right: u(26), top: u(70) }}
-                desligado={<span style={{ ...fonte, fontFeatureSettings: '"calt" 0' }}>{r.partes.map(p => p.t).join('')}</span>}
-                ligadoRotulo={<span style={{ ...fonte, fontFeatureSettings: '"calt" 1' }}>{r.partes.map(p => p.t).join('')}</span>}
-            />
-        </div>
-    );
-}
-
-function PainelRecursos({ cartas, atraso, estilo }: { cartas: Recurso[]; atraso: number; estilo: CSSProperties }) {
-    const ref = useRef<HTMLDivElement>(null);
-    const a = useAlterna(ref, 2300, atraso);
-    const b = useAlterna(ref, 2300, atraso + 1150);
-    return (
-        <Painel colunas={2} linhas={1} rotulo={cartas.map(c => c.nome).join(', ')} estilo={estilo}>
-            <div ref={ref} className="fx-recursos-dupla">
-                <CartaRecurso r={cartas[0]} ligado={a} />
-                <CartaRecurso r={cartas[1]} ligado={b} />
-            </div>
-        </Painel>
-    );
-}
-
-function PainelFracoes() {
-    const ref = useRef<HTMLDivElement>(null);
-    const prontas = useAlterna(ref, 2400, 300);
-    const partes: Parte[][] = prontas
-        ? [[{ t: '1' }, { t: '½', destaque: true }], [{ t: '2' }, { t: '¼', destaque: true }], [{ t: '3' }, { t: '¾', destaque: true }]]
-        : [[{ t: '1 ' }, { t: '1/2', destaque: true }], [{ t: '2 ' }, { t: '1/4', destaque: true }], [{ t: '3 ' }, { t: '3/4', destaque: true }]];
-    return (
-        <Painel colunas={4} linhas={1} rotulo="Frações prontas">
-            <div ref={ref} className="fx-recurso" data-largo>
-                <div className="fx-recurso-cabeca" data-largo>
-                    <span>Frações</span>
-                    <span>Prontas</span>
-                    <span>{prontas ? 'Ligado' : 'Desligado'}</span>
-                </div>
-                <div className="fx-recurso-letras" data-largo data-fracoes style={{ fontFamily: 'var(--ff-cut)' }}>
-                    <span>
-                        {partes.map((p, i) => (
-                            <span key={i} className="fx-fracao">
-                                {p.map((q, j) => (
-                                    <span key={j} style={{ color: q.destaque ? 'var(--tinta)' : '#bdbdbd' }}>
-                                        {q.t}
-                                    </span>
-                                ))}
-                            </span>
-                        ))}
-                    </span>
-                </div>
-                <Botoes ligado={prontas} cor="var(--tinta)" estilo={{ right: u(60), bottom: u(40) }} desligado="1/2" ligadoRotulo={<span style={{ fontFamily: 'var(--ff-cut)' }}>½</span>} />
-            </div>
-        </Painel>
-    );
-}
-
-export function Recursos() {
-    return (
-        <>
-            <div className="fx-grade">
-                <PainelRecursos cartas={CARTAS[0]} atraso={400} estilo={{ gridColumn: '1 / span 2' }} />
-                <PainelRecursos cartas={CARTAS[1]} atraso={1000} estilo={{ gridColumn: '3 / span 2' }} />
-            </div>
-            <PainelFracoes />
-        </>
     );
 }

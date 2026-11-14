@@ -41,7 +41,9 @@ export const VARIACOES = [
     { estilo: 'cut' as Estilo, titulo: 'Cut, com as variações', linhas: ['Sonhei ontem', 'que uma pedra', 'rolava, rolava', 'e não paraaava!'] },
     { estilo: 'worn' as Estilo, titulo: 'Worn, com as variações', linhas: ['Nossa, essssa', 'correnteeeeza', 'tá me deixando', 'tooooda lisa.'] },
 ];
-export const TITULO_RECURSOS = 'Recursos';
+// o título das variações (as trocas do calt), solto, com a nota embaixo; os 78 são os desenhos a mais de cada estilo
+// (a–z em .v2, .v3 e .v4, menos o f, que só tem o .v2, e mais o L.alt e o f.ini)
+export const TITULO_VARIACOES = { texto: 'Variações', nota: 'A letra muda pela vizinha: 78 desenhos a mais em cada estilo' };
 // o título do playground, solto e sem nota
 export const TITULO_ESCREVA = { texto: 'Playground', nota: null };
 // o título da seção dos caracteres, solto (na fonte de texto, como o dos estilos), com a nota embaixo
@@ -69,7 +71,7 @@ export const CABECALHO: {
         { texto: 'Estilos', alvo: 'styles' },
         { texto: 'Testar', alvo: 'tester' },
         { texto: 'Caracteres', alvo: 'characters' },
-        { texto: 'Recursos', alvo: 'features' },
+        { texto: 'Variações', alvo: 'variations' },
         { texto: 'O Livro', alvo: 'book' },
         { texto: 'Na prática', alvo: '', pagina: PAGINA_PRATICA.caminho },
         { texto: 'Playground', alvo: 'playground', pagina: PAGINA_PRATICA.caminho },

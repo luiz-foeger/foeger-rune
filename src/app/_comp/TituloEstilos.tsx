@@ -2,7 +2,7 @@ import Painel from './Painel';
 import Mascara from './Mascara';
 import { TITULO_ESTILOS } from '../_lib/conteudo';
 
-// o título de uma parte da página ("Três* Estilos", "Recursos", "O Livro*"), parado: a palavra pronta, com o asterisco
+// o título de uma parte da página ("Três Estilos", "Variações", "O Livro*"), parado: a palavra pronta, com o asterisco
 // pequeno e alto depois da primeira palavra e a nota no pé do painel que o explica. Livre, ele sai do painel (sem
 // moldura, réguas nem trama): o título na fonte de texto, centrado, e a nota (se houver) embaixo
 export default function TituloEstilos({
