@@ -585,13 +585,13 @@ function creditos(c: Ctx) {
     paraLer(c, fx, fy, fx + fl, fy + fa, 13.5);
     rotulo(c, 'Dados para catalogação', fx + 22, fy + 38, { tam: 11, cor: CINZA });
     const mono = (t: string, x: number, yy: number) => linha(c, t, x, yy, { tam: 13.5, fam: 'mono', peso: 400 });
-    mono('Föeger, Luiz Felipe', fx + 22, fy + 82);
+    mono('Föeger, Luiz', fx + 22, fy + 82);
     mono('Föeger Rune: espécime tipográfico /', fx + 52, fy + 104);
     mono('Luiz Föeger. — Edição 01. — 2026.', fx + 22, fy + 126);
     mono(`${EXTRAS.paginas ?? ''} p. : il. color.`, fx + 52, fy + 148);
     mono('1. Tipografia. 2. Fontes tipográficas.', fx + 52, fy + 192);
     mono('3. Design gráfico. I. Título.', fx + 52, fy + 214);
-    linha(c, '© 2026 Luiz Felipe Föeger. Todos os direitos reservados.', 29, 1440, { tam: 16.5, peso: 400 });
+    linha(c, '© 2026 Luiz Föeger. Todos os direitos reservados.', 29, 1440, { tam: 16.5, peso: 400 });
 }
 
 // a folha de rosto, de frente para o frontispício e no mesmo eixo dele, como as folhas de rosto clássicas: o título na
