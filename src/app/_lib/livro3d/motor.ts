@@ -11,6 +11,28 @@ import { montarFolhas, folhaDoCapitulo, folhaDosCaracteres, contagemDaPagina, le
 import { desenharPagina, type Alvo } from '../especime/paginas';
 import { PONTEIROS, type Ponteiro } from './ponteiros';
 import { carregarFontes, familiasDe, pincelCanvas, type Familias } from '../especime/pincel';
+import {
+    NX as NX_SIM,
+    NY as NY_SIM,
+    MAO_MACIA,
+    GIRO_MAX,
+    FLEXAO,
+    FLEXAO_VEGETAL,
+    criarPapel,
+    passoPapel,
+    paraTextura,
+    medidas,
+    criarMao,
+    maoEm,
+    anguloDaMao,
+    maoNaSoltura,
+    poseParada,
+    alturaDoPino,
+    desvioDaPinca,
+    type Papel,
+    type Mao,
+    type Ponto3,
+} from './papel';
 
 const W = 1;
 const H = 1.5;
@@ -96,8 +118,55 @@ uniform float uDobrar, uLado;
 uniform vec4 uEixo, uCone;
 // a parte da folha dobrada que este desenho leva (−1: a folha inteira, sem a dobra livre)
 uniform float uParte;
+// a folha simulada (pega pelo meio): os pontos da grade de papel, com a borda de fantasmas, nas contas da folha
+uniform float uSimular;
+uniform highp sampler2D uSim;
+// a altura da outra pilha nas contas da folha simulada (o chão além da lombada)
+uniform float uSimE;
 const float PI = 3.14159265;
 ${PARTE}
+// a folha simulada: a superfície bicúbica (Catmull-Rom) que passa pelos pontos da grade, com a normal pelas derivadas
+// (a mesma conta de naSuperficie, na CPU)
+vec4 crPesos(float t) {
+    float t2 = t * t;
+    float t3 = t2 * t;
+    return 0.5 * vec4(-t3 + 2.0 * t2 - t, 3.0 * t3 - 5.0 * t2 + 2.0, -3.0 * t3 + 4.0 * t2 + t, t3 - t2);
+}
+vec4 crDeriv(float t) {
+    float t2 = t * t;
+    return 0.5 * vec4(-3.0 * t2 + 4.0 * t - 1.0, 9.0 * t2 - 10.0 * t, -9.0 * t2 + 8.0 * t + 1.0, 3.0 * t2 - 2.0 * t);
+}
+vec3 simulada(vec2 q, out vec3 n) {
+    vec2 f = clamp(q * vec2(${NX_SIM - 1}.0, ${NY_SIM - 1}.0), vec2(0.0), vec2(${NX_SIM - 1}.0, ${NY_SIM - 1}.0));
+    ivec2 c = min(ivec2(floor(f)), ivec2(${NX_SIM - 2}, ${NY_SIM - 2}));
+    vec2 t = f - vec2(c);
+    vec4 wu = crPesos(t.x);
+    vec4 wv = crPesos(t.y);
+    vec4 du = crDeriv(t.x);
+    vec4 dv = crDeriv(t.y);
+    vec3 p = vec3(0.0);
+    vec3 pu = vec3(0.0);
+    vec3 pv = vec3(0.0);
+    // a textura tem uma borda de fantasmas: o texel (i, j) é o ponto (i − 1, j − 1) da grade
+    for (int b = 0; b < 4; b++)
+        for (int a = 0; a < 4; a++) {
+            vec3 k = texelFetch(uSim, c + ivec2(a, b), 0).xyz;
+            p += wu[a] * wv[b] * k;
+            pu += du[a] * wv[b] * k;
+            pv += wu[a] * dv[b] * k;
+        }
+    // (num ponto em que a grade amassa, as derivadas somem: a normal fica a da folha deitada, sem virar preto)
+    vec3 cr = cross(pu, pv);
+    float lc = length(cr);
+    vec3 m = lc > 1e-9 ? cr / lc : vec3(0.0, 0.0, 1.0);
+    n = uLado > 0.0 ? m : vec3(m.x, -m.y, -m.z);
+    // a folha não entra nas pilhas: do lado dela, nunca abaixo da própria base; além da lombada, nunca abaixo do topo da
+    // outra pilha. A bicúbica passa um pouco abaixo dos pontos da grade onde o papel dobra forte, e ali aparecia a
+    // página de baixo (as manchas pretas, azuis e brancas). A coluna da lombada é o pino, que fica entre as alturas das
+    // duas pilhas e nunca entra nelas (ali p.x é zero ou ruído, e o chão escolhido saía o da outra pilha)
+    if (q.x > 0.0) p.z = max(p.z, (p.x > 0.0 ? 0.0 : uSimE) - 0.0005);
+    return vec3(p.x * uLado, p.y, p.z + uZ);
+}
 // a malha do cone (a parte 1): uma coluna por geratriz, de ψ = 0 a π, de borda a borda da folha, e mais uma faixa
 // estreita de cada lado, na conta da parte deitada e da virada (o pixel da borda do cone sai inteiro). Com as colunas
 // nas geratrizes, a silhueta do rolo é reta mesmo com o cone mais fino que um quadrado da malha comum
@@ -233,6 +302,7 @@ float ang(float t, float v) {
 }
 // a folha em arco: a cada passo ao longo de u o ângulo muda; fora de [0, π] a folha deita na pilha
 vec3 deforma(vec2 q, out vec3 n) {
+    if (uSimular > 0.5) return simulada(q, n);
     if (uDobrar > 0.5) return dobrar(q, n);
     float x = 0.0, z = 0.0, xv = 0.0, zv = 0.0;
     float dt = q.x / 32.0;
@@ -608,6 +678,25 @@ type Ponto2 = [number, number];
 // o rolo limitado a raio
 type Livre = { g: Ponto2; de: Ponto2; para: Ponto2; lado: 1 | -1; completa: boolean; raio: number };
 type Anim = { de: number; para: number; t0: number; dur: number; dir: number; curl0: number; twist0: number; grabV: number; saida: boolean; livre?: Livre };
+// a folha simulada (pega pelo meio): o papel, a mão, o ponto que ela segura (nas contas da folha), a correção do ponto
+// desenhado, o alvo da mão no quadro anterior e o ângulo dela, o lado em que a folha estava deitada, a altura da outra
+// pilha, o histórico do ponteiro (para virar ou não) e a fase: o arrasto, a soltura (a mão no caminho até deitar,
+// levando o resto do desvio até sumir) e o pouso (a folha cai sozinha e, no fim, a guia a leva deslizando até a pose
+// parada exata; k é o relógio dele, de 0 a 1)
+type Sim = {
+    F: Papel;
+    mao: Mao;
+    g: Ponto2;
+    corr: Ponto3;
+    T: Ponto3;
+    phi: number;
+    lado: 1 | -1;
+    e: number;
+    hist: { t: number; phi: number; x: number }[];
+    fase: 'arrasto' | 'solta' | 'pouso';
+    solta: { phi0: number; om0: number; phiFim: number; dur: number; t0: number; vira: boolean; resto: Ponto3 } | null;
+    k: number;
+};
 type Sheet = {
     i: number;
     frente: Face;
@@ -626,6 +715,7 @@ type Sheet = {
     zt: number;
     anim: Anim | null;
     vinco: Vinco | null;
+    sim: Sim | null;
 };
 type Cam = { cx: number; cy: number; zoom: number };
 
@@ -717,6 +807,22 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     const texPapel = cor1(236, 235, 231);
     const texEscura = cor1(38, 35, 31);
     const texVazia = cor1(0, 0, 0, 0);
+    // os pontos da folha simulada, com a borda de fantasmas (float, sem filtro: o shader lê com texelFetch)
+    const texSim = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, texSim);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, NX_SIM + 2, NY_SIM + 2, 0, gl.RGBA, gl.FLOAT, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const bufSim = new Float32Array((NX_SIM + 2) * (NY_SIM + 2) * 4);
+    function enviarSim(F: Papel) {
+        paraTextura(F, bufSim);
+        gl.bindTexture(gl.TEXTURE_2D, texSim);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, NX_SIM + 2, NY_SIM + 2, gl.RGBA, gl.FLOAT, bufSim);
+    }
 
     function enviar(tex: WebGLTexture | null, fonte: TexImageSource, premult: boolean, mip: boolean) {
         const t = tex ?? gl.createTexture()!;
@@ -771,7 +877,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const frente = face(d.frente, d.numFrente);
         const verso = vegetal ? frente : face(d.verso, d.numVerso);
         const tinta = (vegetal && tintaDoVegetal(d.frente)) || [246, 245, 241];
-        return { i, frente, verso, rigida: d.tipo === 'capa' || d.tipo === 'contracapa', vegetal, tinta, lado: 0, phi: 0, curl: 0, twist: 0, grabV: 0.5, dobra: 0, larg: 1, inclina: 0, zt: 0, anim: null, vinco: null };
+        return { i, frente, verso, rigida: d.tipo === 'capa' || d.tipo === 'contracapa', vegetal, tinta, lado: 0, phi: 0, curl: 0, twist: 0, grabV: 0.5, dobra: 0, larg: 1, inclina: 0, zt: 0, anim: null, vinco: null, sim: null };
     });
     const faces = Array.from(new Set(folhas.flatMap(f => [f.frente, f.verso])));
     const TOTAL = defs.filter(d => d.tipo === 'papel').length * 2;
@@ -798,7 +904,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     let ultimoLanc = -1;
     let agora = 0;
     const contagem = () => folhas.reduce((n, f) => n + f.lado, 0);
-    const emMovimento = (f: Sheet) => !!f.anim || arrasto?.i === f.i || (peel.i === f.i && peel.e > 0.004);
+    const emMovimento = (f: Sheet) => !!f.anim || !!f.sim || arrasto?.i === f.i || (peel.i === f.i && peel.e > 0.004);
 
     // o arrasto: a folha, o lado em que ela está deitada, onde o dedo apertou (na tela e, nas contas da folha, o ponto
     // pego g), o ponteiro agora (na tela), a altura em que o ponto pego ficou no quadro anterior (de onde a conta do
@@ -870,6 +976,13 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     // lombada (fica com no máximo 90% do ângulo entre a mediatriz e ela). raio limita o rolo (a dobra que se desfaz
     // depois de solta guarda o rolo de quando foi solta)
     const A_LONGE = 40;
+    // a partir de quanto papel além do ponto pego (rumo à borda de fora) a folha é simulada em vez de dobrada
+    const LIMIAR_SIM = 0.3;
+    // a distância da ponta de fora em que o cursor deixa de levantar o canto: pegando além dela, mesmo na borda de
+    // fora, a folha também é simulada (sem canto levantado, ela começa deitada, sem pulo)
+    const CANTO_LONGE = 0.55;
+    // quanto dura o pouso da folha simulada (a queda e, no fim, a guia até a pose parada)
+    const POUSO = 0.45;
     function vincoEntre(g: Ponto2, c: Ponto2, lado: 1 | -1, acima: number, raio = RAIO): Vinco | null {
         const dx = g[0] - c[0];
         const dy = g[1] - c[1];
@@ -1036,7 +1149,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         const falta = Math.abs(alvoContagem - c);
         const rapido = falta > 1;
         // (espera a folha solta do arrasto pousar: outra virada por cima dela a faria pular)
-        if (falta && !arrasto && !folhas.some(f => f.anim?.livre) && agora - ultimoLanc >= (rapido ? 0.085 : 0.12)) {
+        if (falta && !arrasto && !folhas.some(f => f.anim?.livre || f.sim) && agora - ultimoLanc >= (rapido ? 0.085 : 0.12)) {
             if (alvoContagem > c && c < N) lancar(folhas[c], 1, rapido);
             else if (alvoContagem < c && c > 0) lancar(folhas[c - 1], 0, rapido);
             ultimoLanc = agora;
@@ -1064,6 +1177,12 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             f.dobra = 0;
             f.larg = 1;
             f.inclina = 0;
+            if (f.sim) {
+                f.phi = f.sim.lado > 0 ? 0 : PI;
+                f.curl = 0;
+                f.twist = 0;
+                continue;
+            }
             if (f.anim?.livre) {
                 // a folha solta depois do arrasto: deitada no lado de onde saiu, com a dobra (em dobras)
                 f.phi = f.anim.livre.lado > 0 ? 0 : PI;
@@ -1118,9 +1237,13 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     // a dobra livre de cada folha de papel, depois da câmera do quadro (o ponto pego cai sob o ponteiro com a vista que
     // vai ser desenhada): a puxada pelo ponteiro, a que foi solta (até virar ou desdobrar) e o canto que levanta com o
     // cursor perto da borda. As outras ficam sem dobra
-    function dobras() {
+    function dobras(dt: number) {
         const tp = topos();
         for (const f of folhas) {
+            if (f.sim) {
+                simular(f, dt);
+                continue;
+            }
             const solta = f.anim?.livre;
             if (solta) {
                 const a = f.anim!;
@@ -1193,7 +1316,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
                 f.zt = f.lado;
                 const g: Ponto2 = [W, peel.cy >= 0 ? H / 2 : -H / 2];
                 const d = Math.hypot(peel.cx - g[0], peel.cy - g[1]);
-                const passo = 0.13 * peel.e * (1 - suave(0.15, 0.55, d));
+                const passo = 0.13 * peel.e * (1 - suave(0.15, CANTO_LONGE, d));
                 const c = restringir(g, [g[0] - 0.7071 * passo, g[1] - Math.sign(g[1]) * 0.7071 * passo]);
                 peel.g = g;
                 peel.c = c;
@@ -1204,11 +1327,81 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         }
     }
 
+    // a folha simulada, a cada quadro. No arrasto, a mão vai ao raio do ponteiro, com o desvio da pinça (o ponto pego na
+    // superfície bicúbica fica sob o ponteiro, e não só o da grade). Solta, a mão segue o caminho até deitar e a folha cai
+    // sozinha (o pouso); no fim do pouso, a guia a leva deslizando até a pose parada exata. Aí ela volta a ser uma folha
+    // deitada, na pilha de destino, sem degrau
+    function simular(f: Sheet, dt: number) {
+        const S = f.sim!;
+        const F = S.F;
+        if (dt <= 0) return enviarSim(F);
+        // o ponteiro que segurava a folha não é mais o do arrasto (outro ponteiro apertou): ela é solta, senão ficava
+        // parada no ar, e a fila de viradas esperava por ela para sempre
+        if (S.fase === 'arrasto' && arrasto?.i !== f.i) soltarSim(f);
+        if (S.fase === 'arrasto') {
+            const [E, D] = raioLocal(arrasto!.px, arrasto!.py, f, S.lado);
+            // a mão gira até o ângulo sob o ponteiro, sem passar de GIRO_MAX
+            const alvo = anguloDaMao(S.mao, E, D, S.e, S.phi);
+            S.phi += lim(alvo - S.phi, -GIRO_MAX * dt, GIRO_MAX * dt);
+            const Ta = maoEm(S.g, S.phi, S.e);
+            const T1: Ponto3 = [Ta[0] + S.corr[0], Ta[1] + S.corr[1], Ta[2] + S.corr[2]];
+            F.pino = alturaDoPino(S.phi, S.e);
+            passoPapel(F, S.T, T1, 0, dt, S.phi);
+            S.T = T1;
+            S.corr = desvioDaPinca(F);
+            // o ponteiro no plano da folha e o ângulo da mão, para virar ou não ao soltar (como na dobra)
+            S.hist.push({ t: agora, phi: S.phi, x: E[0] - (E[2] / D[2]) * D[0] });
+            while (S.hist.length > 2 && agora - S.hist[0].t > 0.1) S.hist.shift();
+        } else if (S.fase === 'solta') {
+            const so = S.solta!;
+            const p = lim((agora - so.t0) / so.dur, 0, 1);
+            const m = maoNaSoltura(S.g, so.phi0, so.om0, so.phiFim, so.dur, p, S.e, so.resto);
+            F.pino = alturaDoPino(m.phi, S.e);
+            passoPapel(F, S.T, m.T, MAO_MACIA, dt, m.phi);
+            S.T = m.T;
+            S.phi = m.phi;
+            if (p >= 1) {
+                S.fase = 'pouso';
+                S.k = 0;
+                F.pino = so.vira ? S.e : 0;
+                F.guia = poseParada(F, so.vira);
+            }
+        } else {
+            // o pouso: a guia começa mole (a folha cai pela gravidade) e endurece no fim; com a folha já deitada, o
+            // relógio anda mais rápido. O referencial fica onde a soltura o deixou (girá-lo empurrava a folha deitada
+            // contra a pilha, e ela quicava)
+            S.k = Math.min(1, S.k + (dt / POUSO) * (medidas(F).alto < 0.006 ? 2.5 : 1));
+            F.alfaGuia = 1e-2 * Math.pow(1 - S.k, 3);
+            passoPapel(F, S.T, S.T, MAO_MACIA, dt, F.teta);
+            if (S.k >= 1) {
+                f.sim = null;
+                f.anim = null;
+                f.zt = f.lado;
+                f.phi = f.lado ? PI : 0;
+                return;
+            }
+        }
+        enviarSim(F);
+    }
+    // o raio do ponteiro nas contas da folha: o olho e a direção (Z acima da base da folha; a da esquerda é o espelho)
+    function raioLocal(px: number, py: number, f: Sheet, lado: 1 | -1): [Ponto3, Ponto3] {
+        const nx = (px / largCss) * 2 - 1;
+        const ny = 1 - (py / altCss) * 2;
+        const t = Math.tan(FOV / 2);
+        const dc = [nx * t * (largCss / altCss), ny * t, -1];
+        const d = [0, 1, 2].map(k => v.eixoX[k] * dc[0] + v.eixoY[k] * dc[1] + v.eixoZ[k] * dc[2]);
+        const z0 = zBase(f) + ESP * 0.5;
+        return [
+            [lado * v.olho[0], v.olho[1], v.olho[2] - z0],
+            [lado * d[0], d[1], d[2]],
+        ];
+    }
+
     // as pilhas começam em cima da tábua da capa de baixo (a de fora dela fica no zero)
     const zDireita = (i: number) => (N - 1 - i) * ESP + GROSSO;
     const zEsquerda = (i: number) => i * ESP + GROSSO;
     const zBase = (f: Sheet) => {
-        const t = f.anim?.livre || f.vinco || (arrasto?.i === f.i && !f.rigida) ? f.zt : lim(f.phi / PI, 0, 1);
+        const t = f.anim?.livre || f.sim || f.vinco || (arrasto?.i === f.i && !f.rigida) ? f.zt : lim(f.phi / PI, 0, 1);
         return zDireita(f.i) + (zEsquerda(f.i) - zDireita(f.i)) * t;
     };
     function topos() {
@@ -1491,6 +1684,33 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
                 // com o canto levantado pelo cursor, apertando sobre a aba o ponto pego é o da aba (e não o da folha
                 // deitada embaixo dela)
                 const aba = !f.rigida && peel.i === f.i && f.vinco ? naAba(f.vinco, toque.x, toque.y, f, lado) : null;
+                const gPego = aba ? aba.p : noPapel(toque.x, toque.y, f, lado, 0);
+                // pegando pelo meio (com papel de sobra além do ponto pego, rumo à borda de fora) ou na borda de fora
+                // longe das pontas, a folha é simulada; nas pontas vale a dobra
+                const dCanto = Math.hypot(W - gPego[0], H / 2 - Math.abs(gPego[1]));
+                if (!f.rigida && !aba && (W - gPego[0] >= LIMIAR_SIM || dCanto >= CANTO_LONGE)) {
+                    // a altura da outra pilha, nas contas da folha: onde ela fica deitada lá (as alturas das pilhas são
+                    // fixas; topos() pula a folha de lá com o canto ainda baixando, e a folha pousava na altura dela,
+                    // as duas brigando no desenho)
+                    const e = (lado > 0 ? zEsquerda(f.i) : zDireita(f.i)) - (zBase(f) + ESP * 0.5);
+                    f.vinco = null;
+                    // a mão segura o papel no ponto pego ou, rente à lombada, um pouco mais para fora (ver criarMao)
+                    const mao = criarMao(gPego);
+                    f.sim = {
+                        F: criarPapel(mao.g, f.vegetal ? FLEXAO_VEGETAL : FLEXAO, e),
+                        mao,
+                        g: mao.g,
+                        corr: [0, 0, 0],
+                        T: [mao.g[0], mao.g[1], 0],
+                        phi: 0,
+                        lado,
+                        e,
+                        hist: [],
+                        fase: 'arrasto',
+                        solta: null,
+                        k: 0,
+                    };
+                }
                 arrasto = {
                     id: e.pointerId,
                     i: f.i,
@@ -1501,7 +1721,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
                     grabV: lim(s.y / H + 0.5, 0.02, 0.98),
                     hist: [],
                     // o ponto pego: onde o dedo apertou, no plano da própria folha (ou na aba levantada)
-                    g: aba ? aba.p : noPapel(toque.x, toque.y, f, lado, 0),
+                    g: gPego,
                     c: null,
                     px,
                     py,
@@ -1553,6 +1773,8 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         if (f.rigida) {
             const frente = arrasto.dir > 0 ? (f.phi > PI / 2 || vx < -1.1) && vx < 1.1 : !((f.phi < PI / 2 || vx > 1.1) && vx > -1.1);
             lancar(f, frente ? 1 : 0, false, true);
+        } else if (f.sim) {
+            soltarSim(f);
         } else {
             // o papel solto: o ponto pego passou da lombada (ou foi jogado para lá) e a página vira, indo até o espelho
             // dele do outro lado; jogado para fora, ou sem passar, a dobra se desfaz e ele volta para onde foi pego.
@@ -1590,6 +1812,27 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         alvoContagem = contagem();
     }
 
+    // a folha simulada solta: vira se o ponteiro passou da lombada ou foi jogado para lá (a mesma regra da dobra); a mão
+    // segue do ângulo de agora, com a velocidade dele, até deitar
+    function soltarSim(f: Sheet) {
+        const S = f.sim!;
+        const hs = S.hist;
+        const n = hs.length;
+        const dtH = n > 1 ? Math.max(1e-3, hs[n - 1].t - hs[0].t) : 1;
+        const vxs = n > 1 ? (hs[n - 1].x - hs[0].x) / dtH : 0;
+        const om = n > 1 ? (hs[n - 1].phi - hs[0].phi) / dtH : 0;
+        const x0 = n ? hs[n - 1].x : S.g[0];
+        const vira = (x0 < 0 || vxs < -1.1) && vxs < 1.1;
+        const phiFim = vira ? PI : 0;
+        const dur = 0.25 + 0.35 * (Math.abs(phiFim - S.phi) / PI);
+        const M = maoEm(S.g, S.phi, S.e);
+        S.fase = 'solta';
+        S.solta = { phi0: S.phi, om0: om, phiFim, dur, t0: agora, vira, resto: [S.T[0] - M[0], S.T[1] - M[1], S.T[2] - M[2]] };
+        f.anim = { de: 0, para: 0, t0: agora, dur, dir: S.lado, curl0: 0, twist0: 0, grabV: f.grabV, saida: true };
+        if (vira) f.lado = S.lado > 0 ? 1 : 0;
+        alvoContagem = contagem();
+    }
+
     function aoApertar(e: PointerEvent) {
         if (e.button !== 0) return;
         const [lx, ly] = local(e);
@@ -1604,6 +1847,9 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
                 return;
             }
         }
+        // outro ponteiro apertou com a página ainda pega (o dedo e o mouse, ou a caneta, juntos): ela é solta antes, como
+        // se o primeiro saísse (o soltar dele não chega mais aqui)
+        if (arrasto) soltarArrasto();
         cv.setPointerCapture(e.pointerId);
         toque = { id: e.pointerId, x: lx, y: ly, movido: false, pan: false, cx: camAlvo.cx, cy: camAlvo.cy, dedo: e.pointerType !== 'mouse' };
     }
@@ -1805,6 +2051,12 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         gl.uniform1f(u.uInclina, f.inclina);
         gl.uniform1f(u.uZ, zBase(f) + (emMovimento(f) ? ESP * 0.5 : 0));
         gl.uniform2f(u.uTam, f.rigida ? W * SOBRA_L : W, f.rigida ? H * SOBRA_A : H);
+        gl.uniform1f(u.uSimular, f.sim ? 1 : 0);
+        if (f.sim) {
+            gl.uniform1f(u.uLado, f.sim.lado);
+            gl.uniform1f(u.uSimE, f.sim.e);
+            tex(5, texSim, u.uSim);
+        }
         const vc = f.vinco;
         gl.uniform1f(u.uDobrar, vc ? 1 : 0);
         if (vc) {
@@ -2195,7 +2447,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
         mouse.sx += ((mouse.dentro ? mouse.x : 0) - mouse.sx) * km;
         mouse.sy += ((mouse.dentro ? mouse.y : 0) - mouse.sy) * km;
         v = vista(cam);
-        dobras();
+        dobras(dt);
         carregarTexturas();
         desenhar();
         avisar();
@@ -2247,6 +2499,7 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
             cv.removeEventListener('wheel', aoRolar);
             window.removeEventListener('keydown', aoTeclar);
             for (const fc of faces) if (fc.tex) gl.deleteTexture(fc.tex);
+            gl.deleteTexture(texSim);
             delete (window as unknown as { __livroRune?: unknown }).__livroRune;
         },
     };
