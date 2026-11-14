@@ -67,6 +67,18 @@ const GUIA_W = 80;
 // curva ficava sempre deitada na pilha de origem e, no fim da virada, encolhia até a lombada: pegando perto da borda de
 // fora, a página virava uma tábua reta com uma dobradiça no primeiro nó da grade (a quina passava de 60°)
 const RAIZ_VIRA = 0.55;
+// a pinça de dedos: um pedaço firme em volta do ponto pego, como dois dedos segurando a folha, que anda junto com a mão
+// (deitado na linha da lombada à mão, como na folha dura) enquanto o resto segue mole, com o arco. Sem ela, o papel em
+// volta do ponto pego seguia o arco (que chega à mão descendo, a corcova) e girava até 55° da linha da mão: o que estava
+// sob o cursor parecia escorregar. Até PINCA_R0 do ponto pego (no papel) vale só o molde; até PINCA_R1 o alvo e a mola
+// de cada ponto passam aos poucos para os do arco, sem quina na borda do pedaço. Para o lado da lombada a passagem vai
+// até PINCA_R1_DENTRO: ali o arco faz a corcova, e na passagem curta a corcova chegava à pinça com um degrau
+const PINCA_R0 = 0.05;
+const PINCA_R1 = 0.25;
+const PINCA_R1_DENTRO = 0.4;
+// a mola do molde (rad/s, crítica): bem mais dura que a do arco (com 150, o arco ainda girava o pedaço 38° a 50° da
+// linha da mão; com 300, 22° a 29°; com 900 ele fica a menos de 15°). Com 1500, a mais 3°, o papel esticava mais
+const PINCA_W = 900;
 
 const lim = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const suave = (a: number, b: number, v: number) => {
@@ -124,6 +136,10 @@ export type Papel = {
     vx: number;
     perfX: Float64Array;
     perfZ: Float64Array;
+    // a pinça: os pontos do pedaço (índice × 3), o peso do molde em cada um e a marca deles na grade
+    pLista: Int32Array;
+    pBeta: Float64Array;
+    pMarca: Uint8Array;
 };
 
 // as amostras do perfil do arco antes e depois da mão
@@ -205,6 +221,9 @@ export function criarPapel(g: [number, number], flexao: number, e: number): Pape
         vx: 0,
         perfX: new Float64Array(NP + NA + 1),
         perfZ: new Float64Array(NP + NA + 1),
+        pLista: new Int32Array(0),
+        pBeta: new Float64Array(0),
+        pMarca: new Uint8Array(N),
     };
     // a pinça: a célula do ponto pego e os pesos bilineares; as distâncias, ao longo do papel, de cada ponto até ele
     const fi = lim(g[0] / HX, 0, NX - 1 - 1e-9);
@@ -217,6 +236,20 @@ export function criarPapel(g: [number, number], flexao: number, e: number): Pape
     F.idx.set([3 * k, 3 * (k + 1), 3 * (k + NX), 3 * (k + NX + 1)]);
     F.pes.set([(1 - a) * (1 - b), a * (1 - b), (1 - a) * b, a * b]);
     for (let q = 0; q < N; q++) F.Lg[q] = Math.hypot(P[2 * q] - g[0], P[2 * q + 1] - g[1]) + 1e-4;
+    // o pedaço da pinça (sem a lombada, que é presa) e o peso do molde em cada ponto dele
+    const lista: number[] = [];
+    const beta: number[] = [];
+    for (let q = 0; q < N; q++) {
+        if (!w[q]) continue;
+        const dx = P[2 * q] - g[0];
+        const bq = 1 - suave(PINCA_R0, PINCA_R1, Math.hypot(dx < 0 ? (dx * PINCA_R1) / PINCA_R1_DENTRO : dx, P[2 * q + 1] - g[1]));
+        if (bq <= 0) continue;
+        lista.push(3 * q);
+        beta.push(bq);
+        F.pMarca[q] = 1;
+    }
+    F.pLista = Int32Array.from(lista);
+    F.pBeta = Float64Array.from(beta);
     return F;
 }
 
@@ -505,6 +538,63 @@ function paraReferencial(G: Float64Array, teta: number, out: Float64Array) {
     }
 }
 
+// a pinça num sub passo (no referencial; a fração a do quadro): cada ponto do pedaço vai para o alvo do arco misturado ao
+// do molde, com a mola misturada. O molde é o papel em repouso em volta do ponto pego, deitado no referencial (que gira
+// com a linha da lombada à mão) e posto onde o ponto pego está agora (a média da célula, que a mão leva): ele não puxa o
+// pedaço para lugar nenhum, só o mantém na forma e no giro da mão (na soltura, a mão macia continua atrasando o papel).
+// O amortecimento freia o que o pedaço anda fora do passo do ponto pego. Ela vem antes das distâncias, que acertam o que
+// o molde e o arco não combinam: depois delas (como a guia do arco), a mola dura esticava o papel na passagem para o
+// arco (no fuzz, 244 gestos acima de 10%, até 46%)
+function pincaNoPasso(F: Papel, a: number, dt: number, ns: number) {
+    const lista = F.pLista;
+    if (!lista.length) return;
+    const { y, yp, P, idx, pes } = F;
+    const beta = F.pBeta;
+    const G0 = F.gf0;
+    const G1 = F.gf1;
+    let bx = 0;
+    let by = 0;
+    let bz = 0;
+    let ux = 0;
+    let uy = 0;
+    let uz = 0;
+    for (let q = 0; q < 4; q++) {
+        const i = idx[q];
+        const pq = pes[q];
+        bx += pq * y[i];
+        by += pq * y[i + 1];
+        bz += pq * y[i + 2];
+        ux += pq * yp[i];
+        uy += pq * yp[i + 1];
+        uz += pq * yp[i + 2];
+    }
+    const g0 = F.g[0];
+    const g1 = F.g[1];
+    for (let m = 0; m < lista.length; m++) {
+        const i = lista[m];
+        const be = beta[m];
+        const W = GUIA_W + (PINCA_W - GUIA_W) * be;
+        const kq = dt * dt * W * W;
+        const cq = dt * 2 * W;
+        const dq = 1 / (1 + kq + cq);
+        // o molde do ponto: na altura do ponto pego, afastado dele como no papel
+        const mx = bx + P[(2 * i) / 3] - g0;
+        const my = by + P[(2 * i) / 3 + 1] - g1;
+        let p = G1[i] - G0[i];
+        let ga = G0[i] + p * a;
+        let pa = p / ns;
+        y[i] = (y[i] + kq * (ga + (mx - ga) * be) + cq * (yp[i] + pa + (bx - ux - pa) * be)) * dq;
+        p = G1[i + 1] - G0[i + 1];
+        ga = G0[i + 1] + p * a;
+        pa = p / ns;
+        y[i + 1] = (y[i + 1] + kq * (ga + (my - ga) * be) + cq * (yp[i + 1] + pa + (by - uy - pa) * be)) * dq;
+        p = G1[i + 2] - G0[i + 2];
+        ga = G0[i + 2] + p * a;
+        pa = p / ns;
+        y[i + 2] = (y[i + 2] + kq * (ga + (bz - ga) * be) + cq * (yp[i + 2] + pa + (bz - uz - pa) * be)) * dq;
+    }
+}
+
 // um quadro: a mão vai de T0 a T1 (no mundo da folha; null = solta) e o referencial de teta até teta1, em sub passos
 // de PASSO. A ordem das restrições é fixa: invertê-la a cada sub passo explode com muitos sub passos, e o piso já entra
 // na previsão (sem isso a gravidade afunda o papel e as distâncias viram deslizamento)
@@ -602,6 +692,7 @@ export function passoPapel(F: Papel, T0: Ponto3 | null, T1: Ponto3 | null, alfaM
                 y[i + 2] = -sn * X + c * f;
             }
         }
+        if (comArco) pincaNoPasso(F, a, dt, ns);
         // distâncias (duras)
         for (let q = 0, m = dRest.length; q < m; q++) {
             const ia = dist[2 * q];
@@ -653,12 +744,14 @@ export function passoPapel(F: Papel, T0: Ponto3 | null, T1: Ponto3 | null, alfaM
             }
         }
         // o arco (no referencial, entre a forma do começo e a do fim do quadro): cada ponto vai para o dele com a mola, e
-        // o amortecimento freia só o que ele anda fora do passo da forma (o papel acompanha a forma sem tremer em volta)
+        // o amortecimento freia só o que ele anda fora do passo da forma (o papel acompanha a forma sem tremer em volta).
+        // O pedaço da pinça já foi para o dele antes das distâncias (pincaNoPasso)
         if (comArco) {
             const G0 = F.gf0;
             const G1 = F.gf1;
+            const marca = F.pMarca;
             for (let k = 0, i = 0; k < N; k++, i += 3) {
-                if (!w[k]) continue;
+                if (!w[k] || marca[k]) continue;
                 for (let d = i; d < i + 3; d++) {
                     const p = G1[d] - G0[d];
                     y[d] = (y[d] + kk * (G0[d] + p * a) + cc * (yp[d] + p / ns)) * denArco;
