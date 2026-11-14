@@ -5686,64 +5686,52 @@ html[data-paleta='azul'] [data-clone] {
     overflow-x: clip;
 }
 
-/* 27. as variações (SecaoVariacoes.tsx): as trocas do calt, cada uma num painel com o nome e a frase no alto à
-   esquerda, a chave "Sem | Com" à direita (o mesmo sublinhado dos grupos dos caracteres, na cor do painel) e as
-   letras no meio, na Cut; ligada, cada letra trocada fica na cor do painel */
+/* 27. as variações (SecaoVariacoes.tsx): as trocas do calt, cada uma num painel. No alto à esquerda, o rótulo dos
+   cartões do desgaste (o .fx-guia-rotulo: caixa alta, 14 u, a segunda linha apagada, com as linhas de base a 40 e 58 u
+   do topo e a 30 u da borda); no canto direito, a caixinha de ligar e desligar (a .fx-alterna, agora com botões de
+   verdade); no meio, as letras na Cut, e, ligada, cada letra trocada fica na cor do painel */
 .fx-var {
     position: absolute;
     inset: 0;
 }
 .fx-var-cabeca {
     position: absolute;
-    left: calc(39 * var(--u));
-    right: calc(39 * var(--u));
-    top: calc(36 * var(--u));
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: calc(30 * var(--u));
+    left: calc(30 * var(--u));
+    right: calc(120 * var(--u));
+    top: calc(30 * var(--u));
 }
-.fx-var-nome {
+.fx-var-nome,
+.fx-var-legenda {
     margin: 0;
     font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-sub);
+    font-size: var(--t-rot);
     font-weight: 600;
+    letter-spacing: 0.03em;
     line-height: 1;
+    color: #111;
+    text-box: trim-both cap alphabetic;
 }
-.fx-var-texto {
-    margin: calc(12 * var(--u)) 0 0;
-    font-size: var(--t-sec);
-    font-weight: 500;
-    line-height: 1.3;
+.fx-var-legenda {
+    margin-top: calc(8 * var(--u));
     opacity: 0.6;
-    text-wrap: pretty;
 }
-.fx-var-chave {
-    display: flex;
-    flex: none;
-    gap: calc(24 * var(--u));
+.fx-var-janela {
+    right: calc(26 * var(--u));
+    top: calc(70 * var(--u));
 }
-.fx-var-opcao {
-    padding: 0 0 calc(8 * var(--u));
-    border: 0;
-    border-bottom: max(1px, calc(2 * var(--u))) solid transparent;
-    background: none;
-    color: var(--tinta);
-    font-family: var(--ff-ui), sans-serif;
-    font-size: var(--t-sec);
-    font-weight: 600;
-    line-height: 1;
+.fx-var-janela .fx-alterna-botao {
+    width: 100%;
+    padding: 0;
     cursor: pointer;
 }
-.fx-var-opcao[data-ativo='true'] {
-    color: var(--cor-troca);
-    border-bottom-color: currentColor;
+.fx-var-amostra {
+    font-family: var(--ff-cut);
 }
 .fx-var-letras {
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(120 * var(--u));
+    top: calc(70 * var(--u));
     bottom: calc(20 * var(--u));
     margin: 0;
     display: flex;
@@ -5754,6 +5742,9 @@ html[data-paleta='azul'] [data-clone] {
     font-size: calc(220 * var(--u));
     line-height: 1;
     white-space: nowrap;
+}
+.fx-var[data-largo] .fx-var-letras {
+    font-size: calc(205 * var(--u));
 }
 .fx-var-grupo {
     text-box: trim-both cap alphabetic;
@@ -5772,11 +5763,11 @@ html[data-paleta='azul'] [data-clone] {
     .fx-var[data-largo] .fx-var-letras {
         flex-direction: column;
         gap: 0.32em;
-        top: calc(190 * var(--u));
+        top: calc(150 * var(--u));
         font-size: calc(200 * var(--u));
     }
     .fx-var-letras {
-        top: calc(150 * var(--u));
+        top: calc(110 * var(--u));
         font-size: calc(190 * var(--u));
     }
 }
