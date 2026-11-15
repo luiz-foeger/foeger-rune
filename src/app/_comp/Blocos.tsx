@@ -8,13 +8,15 @@ import { PALAVRAS_EXTRA } from '../_lib/glifos-extra';
 import { LINHAS, type Ponto } from '../_lib/glifos';
 import { MEDIDAS } from '../_lib/medidas';
 import { pausado } from '../_lib/movimento';
+import { AMPLITUDE, moverDivisa } from '../_lib/divisa';
 
 // o bloco do Y na seção do desgaste: a letra dividida por uma divisa. À esquerda, a pedra nova (o Cut, cheio); à
 // direita, a pedra gasta (o Worn), com a hachura do que o tempo levou, na cor da letra. As quinas vão marcadas com as
 // coordenadas: do lado do Cut, no vértice; do lado da Worn, onde o contorno gasto cruza a bissetriz (da mesma conta que
 // gerou a fonte, medidas.ts; cai a menos de 1,1 unidade do contorno da Worn de verdade). Atrás, as faixas das linhas da
 // fonte; no canto, a ficha da letra; embaixo, quanto da tinta o tempo levou. A divisa vai e vem sozinha e segue o mouse
-// quando ele passa por cima, andando como uma mola sem balanço: rápida atrás do mouse, mais mole de volta ao passeio.
+// quando ele passa por cima, andando como uma mola sem balanço: rápida atrás do mouse, mais mole de volta ao passeio. O
+// A ao lado anda com ela (divisa.ts): é o par da fileira, como as lupas do R e do H com a régua do σ.
 const M = 413;
 const G = 59;
 const tam = (n: number) => n * M + (n - 1) * G;
@@ -104,10 +106,12 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
                 quadro = requestAnimationFrame(anda);
                 return;
             }
-            const solta = cfg.anda ? W * (0.5 + 0.28 * Math.sin((agora - t0) / 2600)) : W / 2;
+            const solta = cfg.anda ? W * (0.5 + AMPLITUDE * Math.sin((agora - t0) / 2600)) : W / 2;
             const w = mouse.current !== null ? 14 : 4.5;
             velocidade += (w * w * ((mouse.current ?? solta) - x) - 2 * w * velocidade) * dt;
             x = Math.min(W, Math.max(0, x + velocidade * dt));
+            // a do cartão grande leva o A junto
+            if (cfg.anda) moverDivisa(x / W);
             esq.current?.setAttribute('width', String(x));
             dir.current?.setAttribute('x', String(x));
             dir.current?.setAttribute('width', String(W - x));

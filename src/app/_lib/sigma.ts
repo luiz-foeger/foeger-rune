@@ -1,8 +1,9 @@
 import { suave } from './movimento';
 
-// o desgaste da seção do desgaste: um σ só (em unidades da fonte) para todos os cartões, como na fonte, onde a Polished
-// e a Worn saem da Cut pelo mesmo desfoque (σ 26 e σ 50). Sozinho, ele para em cada estilo e anda até o seguinte; na
-// régua, ele segue o mouse (ou o dedo, arrastando) e todos os cartões vão junto. O valor anda como uma mola sem
+// o desgaste da seção do desgaste: um σ só (em unidades da fonte) para os cartões, como na fonte, onde a Polished e a
+// Worn saem da Cut pelo mesmo desfoque (σ 26 e σ 50). Sozinho, ele para em cada estilo e anda até o seguinte; na
+// régua, ele segue o mouse (ou o dedo, arrastando) e os cartões vão junto. O A fica de fora: anda com a divisa do Y ao
+// lado (divisa.ts). O valor anda como uma mola sem
 // balanço (amortecimento crítico) atrás do alvo: rápida atrás do ponteiro, mais mole de volta ao passeio, como a divisa
 // do Y.
 const PASSEIO: { sigma: number; fica: number; anda: number }[] = [

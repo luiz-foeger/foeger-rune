@@ -1370,7 +1370,7 @@ html[data-paleta='azul'] [data-clone] {
 }
 
 /* 13. a seção do desgaste: os cartões de perto (o A com a lente de transferidor, as lupas do R, do H e do b, o g com as
-   linhas da fonte, o "Opa!" e a régua do σ que move todos) */
+   linhas da fonte, o "Opa!" e a régua do σ que move os outros; o A anda com a divisa do Y, o par dele na fileira) */
 .fx-cartao-svg {
     position: absolute;
     inset: 0;
