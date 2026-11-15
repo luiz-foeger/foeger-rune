@@ -329,7 +329,9 @@ const pagina2 = (n?: number) => (n ? String(n).padStart(2, '0') : '');
 // da de baixo (multiplicada, ela sumiria no preto). Sai a página inteira, com o papel, sempre igual (sorteio com semente) e guardada, porque a página é
 // redesenhada várias vezes no livro; numa resolução menor que a da página, para o grão ficar grosso
 type Rgb = [number, number, number];
-type Tinta = { cor: Rgb; desenho: (p: Pincel) => void };
+// modo: o de uma tinta só, quando ela não segue o do papel (nas pranchas, a tinta clara cobre o papel de cor e a escura
+// multiplica por cima dela, para o cruzamento das duas aparecer)
+type Tinta = { cor: Rgb; desenho: (p: Pincel) => void; modo?: 'multiplica' | 'cobre' };
 const RISO_L = 820;
 const RISO_A = 1230;
 const RISOGRAFIAS = new Map<string, HTMLCanvasElement>();
@@ -402,14 +404,15 @@ function risografia(chave: string, fam: Familias, papel: Rgb, tintas: Tinta[], m
         cor[i * 3 + 2] = papel[2] + fibra;
     }
     tintas.forEach((t, k) => {
-        const { pega, tom } = tintaGranulada(fam, 11 + 12 * k, t.desenho, cobre);
+        const cobreT = (t.modo ?? modo) === 'cobre';
+        const { pega, tom } = tintaGranulada(fam, 11 + 12 * k, t.desenho, cobreT);
         for (let i = 0; i < n; i++) {
-            const a = (cobre ? 0.86 : 1) * pega[i];
+            const a = (cobreT ? 0.86 : 1) * pega[i];
             if (!a) continue;
             for (let ch = 0; ch < 3; ch++) {
                 const tinta = Math.min(255, t.cor[ch] * tom[i]);
                 const j = i * 3 + ch;
-                cor[j] = cobre ? cor[j] * (1 - a) + tinta * a : cor[j] * (1 - a + (a * tinta) / 255);
+                cor[j] = cobreT ? cor[j] * (1 - a) + tinta * a : cor[j] * (1 - a + (a * tinta) / 255);
             }
         }
     });
@@ -671,13 +674,6 @@ function sumario(c: Ctx) {
             y = linhaDoSumario(c, y, { titulo: nome, pagina, destino: { pagina }, secao: true });
         }
     });
-    y = linhaDoSumario(c, y, { titulo: 'Os caracteres', pagina: EXTRAS.letras, destino: { caracteres: true } });
-    const partes: [string, number | undefined][] = [
-        ['Letras', EXTRAS.letras],
-        ['Acentos', EXTRAS.acentos],
-        ['Sinais', EXTRAS.sinais],
-    ];
-    for (const [t, pagina] of partes) y = linhaDoSumario(c, y, { titulo: t, pagina, destino: { pagina }, secao: true });
     linhaDoSumario(c, y, { titulo: 'Colofão', pagina: EXTRAS.colofao, destino: { pagina: EXTRAS.colofao } });
 }
 
@@ -782,17 +778,111 @@ function legendaDe(c: Ctx, l: [string, string], cor: string) {
 
 // ---------- os capítulos ----------
 
-// a página de cor que abre cada assunto, à esquerda da introdução (com o vegetal entre as duas): só a cor chapada, que
-// vira o fundo do vegetal quando ele é virado por cima dela. Uma cor por assunto: o ocre da Cut, o azul da Polished, o
-// verde da Worn, a terracota e, nos caracteres, o azul fundo
+// a cor de cada capítulo, a da página que o abre: o ocre da Cut, o azul da Polished, o verde da Worn, a terracota e, nas
+// runas, o preto
 const CORES_DOS_ASSUNTOS: Record<IdCapitulo, () => string> = {
     construcao: () => COR.cut,
     estilos: () => COR.polished,
     variacoes: () => COR.worn,
     tamanhos: () => COR.laranja,
+    runas: () => PRETO,
 };
+
+// as capas do livro que ficaram de fora, em página cheia e sem nenhum texto, no capítulo do título ao texto (o maior
+// tamanho em que a fonte aparece): cada uma num papel de cor, em tinta granulada de risografia (a tinta clara cobre o
+// papel de cor; a escura multiplica o que está embaixo). O ö de pedras roladas, com os pingos de duas pedras diferentes;
+// o corte do cinzel, com as retas prolongadas para fora da letra; o nome empilhado, gastando linha a linha; e o R da
+// Cut e o da Worn, enormes e cortados pela borda
+function capaDoCorte(c: Ctx) {
+    const papel = COR.cut;
+    const g = glifoDe('R', 'R');
+    const tam = 1000;
+    const esc = tam / 1000;
+    const x0 = (1000 - g.avanco * esc) / 2;
+    const base = 1150;
+    const tintas: Tinta[] = [{ cor: rgbDe(TINTA), desenho: q => contorno({ p: q, alvos: [] }, g, x0, base, tam, '#000') }];
+    c.p.imagem(risografia(`capa-corte-${papel}`, c.p.fam, rgbDe(papel), tintas), 0, 0, 1000, 1500, true);
+    // as retas dos três golpes de cinzel (o topo, a lateral da barriga e a ponta da perna), prolongadas para fora da
+    // letra como linhas de construção, nítidas por cima da tinta
+    const anel = g.pedras[0].vertices[0];
+    const p = (i: number): [number, number] => [x0 + (anel[i][0] - g.x) * esc, base + anel[i][1] * esc];
+    const golpes: [number, number, number, number][] = [
+        [4, 5, 0.5, 0.35],
+        [2, 3, 0.55, 0.45],
+        [11, 0, 0.6, 0.9],
+    ];
+    for (const [a, b, antes, depois] of golpes) {
+        const [ax, ay] = p(a);
+        const [bx, by] = p(b);
+        const [dx, dy] = [bx - ax, by - ay];
+        c.p.fio(ax - dx * antes, ay - dy * antes, bx + dx * depois, by + dy * depois, { cor: PAPEL, esp: 5 });
+    }
+}
+
+function capaEmpilhada(c: Ctx) {
+    const papel = COR.polished;
+    // cada linha num estilo, mais gasta que a de cima, e numa tinta: o azul fundo, o claro e o mais escuro da paleta
+    const linhas: [string, Familia, string][] = [
+        ['FÖEGER', 'cut', COR.roxo],
+        ['RU', 'polished', COR.claroFrio],
+        ['NE', 'worn', COR.frioEscuro],
+    ];
+    const x0 = 30;
+    const tams = linhas.map(([t, fam]) => ajustar(c, t, { fam, semCalt: true }, 940));
+    const vao = 34;
+    // a altura do bloco (o trema do Ö sobe acima das maiúsculas), centrado na página
+    const alto = 0.2 * tams[0] + tams.reduce((s, t) => s + MAIUSCULA * t, 0) + vao * (linhas.length - 1);
+    let y = (1500 - alto) / 2 + 0.2 * tams[0];
+    const tintas = linhas.map(([t, fam, cor], i): Tinta => {
+        y += MAIUSCULA * tams[i];
+        const base = y;
+        y += vao;
+        return { cor: rgbDe(cor), modo: 'cobre', desenho: q => q.texto(t, x0, base, { tam: tams[i], fam, peso: 400, cor: '#000', semCalt: true }) };
+    });
+    c.p.imagem(risografia(`capa-empilhada-${papel}-${linhas.map(l => l[2]).join('-')}`, c.p.fam, rgbDe(papel), tintas), 0, 0, 1000, 1500, true);
+}
+
+function capaDoUmlaut(c: Ctx) {
+    const papel = COR.worn;
+    const tam = 1300;
+    const fam: Familia = 'worn';
+    const w = largura(c, 'ö', { tam, fam, semCalt: true });
+    const x0 = 500 - w / 2;
+    const base = 1320;
+    // o corte entre os pingos e o corpo da letra (os pingos começam um pouco acima da altura do x) e o meio, entre os
+    // dois pingos: o corpo, o pingo da esquerda e o da direita, cada um na sua tinta
+    const yCorte = base - 0.565 * tam;
+    const parte = (cor: string, x: number, y: number, l: number, a: number): Tinta => ({
+        cor: rgbDe(cor),
+        modo: 'cobre',
+        desenho: q => q.recortar(x, y, l, a, () => q.texto('ö', x0, base, { tam, fam, peso: 400, cor: '#000', semCalt: true })),
+    });
+    const tintas = [parte(CREME, 0, yCorte, 1000, 1500 - yCorte), parte(COR.cut, 0, 0, 500, yCorte), parte(COR.wornEscuro, 500, 0, 500, yCorte)];
+    c.p.imagem(risografia(`capa-umlaut-${papel}-${COR.cut}-${COR.wornEscuro}`, c.p.fam, rgbDe(papel), tintas), 0, 0, 1000, 1500, true);
+}
+
+function capaSobreposta(c: Ctx) {
+    const papel = COR.laranja;
+    const tam = 1450;
+    // o R da Cut em creme, cobrindo o papel, e o da Worn em azul por cima, multiplicando: onde passa sobre o creme ele
+    // fica azul, e sobre a terracota, um castanho fundo; os dois cortados pela borda
+    const tintas: Tinta[] = [
+        { cor: rgbDe(CREME), modo: 'cobre', desenho: q => q.texto('R', -40, 1330, { tam, fam: 'cut', peso: 400, cor: '#000', semCalt: true }) },
+        { cor: rgbDe(COR.polished), modo: 'multiplica', desenho: q => q.texto('R', 250, 1560, { tam, fam: 'worn', peso: 400, cor: '#000', semCalt: true }) },
+    ];
+    c.p.imagem(risografia(`capa-sobreposta-${papel}-${COR.polished}`, c.p.fam, rgbDe(papel), tintas), 0, 0, 1000, 1500, true);
+}
+
+// as pranchas das páginas de cor: um desenho de página cheia, sem texto, feito para o assunto de cada capítulo, no papel
+// da cor dele. A página de cor vira o fundo do vegetal quando ele é virado por cima dela, como o papel de seda que
+// protege a gravura nos livros antigos
+const PRANCHAS_DE_COR: Partial<Record<IdCapitulo, (c: Ctx) => void>> = {};
+
+// a página de cor que abre cada capítulo, à esquerda da introdução (com o vegetal entre as duas), com a prancha dele
 function paginaDeCor(c: Ctx, cap: number) {
-    fundo(c, cap < CAPITULOS.length ? CORES_DOS_ASSUNTOS[CAPITULOS[cap].id]() : COR.roxo);
+    const id = CAPITULOS[cap].id;
+    fundo(c, CORES_DOS_ASSUNTOS[id]());
+    PRANCHAS_DE_COR[id]?.(c);
 }
 
 // a introdução do capítulo, na página da direita, embaixo do vegetal, como as dos livros de verdade. No alto, o número
@@ -1534,16 +1624,22 @@ const MATERIAS: Record<IdCapitulo, ((c: Ctx, cap: number, num?: number) => void)
     ],
     estilos: [(c, cap, num) => colagem(c, cap, 0, num), (c, cap, num) => colagem(c, cap, 1, num), (c, cap, num) => visaoGeral(c, cap, 0, num), (c, cap, num) => visaoGeral(c, cap, 1, num), desgasteDePerto, noAlfabetoInteiro],
     variacoes: [(c, cap, num) => quatroS(c, cap, 0, num), (c, cap, num) => quatroS(c, cap, 1, num), asTrocas, trocasEmTexto, quatroCortesDoE, trocaNosTresEstilos],
+    // do maior tamanho ao menor: as capas que ficaram de fora, em página cheia (a 2, a 5, a 7 e a 8 da folha das
+    // descartadas), o cartaz, as palavras e os números, e os exemplos de texto
     tamanhos: [
+        c => capaDoUmlaut(c),
+        c => capaDoCorte(c),
+        c => capaEmpilhada(c),
+        c => capaSobreposta(c),
         (c, cap, num) => ploc(c, cap, 0, num),
         (c, cap, num) => ploc(c, cap, 1, num),
         (c, cap, num) => palavrasENumeros(c, cap, num, 'cut', 'Cut'),
         (c, cap, num) => palavrasENumeros(c, cap, num, 'worn', 'Worn'),
-        acentosEmDestaque,
-        fracoesESinais,
         exemplosEsq,
         exemplosDir,
     ],
+    // os caracteres, cada grupo numa página: as maiúsculas, as minúsculas, os acentos e os sinais
+    runas: [(c, cap, num) => letras(c, 0, num), (c, cap, num) => letras(c, 1, num), (c, cap, num) => acentos(c, num), (c, cap, num) => sinais(c, num)],
 };
 
 // ---------- os papéis vegetais ----------
@@ -1689,17 +1785,18 @@ function tabelasDasLetras() {
     ];
 }
 
-// as letras, embaixo do vegetal do gabarito
-function letras(c: Ctx, num?: number) {
+// as letras, uma página para as maiúsculas e outra para as minúsculas, em casas maiores (até as pedras das runas)
+function letras(c: Ctx, qual: 0 | 1, num?: number) {
+    const t = tabelasDasLetras()[qual];
     fundo(c, PAPEL);
-    cabeca(c, ['Föeger Rune', 'Cut'], ['Os caracteres', 'Letras']);
-    for (const t of tabelasDasLetras()) tabela(c, t.titulo, t.chars, t.y, { colunas: LETRAS.colunas, tam: LETRAS.tam, alto: LADO_LETRA });
-    rodape(c, num, 'Os caracteres');
+    cabeca(c, ['Föeger Rune', 'Cut'], ['As runas', qual === 0 ? 'Maiúsculas' : 'Minúsculas']);
+    tabela(c, t.titulo, t.chars, 262, { colunas: 6, tam: 100, alto: 944 / 6 });
+    rodape(c, num, qual === 0 ? LIVRO.titulo : 'As runas');
 }
 
 function acentos(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    cabeca(c, ['Föeger Rune', 'Cut'], ['Os caracteres', 'Acentos']);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['As runas', 'Acentos']);
     const y = tabela(c, 'Maiúsculas', 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŒŠŸŽ', 262, { colunas: 10, tam: 58, alto: 106 });
     tabela(c, 'Minúsculas e outras', 'àáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿıœšžßƒªºµ', y + 60, { colunas: 10, tam: 58, alto: 106 });
     rodape(c, num, LIVRO.titulo);
@@ -1707,11 +1804,11 @@ function acentos(c: Ctx, num?: number) {
 
 function sinais(c: Ctx, num?: number) {
     fundo(c, PAPEL);
-    cabeca(c, ['Föeger Rune', 'Cut'], ['Os caracteres', 'Sinais']);
+    cabeca(c, ['Föeger Rune', 'Cut'], ['As runas', 'Sinais']);
     let y = tabela(c, 'Números e frações', '0123456789¹²³¼½¾', 262, { colunas: 8, tam: 60, alto: 110 });
     y = tabela(c, 'Pontuação', '.,:;…!¡?¿\'"‘’‚“”„«»‹›()[]{}/\\|¦-–—_•·¶§†‡#&@*%‰', y + 60, { alto: 78, tam: 44 });
     tabela(c, 'Símbolos', '$¢£¤¥€+−±×÷=≠≈<>≤≥∞¬^~˜¨´¸`ˆ©®™№°←↑→↓★♥✓', y + 60, { alto: 78, tam: 44 });
-    rodape(c, num, 'Os caracteres');
+    rodape(c, num, 'As runas');
 }
 
 // o colofão, a última página impressa, como nos livros: o selo da editora e, embaixo, como o livro foi feito, num
@@ -1776,15 +1873,6 @@ export function desenharPagina(p: Pincel, pg: Pagina, num?: number, destaque = -
             break;
         case 'vegetal':
             vegetal(c, pg.v);
-            break;
-        case 'letras':
-            letras(c, num);
-            break;
-        case 'acentos':
-            acentos(c, num);
-            break;
-        case 'sinais':
-            sinais(c, num);
             break;
         case 'colofao':
             colofao(c);

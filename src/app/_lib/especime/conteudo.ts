@@ -1,15 +1,18 @@
 // o conteúdo do livro da página: o espécime da Föeger Rune, na ordem dos livros de verdade e contado como a vida de uma
 // pedra, a partir da logo da Föeger, de onde a fonte nasceu: a capa com a guarda lisa por dentro; as páginas de
 // abertura (a falsa folha de rosto, o frontispício, a folha de rosto, os créditos no verso dela, o sumário e, numa
-// dupla, a logo peça por peça e a apresentação); os quatro capítulos (como as letras foram construídas, os três estilos,
-// as variações e a fonte do título ao texto); os caracteres; o colofão; e a contracapa, também com a guarda por dentro.
-// Cada assunto abre numa dupla: à esquerda, uma página de cor chapada com letras enormes; à direita, a introdução; e,
-// entre as duas, um papel vegetal impresso com o desenho de construção do assunto. As matérias seguem as páginas dos
+// dupla, a logo peça por peça e a apresentação); os cinco capítulos, um para cada cor (como as letras foram construídas,
+// os três estilos, as variações, a fonte do título ao texto e, por último, no preto, as runas: os caracteres, cada um na
+// sua pedra); o colofão; e a contracapa, também com a guarda por dentro.
+// Cada capítulo abre numa dupla: à esquerda, a página da cor dele, com uma prancha de página cheia, sem texto, desenhada
+// para o assunto; à direita, a introdução; e, entre as duas, um papel vegetal impresso com o desenho de construção do
+// assunto. As capas do livro que ficaram de fora entram em página cheia no capítulo do título ao texto, o maior
+// tamanho em que a fonte aparece. As matérias seguem as páginas dos
 // espécimes de fundição (a referência é o livro da Studio Feixen): uma dupla por assunto, com a letra grande, caixas
 // com o nome do que mostram e os números de verdade da fonte. Os números e os fatos são os da prévia de 05/11 (311 glifos em cada estilo, as larguras de cada estilo, o revezamento das minúsculas,
 // o L do meio e o f do começo).
 
-export type IdCapitulo = 'construcao' | 'estilos' | 'variacoes' | 'tamanhos';
+export type IdCapitulo = 'construcao' | 'estilos' | 'variacoes' | 'tamanhos' | 'runas';
 export type Capitulo = {
     // o id do capítulo (as páginas de cada um são achadas por ele, não pela posição)
     id: IdCapitulo;
@@ -148,12 +151,31 @@ export const CAPITULOS: Capitulo[] = [
             'Em corpo de texto, o desenho vira textura, pesada e irregular, que pede frases curtas e espaço entre as linhas.',
             'Os acentos são pedras à parte, pousadas por cima, e as frações, os números elevados e os símbolos do dia a dia vêm no mesmo traço.',
         ],
-        materias: 8,
+        materias: 10,
         secoes: [
-            { nome: 'Em corpo de cartaz', k: 1 },
-            { nome: 'Palavras e números', k: 3 },
-            { nome: 'Acentos, frações e sinais', k: 5, sumario: true },
-            { nome: 'Exemplos de texto', k: 7, sumario: true },
+            { nome: 'Na capa', k: 1, sumario: true },
+            { nome: 'Em corpo de cartaz', k: 5 },
+            { nome: 'Palavras e números', k: 7 },
+            { nome: 'Exemplos de texto', k: 9, sumario: true },
+        ],
+    },
+    {
+        id: 'runas',
+        n: 5,
+        titulo: 'As runas',
+        epigrafe: 'Uma pedra para cada letra.',
+        visaoGeral: 'As runas eram letras gravadas em pedra. Aqui, cada caractere da Rune ganha a sua: as maiúsculas e as minúsculas, os acentos, os números e os sinais. São 311 glifos em cada estilo.',
+        corpo: [
+            'Cada pedra leva uma letra só, gravada no meio, como nas runas antigas. A letra é a da Cut, a do corte do cinzel.',
+            'Os acentos são pedras à parte, pousadas por cima da letra; por isso cada letra acentuada tem a sua pedra.',
+            'Os números, a pontuação e os símbolos vêm no mesmo traço, com o mesmo corte nas quinas.',
+        ],
+        materias: 4,
+        secoes: [
+            { nome: 'Maiúsculas', k: 1, sumario: true },
+            { nome: 'Minúsculas', k: 2, sumario: true },
+            { nome: 'Acentos', k: 3, sumario: true },
+            { nome: 'Sinais', k: 4, sumario: true },
         ],
     },
 ];
@@ -184,9 +206,6 @@ export type Pagina =
     | { tipo: 'abertura'; cap: number }
     | { tipo: 'materia'; cap: number; k: number }
     | { tipo: 'vegetal'; v: number }
-    | { tipo: 'letras' }
-    | { tipo: 'acentos' }
-    | { tipo: 'sinais' }
     | { tipo: 'colofao' };
 
 // a cor do papel vegetal de uma página (as outras não têm)
@@ -194,9 +213,9 @@ export const tintaDoVegetal = (p: Pagina) => (p.tipo === 'vegetal' ? VEGETAIS[p.
 
 export type Folha = { frente: Pagina; verso: Pagina; tipo: 'capa' | 'papel' | 'vegetal' | 'contracapa'; numFrente?: number; numVerso?: number };
 
-// as páginas que o sumário e os créditos precisam saber (preenchidas na montagem): a apresentação, as três dos
-// caracteres, o colofão e o total de páginas numeradas, para a ficha
-export const EXTRAS: { apresentacao?: number; letras?: number; acentos?: number; sinais?: number; colofao?: number; paginas?: number } = {};
+// as páginas que o sumário e os créditos precisam saber (preenchidas na montagem): a apresentação, o colofão e o total
+// de páginas numeradas, para a ficha
+export const EXTRAS: { apresentacao?: number; colofao?: number; paginas?: number } = {};
 
 export function montarFolhas(): Folha[] {
     // as páginas na ordem de leitura, com os vegetais onde eles entram (sempre entre duas folhas: depois de uma página da
@@ -214,7 +233,7 @@ export function montarFolhas(): Folha[] {
         seq.push({ tipo: 'cor', cap }, { vegetal: cap }, { tipo: 'abertura', cap });
         for (let k = 0; k < ch.materias; k++) seq.push({ tipo: 'materia', cap, k });
     });
-    seq.push({ tipo: 'cor', cap: CAPITULOS.length }, { vegetal: CAPITULOS.length }, { tipo: 'letras' }, { tipo: 'acentos' }, { tipo: 'sinais' }, { tipo: 'colofao' });
+    seq.push({ tipo: 'colofao' });
     const f: Folha[] = [{ tipo: 'capa', frente: { tipo: 'capa' }, verso: { tipo: 'guarda' } }];
     let frente: Pagina | null = null;
     for (const x of seq) {
@@ -245,9 +264,6 @@ export function montarFolhas(): Folha[] {
         c.paginas = [ini, ini + 1 + c.materias];
     });
     EXTRAS.apresentacao = pagina('apresentacao', 'verso');
-    EXTRAS.letras = pagina('letras', 'frente');
-    EXTRAS.acentos = pagina('acentos', 'verso');
-    EXTRAS.sinais = pagina('sinais', 'frente');
     EXTRAS.colofao = pagina('colofao', 'verso');
     EXTRAS.paginas = n - 1;
     return f;
@@ -267,9 +283,10 @@ export function contagemDaPagina(folhas: Folha[], n: number) {
     return folhas[i].numVerso === n ? i + 1 : i;
 }
 
-// a página das letras, a primeira dos caracteres (o sumário também leva a ela), com o vegetal do gabarito já virado
+// a primeira dupla dos caracteres, as maiúsculas e as minúsculas das runas (a página logo depois da introdução delas)
 export function folhaDosCaracteres(folhas: Folha[]) {
-    return folhas.findIndex(x => x.frente.tipo === 'letras');
+    const runas = CAPITULOS.find(c => c.id === 'runas')?.paginas;
+    return runas ? contagemDaPagina(folhas, runas[0] + 2) : 0;
 }
 
 // a ordem do PDF: capa, as páginas numeradas (com o papel vegetal no lugar dele) e a contracapa
