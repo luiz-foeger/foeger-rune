@@ -11,9 +11,8 @@ export const ESTILOS: { id: Estilo; nome: string; familia: string }[] = [
 // o "Rounded Redefined" da Ease: a ideia da fonte, a pedra que se gasta
 export const FRASE = 'Pedra que se gasta';
 
-// o "Seven* Styles": a palavra digitada com a letra pendurada; o asterisco entra no fim, depois da primeira palavra
-// sem asterisco nem nota (o asterisco vinha do 'Seven* Styles' da Feixen)
-export const TITULO_ESTILOS = { texto: 'Três Estilos', asteriscoDepois: null as number | null, nota: null as string | null };
+// o título dos estilos (o "Seven* Styles" da Ease, sem o asterisco), solto e sem nota
+export const TITULO_ESTILOS = { texto: 'Três Estilos', nota: null };
 
 // o testador: a cor de cada estilo (a da faixa dele, mais adiante na página), o parágrafo (o "Hi, my name is George…")
 // e o humor de cada um, de 0 a 100
@@ -47,7 +46,7 @@ export const TITULO_VARIACOES = { texto: 'Variações', nota: null };
 export const TITULO_ESCREVA = { texto: 'Playground', nota: null };
 // o título da seção dos caracteres, solto (na fonte de texto, como o dos estilos), com a nota embaixo
 export const TITULO_CARACTERES = { texto: 'Caracteres', nota: 'Números, acentos, pontuação e símbolos: 177 em cada estilo' };
-// o título do livro, solto como os outros (na fonte de texto, centrado), sem o asterisco e a nota
+// o título do livro, solto e sem nota
 export const TITULO_LIVRO = { texto: 'O Livro', nota: null };
 
 // a segunda página: a fonte em uso (as peças das faixas) e o playground. Os endereços (as páginas, as âncoras e o PDF)

@@ -5,7 +5,7 @@ import Inspetor from '../_comp/Inspetor';
 import { Escura, LetrasRune, TextoVariacoes } from '../_comp/Livro';
 import { CaixinhasCut, CaixinhasPolished, CaixinhasWorn, CartazCut, DiscoWorn, LivroPolished } from '../_comp/Pratica';
 import Rodape from '../_comp/Rodape';
-import TituloEstilos from '../_comp/TituloEstilos';
+import Titulo from '../_comp/Titulo';
 import { Cabecalho } from '../_comp/Topo';
 import { PAGINA_PRATICA, TITULO_ESCREVA } from '../_lib/conteudo';
 
@@ -21,7 +21,7 @@ export default function NaPratica() {
         <>
             <Cabecalho />
             <main className="fx-corpo fx-corpo-pagina">
-                <TituloEstilos texto={PAGINA_PRATICA.titulo} asteriscoDepois={null} nota={null} livre />
+                <Titulo texto={PAGINA_PRATICA.titulo} />
                 {/* as faixas coloridas, uma por estilo, coladas umas nas outras: a frase que corre, a peça grande e as
                     caixinhas de texto pequeno (Pratica.tsx) */}
                 <div className="fx-faixas">
@@ -48,7 +48,7 @@ export default function NaPratica() {
                 {/* passando o mouse num texto das faixas: a fonte e o tamanho dele */}
                 <Inspetor escopo=".fx-faixas" />
                 {/* o playground: o editor para testar a fonte (os estilos, os tamanhos, as cores, os efeitos e o desgaste) */}
-                <TituloEstilos texto={TITULO_ESCREVA.texto} asteriscoDepois={null} nota={TITULO_ESCREVA.nota} ancora="playground" livre />
+                <Titulo texto={TITULO_ESCREVA.texto} nota={TITULO_ESCREVA.nota} ancora="playground" />
                 <Editor />
             </main>
             <Rodape />

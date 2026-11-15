@@ -370,22 +370,8 @@ html[data-trocando] [data-visivel] > .fx-mascara > .fx-mascara-linha {
     display: block;
 }
 
-/* 5. os títulos das partes ("Três* Estilos", parado, com o asterisco pequeno e alto) e o testador com o seletor e o
-   humor */
-.fx-titulo-estilos {
-    font-family: var(--ff-cut), sans-serif;
-    font-size: calc(152 * var(--u));
-    line-height: 1;
-    text-box: trim-both cap alphabetic;
-    white-space: pre;
-    min-height: calc(115 * var(--u));
-}
-.fx-asterisco {
-    display: inline-block;
-    font-size: 0.55em;
-    transform: translateY(-0.62em);
-}
-/* o título livre (fora do painel): na fonte de texto, centrado (com nota, ela vai embaixo) */
+/* 5. os títulos das partes e o testador com o seletor e o humor */
+/* o título: solto (fora dos painéis), na fonte de texto, centrado (com nota, ela vai embaixo) */
 .fx-cabeca {
     display: flex;
     flex-direction: column;
@@ -419,15 +405,6 @@ html[data-trocando] [data-visivel] > .fx-mascara > .fx-mascara-linha {
     .fx-cabeca-titulo {
         font-size: calc(110 * var(--u));
     }
-}
-.fx-nota {
-    position: absolute;
-    right: calc(37 * var(--u));
-    bottom: calc(22 * var(--u));
-    margin: 0;
-    font-size: var(--t-sec);
-    font-weight: 600;
-    line-height: 1;
 }
 
 .fx-testador {
@@ -922,15 +899,6 @@ html:has([data-clone]) {
         top: calc(-18 * var(--u));
         width: calc(7 * var(--u));
         height: calc(103 * var(--u));
-    }
-    .fx-titulo-estilos {
-        font-size: calc(100 * var(--u));
-        min-height: calc(76 * var(--u));
-    }
-    .fx-nota {
-        right: calc(24 * var(--u));
-        bottom: calc(18 * var(--u));
-        font-size: 9px;
     }
 
     /* o testador: o seletor à direita, o parágrafo embaixo dele e o humor em barras deitadas */

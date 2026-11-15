@@ -8,8 +8,8 @@ import Testador from './_comp/Testador';
 import { Cabecalho } from './_comp/Topo';
 import { HeroPedras } from './_comp/HeroPedras';
 import Rodape from './_comp/Rodape';
-import TituloEstilos from './_comp/TituloEstilos';
-import { TITULO_CARACTERES, TITULO_LIVRO, TITULO_VARIACOES } from './_lib/conteudo';
+import Titulo from './_comp/Titulo';
+import { TITULO_CARACTERES, TITULO_ESTILOS, TITULO_LIVRO, TITULO_VARIACOES } from './_lib/conteudo';
 
 // a home da Föeger Rune, a fonte e a ideia: o cabeçalho preso no alto e o hero da palavra Rune; o alfabeto com os três
 // desgastes e a frase digitada; a seção do desgaste (os cartões de perto, movidos pelo mesmo σ); o "Três Estilos" e o
@@ -27,18 +27,18 @@ export default function Pagina() {
                 <Digitada />
                 {/* a seção do desgaste: os cartões de perto, todos movidos pelo mesmo σ */}
                 <SecaoDesgaste />
-                <TituloEstilos ancora="styles" livre />
+                <Titulo texto={TITULO_ESTILOS.texto} nota={TITULO_ESTILOS.nota} ancora="styles" />
                 {/* a âncora do testador (#tester), para link direto */}
                 <div id="tester" />
                 <Testador />
                 {/* os caracteres além do alfabeto: os números, o mostruário (acentos, pontuação e símbolos) e os símbolos se gastando */}
-                <TituloEstilos texto={TITULO_CARACTERES.texto} asteriscoDepois={null} nota={TITULO_CARACTERES.nota} ancora="characters" livre />
+                <Titulo texto={TITULO_CARACTERES.texto} nota={TITULO_CARACTERES.nota} ancora="characters" />
                 <Caracteres />
                 {/* as variações: as trocas que a fonte faz sozinha (as letras repetidas, o L do meio e o f do começo) */}
-                <TituloEstilos texto={TITULO_VARIACOES.texto} asteriscoDepois={null} nota={TITULO_VARIACOES.nota} ancora="variations" livre />
+                <Titulo texto={TITULO_VARIACOES.texto} nota={TITULO_VARIACOES.nota} ancora="variations" />
                 <SecaoVariacoes />
                 {/* o livro: o espécime para folhear (o livro realista do clone-tantan) e o PDF para baixar */}
-                <TituloEstilos texto={TITULO_LIVRO.texto} asteriscoDepois={null} nota={TITULO_LIVRO.nota} ancora="book" livre />
+                <Titulo texto={TITULO_LIVRO.texto} nota={TITULO_LIVRO.nota} ancora="book" />
                 <SecaoLivro />
             </main>
             <Rodape />
