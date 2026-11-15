@@ -71,20 +71,25 @@ export default function SecaoLivro() {
                 {/* sem tela de carregamento: o livro aparece quando fica pronto; só um erro, se houver, ocupa o lugar dele */}
                 {erro && <div className="fx-livro-carregando">{erro}</div>}
             </section>
+            {/* os botões de baixo, os da versão antiga da página (portfolio: foeger-sans/_components/livro/Livro.tsx):
+                as setas em círculo, as páginas abertas e a pílula preta do PDF. As setas são a ↑ da Inter Tight
+                girada (o recorte latino dela não tem ← e →; é a mesma seta do "Baixar ↓" e do ↗ do rodapé) */}
             <div className="fx-livro-controles">
                 <button type="button" className="fx-livro-seta" onClick={() => controle.current?.virar(-1)} disabled={!pronto || estado.inicio} aria-label="Página anterior">
-                    ←
+                    <span className="fx-livro-seta-glifo" data-lado="esquerda" aria-hidden>
+                        ↑
+                    </span>
                 </button>
                 <span className="fx-livro-paginas" aria-live="polite">
                     {estado.rotulo}
                 </span>
                 <button type="button" className="fx-livro-seta" onClick={() => controle.current?.virar(1)} disabled={!pronto || estado.fim} aria-label="Próxima página">
-                    →
+                    <span className="fx-livro-seta-glifo" data-lado="direita" aria-hidden>
+                        ↑
+                    </span>
                 </button>
                 <a className="fx-livro-baixar" href={PDF} download>
-                    <i />
-                    <span>Baixar o PDF ↓</span>
-                    <i />
+                    Baixar o PDF ↓
                 </a>
             </div>
         </>

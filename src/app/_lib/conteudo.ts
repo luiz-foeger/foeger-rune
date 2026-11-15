@@ -54,31 +54,29 @@ export const TITULO_LIVRO = { texto: 'O Livro', nota: null };
 // ficam sempre em inglês, numa palavra só: sem acento e curtos
 export const PAGINA_PRATICA = { caminho: '/showcase', titulo: 'Na prática' };
 
-// o cabeçalho, igual ao do site principal: o menu (as seções das duas páginas, pelas âncoras; sem página, é a home),
-// a logo da Föeger no meio e, à direita, as duas páginas (a atual marcada) e o PDF, no lugar do PT/EN de lá
+// o cabeçalho: à esquerda as duas páginas (a atual marcada), a logo da Föeger no meio e, à direita, o "Baixar" da
+// fonte (os arquivos dos três estilos num zip; o PDF do espécime fica no botão do livro)
 export const CABECALHO: {
-    menu: string;
-    fechar: string;
-    itens: { texto: string; alvo: string; pagina?: string }[];
     paginas: { texto: string; href: string }[];
-    acao: { texto: string; href: string };
+    acao: { texto: string; rotulo: string; href: string };
 } = {
-    menu: 'Menu',
-    fechar: 'Fechar',
-    itens: [
-        { texto: 'Alfabeto', alvo: 'alphabet' },
-        { texto: 'Estilos', alvo: 'styles' },
-        { texto: 'Testar', alvo: 'tester' },
-        { texto: 'Caracteres', alvo: 'characters' },
-        { texto: 'Variações', alvo: 'variations' },
-        { texto: 'O Livro', alvo: 'book' },
-        { texto: 'Na prática', alvo: '', pagina: PAGINA_PRATICA.caminho },
-        { texto: 'Playground', alvo: 'playground', pagina: PAGINA_PRATICA.caminho },
-    ],
     paginas: [
         { texto: 'A fonte', href: '/' },
         { texto: PAGINA_PRATICA.titulo, href: PAGINA_PRATICA.caminho },
     ],
-    acao: { texto: 'Baixar', href: '/foeger-rune-specimen.pdf' },
+    acao: { texto: 'Baixar', rotulo: 'Baixar a fonte', href: '/foeger-rune.zip' },
+};
+
+// o rodapé das duas páginas: o e-mail, as redes do site principal (portfolio: _ideias/nova/_lib/textos.ts, LINKS) e o
+// crédito do colofão do livro, que leva ao site principal
+export const RODAPE = {
+    email: 'foegerluiz@gmail.com',
+    redes: [
+        { texto: 'Instagram', href: 'https://instagram.com/foeger.dev' },
+        { texto: 'LinkedIn', href: 'https://www.linkedin.com/in/luizfoeger' },
+        { texto: 'Behance', href: 'https://behance.net/foeger' },
+        { texto: 'GitHub', href: 'https://github.com/luiz-foeger' },
+    ],
+    credito: { texto: '© 2026 Luiz Föeger', href: 'https://luizfoeger.vercel.app' },
 };
 export const HERO = { legenda: ['Föeger Rune', 'Desenhada por Luiz Föeger'] };

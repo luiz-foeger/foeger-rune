@@ -80,7 +80,7 @@ export default function Painel({
     aberto?: boolean; // as seções sem régua: sem moldura, réguas nem letras, e a trama um pedaço que some nas bordas (como a do livro)
     nu?: boolean; // um objeto solto na página (o cartaz colado, o ingresso): sem moldura, réguas, letras nem trama
     celular?: { colunas: number; linhas: number }; // o tamanho no celular, quando não é o padrão
-    ancora?: string; // o id, para o menu do cabeçalho levar até o painel
+    ancora?: string; // o id da seção (a âncora no endereço)
     entrada?: boolean; // sobe e acende ao chegar na tela; sem ela, o painel já está pronto (o alfabeto, que a página traz por cima do hero)
 }) {
     const ref = useRef<HTMLElement>(null);

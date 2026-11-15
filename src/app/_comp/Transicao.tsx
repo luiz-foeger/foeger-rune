@@ -10,7 +10,7 @@ import { useLenis } from 'lenis/react';
 // cobre tudo em ~0,9 s (power2.inOut). Por baixo, a página desce, gira ~2,5°, cresce até 1,3× e desbota. Com a tela
 // coberta, a rota troca. Na saída, em vez do esmaecer até o fundo da Namma (que no preto passava por um cinza sujo),
 // a cortina sobe como a do menu dela ao fechar: a borda inclinada para o outro lado, presa à direita, e a página nova
-// se endireita por baixo (girada ao contrário, mais baixa e um pouco maior). A cortina é preta, a mesma do menu.
+// se endireita por baixo (girada ao contrário, mais baixa e um pouco maior). A cortina é preta (#111111).
 // Na troca, o html leva data-trocando: os títulos e os painéis da página nova esperam a cortina subir para entrar.
 // Fica no layout, por fora do [data-clone] (que tem container-type e prenderia o fixed), e por isso sobrevive à troca
 // de rota: o palco (a página) e a cortina são os mesmos antes e depois. Com movimento reduzido, a troca é direta.
@@ -67,7 +67,7 @@ const subindo = (k: number, W: number, H: number) => {
 const trocando = (sim: boolean) => document.documentElement.toggleAttribute('data-trocando', sim);
 
 const Contexto = createContext<(href: string) => void>(() => {});
-// a navegação com a cortina: os links das páginas, o menu e a logo usam esta função
+// a navegação com a cortina: os links das páginas e a logo usam esta função
 export const useNavegar = () => useContext(Contexto);
 
 export default function Transicao({ children }: { children: ReactNode }) {

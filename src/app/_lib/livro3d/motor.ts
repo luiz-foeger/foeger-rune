@@ -2425,11 +2425,6 @@ function montar(gl: WebGL2RenderingContext, cv: HTMLCanvasElement, fam: Familias
     let parouEm = 0;
     const quadro = (t: number) => {
         raf = requestAnimationFrame(quadro);
-        // com o menu do cabeçalho aberto, a cortina cobre o livro: não desenha (o tempo segue, as viradas continuam)
-        if (document.documentElement.hasAttribute('data-menu-aberto')) {
-            antes = t;
-            return;
-        }
         const dt = Math.min(0.05, Math.max(0, (t - antes) / 1000));
         antes = t;
         agora = (t - inicio - pausado) / 1000;

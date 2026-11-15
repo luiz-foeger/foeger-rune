@@ -7,6 +7,7 @@ import SecaoVariacoes from './_comp/SecaoVariacoes';
 import Testador from './_comp/Testador';
 import { Cabecalho } from './_comp/Topo';
 import { HeroPedras } from './_comp/HeroPedras';
+import Rodape from './_comp/Rodape';
 import TituloEstilos from './_comp/TituloEstilos';
 import { TITULO_CARACTERES, TITULO_LIVRO, TITULO_VARIACOES } from './_lib/conteudo';
 
@@ -14,7 +15,7 @@ import { TITULO_CARACTERES, TITULO_LIVRO, TITULO_VARIACOES } from './_lib/conteu
 // desgastes e a frase digitada; a seção do desgaste (os cartões de perto, movidos pelo mesmo σ); o "Três Estilos" e o
 // testador (as faixas de cada estilo com as peças em uso, a seção escura e o playground ficam na página "Na prática",
 // com o link no cabeçalho); os caracteres; as variações; e, no fim, o livro do espécime e o PDF
-// para baixar. Parte do clone da Studio Feixen Fonts (guardado em C:\pessoal\clone-feixen), sem as seções que mais
+// para baixar, com o rodapé de uma linha embaixo. Parte do clone da Studio Feixen Fonts (guardado em C:\pessoal\clone-feixen), sem as seções que mais
 // tinham a cara dela: os cartões das quinas de fora e de dentro, a troca de palavra e as letras soltas com o botão.
 export default function Pagina() {
     return (
@@ -27,7 +28,7 @@ export default function Pagina() {
                 {/* a seção do desgaste: os cartões de perto, todos movidos pelo mesmo σ */}
                 <SecaoDesgaste />
                 <TituloEstilos ancora="styles" livre />
-                {/* a âncora do "Testar" do menu */}
+                {/* a âncora do testador (#tester), para link direto */}
                 <div id="tester" />
                 <Testador />
                 {/* os caracteres além do alfabeto: os números, o mostruário (acentos, pontuação e símbolos) e os símbolos se gastando */}
@@ -40,6 +41,7 @@ export default function Pagina() {
                 <TituloEstilos texto={TITULO_LIVRO.texto} asteriscoDepois={null} nota={TITULO_LIVRO.nota} ancora="book" livre />
                 <SecaoLivro />
             </main>
+            <Rodape />
         </>
     );
 }

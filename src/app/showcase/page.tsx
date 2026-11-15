@@ -4,6 +4,7 @@ import { Faixa, Manchete } from '../_comp/Faixa';
 import Inspetor from '../_comp/Inspetor';
 import { Escura, LetrasRune, TextoVariacoes } from '../_comp/Livro';
 import { CaixinhasCut, CaixinhasPolished, CaixinhasWorn, CartazCut, DiscoWorn, LivroPolished } from '../_comp/Pratica';
+import Rodape from '../_comp/Rodape';
 import TituloEstilos from '../_comp/TituloEstilos';
 import { Cabecalho } from '../_comp/Topo';
 import { PAGINA_PRATICA, TITULO_ESCREVA } from '../_lib/conteudo';
@@ -13,8 +14,8 @@ export const metadata: Metadata = { title: `${PAGINA_PRATICA.titulo} · Föeger 
 // a página "Na prática": a Föeger Rune onde ela seria usada, uma faixa colorida por estilo, aberta pela frase que corre
 // e com as peças de verdade (no Cut, os cartazes colados na parede e as caixinhas do festival; no Polished, as capas
 // dos livros e as do livro infantil; no Worn, o disco e as do LP), fechada pela seção escura (o RUNE e as variações);
-// o inspetor de fonte e tamanho por cima das faixas; e, no fim, o playground para testar a fonte do seu jeito. A volta
-// para a home fica no cabeçalho (o "A fonte") e na logo
+// o inspetor de fonte e tamanho por cima das faixas; e, no fim, o playground para testar a fonte do seu jeito, com o
+// rodapé de uma linha embaixo. A volta para a home fica no cabeçalho (o "A fonte") e na logo
 export default function NaPratica() {
     return (
         <>
@@ -50,6 +51,7 @@ export default function NaPratica() {
                 <TituloEstilos texto={TITULO_ESCREVA.texto} asteriscoDepois={null} nota={TITULO_ESCREVA.nota} ancora="playground" livre />
                 <Editor />
             </main>
+            <Rodape />
         </>
     );
 }

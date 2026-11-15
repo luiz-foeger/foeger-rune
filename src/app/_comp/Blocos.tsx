@@ -99,7 +99,7 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
             // alvo (o mouse, ou o passeio) como uma mola sem balanço
             const dt = Math.min(0.05, Math.max(0, (agora - antes) / 1000));
             antes = agora;
-            // coberta pela cortina (do menu ou da troca de página): a divisa espera parada
+            // coberta pela cortina da troca de página: a divisa espera parada
             if (pausado()) {
                 quadro = requestAnimationFrame(anda);
                 return;
