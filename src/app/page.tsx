@@ -25,7 +25,7 @@ export default function Pagina() {
             <main className="fx-corpo">
                 <Alfabeto />
                 <Digitada />
-                {/* a seção do desgaste: os cartões de perto, todos movidos pelo mesmo σ */}
+                {/* a seção do desgaste: os cartões de perto, movidos pelo mesmo σ (menos o Y, com a divisa, e o A, que anda com ela) */}
                 <SecaoDesgaste />
                 <Titulo texto={TITULO_ESTILOS.texto} nota={TITULO_ESTILOS.nota} ancora="styles" />
                 {/* a âncora do testador (#tester), para link direto */}

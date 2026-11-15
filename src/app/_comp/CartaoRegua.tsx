@@ -6,10 +6,10 @@ import { ESTILOS } from '../_lib/medidas';
 import { segurarSigma, sigmaAgora, sigmaNaMao } from '../_lib/sigma';
 import { useLaco } from '../_lib/movimento';
 
-// o cartão da régua do desgaste (2 × 1): o σ que move todos os cartões da seção, de 0 a 50 unidades da fonte, com os
-// três estilos marcados onde eles saem do desfoque (Cut 0, Polished 26, Worn 50) e o a de cada fonte de verdade em cima
-// da sua marca (o miolo dele fecha na Worn). O pegador anda sozinho; com o mouse em cima (ou o dedo arrastando), ele
-// segue o ponteiro e todos os cartões vão junto.
+// o cartão da régua do desgaste (2 × 1): o σ que move os cartões da seção, de 0 a 50 unidades da fonte, com os três
+// estilos marcados onde eles saem do desfoque (Cut 0, Polished 26, Worn 50) e o a de cada fonte de verdade em cima da
+// sua marca (o miolo dele fecha na Worn). O pegador anda sozinho; com o mouse em cima (ou o dedo arrastando), ele segue
+// o ponteiro e os cartões vão junto. O par do meio fica de fora: o Y tem a divisa dele e o A anda com ela (divisa.ts).
 const L = 885;
 const A = 413;
 const X0 = 70;

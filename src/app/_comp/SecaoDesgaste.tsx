@@ -6,10 +6,11 @@ import CartaoRegua from './CartaoRegua';
 import { BlocoY } from './Blocos';
 
 // a seção do desgaste: os cartões de perto da Föeger Rune numa grade de 4 × 4 módulos, movidos pelo mesmo σ (a régua
-// no alto), como na fonte, em que a Polished (σ 26) e a Worn (σ 50) saem da Cut pelo mesmo desfoque. A exceção é o A,
-// que anda com a divisa do Y ao lado: cada par da fileira anda junto (a régua com as lupas do R e do H, o Y com o A).
-// Os números são medidos com a conta que gerou a fonte (medidas.ts) ou são as medidas dela (glifos.ts): as coordenadas
-// das quinas, as linhas, o quanto cada quina anda, o miolo do A que fecha, os miolos do "Opa!" e a tinta que o Y perde.
+// no alto), como na fonte, em que a Polished (σ 26) e a Worn (σ 50) saem da Cut pelo mesmo desfoque. A exceção é o par
+// do meio: o Y tem a divisa dele (o Cut de um lado, a Worn do outro) e o A anda com ela; cada par da fileira anda junto
+// (a régua com as lupas do R e do H, o Y com o A). Os números são medidos com a conta que gerou a fonte (medidas.ts) ou
+// são as medidas dela (glifos.ts): as coordenadas das quinas, as linhas, o quanto cada quina anda, o miolo do A que
+// fecha, os miolos do "Opa!" e a tinta que o Y perde.
 const R: Detalhe = { letra: 'R', cor: 'var(--p-quente)', foco: [690, -60], zoom: 0.9, tipo: 'fora' };
 const H: Detalhe = { letra: 'H', cor: 'var(--p-quente)', foco: [213, -40], zoom: 0.95, tipo: 'fora' };
 const B: Detalhe = { letra: 'b', cor: 'var(--p-polished)', foco: [334, -420], zoom: 1.0, tipo: 'dentro', guia: { y: -545, rotulo: 'ALTURA DO X 545' } };

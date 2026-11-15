@@ -12,9 +12,9 @@ import { useLaco } from '../_lib/movimento';
 // o cartão grande (2 × 2) do A: a letra inteira com as quinas do Cut marcadas e as coordenadas delas (em unidades da
 // fonte, com y para cima, como no editor), as faixas das linhas da fonte com as medidas, e a lente de transferidor no
 // miolo. O miolo do A é um triângulo estreito, de 30° em cima (o ângulo vai marcado na lente): o desgaste o enche até
-// fechar em σ 44, antes da Worn (σ 50). A leitura é a área dele, da mesma conta que gerou a fonte (medidas.ts). O
-// desgaste não vem da régua do σ, como nos outros cartões: o A anda com a divisa do Y ao lado, o par dele na fileira
-// (divisa.ts).
+// fechar em σ 44, antes da Worn (σ 50). A leitura é a área dele, da mesma conta que gerou a fonte (medidas.ts). Ao
+// contrário dos cartões da régua, o desgaste não vem do σ dela: o A anda com a divisa do Y ao lado, o par dele na
+// fileira (divisa.ts).
 const L = 885;
 const S = 0.9; // u por unidade da fonte
 const CAP_TOPO = 55;
