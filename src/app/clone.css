@@ -1131,9 +1131,10 @@ html:has([data-clone]) {
 /* 11. o cabeçalho, nascido do cabeçalho do site principal (portfolio: rumo/fa.css, .fa-cab): fixo, transparente e em
    modo diferença, com as duas páginas à esquerda, a logo da Föeger no meio e o "Baixar" da fonte à direita; as medidas
    são as de lá (--fa-r, a unidade do site). Fica num portal no body, fora do [data-clone]. O rodapé (seção 26) usa a
-   mesma unidade, a mesma letra e o mesmo hover */
+   mesma unidade, a mesma letra e o mesmo hover; a faixa de desfoque, a unidade (no celular, ela mede a barra) */
 .fx-cab,
-.fx-rodape {
+.fx-rodape,
+.fx-desfoque {
     --fa-r: max(0.5208333333vw, 1px);
     --power3Out: cubic-bezier(0.215, 0.61, 0.355, 1);
 }
@@ -1264,6 +1265,17 @@ html:has([data-clone]) {
     backdrop-filter: blur(2px);
     -webkit-mask-image: linear-gradient(0deg, transparent, #000);
     mask-image: linear-gradient(0deg, transparent, #000);
+}
+/* no celular, a faixa fica só atrás da barra do cabeçalho (o respiro, a logo e o respiro de novo, as medidas do
+   .fx-cab), e não em 30% da tela: cheia até o pé dos textos e sumindo no respiro de baixo. Com os 30% (uns 250 px),
+   ela borrava os títulos das seções no alto da tela, como a 120 px, onde a navegação por âncora os deixa */
+@media (max-width: 899px) {
+    .fx-desfoque {
+        --respiro: max(18px, calc(4.8 * var(--fa-r)));
+        height: calc(2 * var(--respiro) + max(18px, calc(2.7933 * var(--fa-r))) + 5px);
+        -webkit-mask-image: linear-gradient(#000 calc(100% - var(--respiro)), transparent);
+        mask-image: linear-gradient(#000 calc(100% - var(--respiro)), transparent);
+    }
 }
 
 /* 12. a paleta monocromática em azul: as mesmas cores por papel, em tons de um azul só (com ?paleta=azul) */
@@ -5476,9 +5488,9 @@ html[data-paleta='azul'] [data-clone] {
 .fx-rodape {
     --rodape-margem: max(18px, calc(4.8 * var(--fa-r)));
     --rodape-letra: max(13px, 0.88vw);
-    /* na mesma camada do corpo (relative, z-index 1, com o fundo da página), por cima das pedras do hero */
+    /* abaixo do corpo e acima das pedras do hero (z-index 0, depois delas na árvore): o que o corpo deixa sobrar embaixo (as réguas dos últimos painéis, a entrada deles e o foco dos botões do livro) passa por cima do fundo do rodapé */
     position: relative;
-    z-index: 1;
+    z-index: 0;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
