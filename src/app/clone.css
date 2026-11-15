@@ -1305,6 +1305,15 @@ html[data-paleta='azul'] [data-clone] {
     cursor: ew-resize;
     touch-action: pan-y;
 }
+/* os nomes da divisa esmaecem quando não cabem do lado deles (em cima da ficha da letra ou além da margem do cartão;
+   a conta fica no laço da divisa, em Blocos.tsx) e voltam quando a divisa se afasta: somem depressa e voltam devagar */
+.fx-divisa-rotulo {
+    transition: opacity 0.25s ease;
+}
+.fx-divisa-rotulo[data-escondido] {
+    opacity: 0;
+    transition-duration: 0.15s;
+}
 /* no celular, o painel encolhe para menos da metade: os nomes da divisa crescem (em unidades do SVG) e a legenda sai */
 @media (max-width: 899px) {
     .fx-divisa .fx-divisa-rotulo {

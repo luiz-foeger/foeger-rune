@@ -87,6 +87,9 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
     const alca = useRef<SVGGElement>(null);
     const caixa = useRef<SVGSVGElement>(null);
     const mouse = useRef<number | null>(null);
+    const nomeCut = useRef<SVGTextElement>(null);
+    const nomeWorn = useRef<SVGTextElement>(null);
+    const ficha = useRef<SVGTextElement>(null); // a 1ª linha da ficha, na mesma altura dos nomes da divisa
     const passo = 10 / s;
     const cy = grande ? H / 2 - 30 : H / 2;
 
@@ -96,6 +99,24 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
         let velocidade = 0;
         const t0 = performance.now();
         let antes = t0;
+        // os nomes da divisa somem (esmaecendo, no clone.css) quando não cabem do lado deles: o do Cut, à esquerda,
+        // quando chega à 1ª linha da ficha ou à margem do cartão; o da Worn, à direita, quando a divisa passa por cima
+        // da ficha ou ele passa da margem. As larguras mudam com a fonte carregada e no celular (os nomes crescem e o
+        // "· σ" sai): elas são medidas de novo quando o cartão muda de tamanho e quando as fontes chegam
+        const MARGEM = 30;
+        const FOLGA = 14;
+        let medidas: { cut: number; worn: number; ficha: number | null } | null = null;
+        let vivo = true;
+        const medir = () => {
+            if (!vivo || !nomeCut.current || !nomeWorn.current) return;
+            const f = ficha.current?.getBBox();
+            medidas = { cut: nomeCut.current.getBBox().width, worn: nomeWorn.current.getBBox().width, ficha: f ? f.x + f.width : null };
+        };
+        const tamanho = new ResizeObserver(medir);
+        if (caixa.current) tamanho.observe(caixa.current);
+        document.fonts?.ready.then(medir);
+        let cutEscondido = false;
+        let wornEscondido = false;
         const anda = (agora: number) => {
             // a do cartão grande vai e vem devagar entre 22% e 78%; as outras esperam no meio. A divisa vai atrás do
             // alvo (o mouse, ou o passeio) como uma mola sem balanço
@@ -107,8 +128,9 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
                 return;
             }
             const solta = cfg.anda ? W * (0.5 + AMPLITUDE * Math.sin((agora - t0) / 2600)) : W / 2;
+            const alvo = mouse.current ?? solta;
             const w = mouse.current !== null ? 14 : 4.5;
-            velocidade += (w * w * ((mouse.current ?? solta) - x) - 2 * w * velocidade) * dt;
+            velocidade += (w * w * (alvo - x) - 2 * w * velocidade) * dt;
             x = Math.min(W, Math.max(0, x + velocidade * dt));
             // a do cartão grande leva o A junto
             if (cfg.anda) moverDivisa(x / W);
@@ -116,10 +138,27 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
             dir.current?.setAttribute('x', String(x));
             dir.current?.setAttribute('width', String(W - x));
             alca.current?.setAttribute('transform', `translate(${x.toFixed(1)} 0)`);
+            if (medidas) {
+                // os nomes ficam a 16 da divisa: o do Cut termina em x − 16 e o da Worn começa em x + 16. Vale onde a
+                // divisa está e aonde ela vai (o mouse ou o vaivém): num arrasto rápido, o nome que não cabe lá começa
+                // a sumir já na saída, e não passa por cima da ficha enquanto esmaece
+                const m = medidas;
+                const limite = m.ficha === null ? MARGEM : Math.max(MARGEM, m.ficha + FOLGA);
+                const cutBate = (d: number) => d - 16 - m.cut < limite;
+                const wornBate = (d: number) => d + 16 < limite || d + 16 + m.worn > W - MARGEM;
+                const cut = cutBate(x) || cutBate(alvo);
+                const worn = wornBate(x) || wornBate(alvo);
+                if (cut !== cutEscondido) nomeCut.current?.toggleAttribute('data-escondido', (cutEscondido = cut));
+                if (worn !== wornEscondido) nomeWorn.current?.toggleAttribute('data-escondido', (wornEscondido = worn));
+            }
             quadro = requestAnimationFrame(anda);
         };
         quadro = requestAnimationFrame(anda);
-        return () => cancelAnimationFrame(quadro);
+        return () => {
+            vivo = false;
+            tamanho.disconnect();
+            cancelAnimationFrame(quadro);
+        };
     }, [W, cfg.anda]);
 
     const letra = (filho: ReactNode) => <g transform={`translate(${x0} ${base}) scale(${s})`}>{filho}</g>;
@@ -202,7 +241,7 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
                         </text>
                         {/* a ficha da letra */}
                         <g className="fx-guia-rotulo" fill="#111">
-                            <text x="30" y="40">
+                            <text ref={ficha} x="30" y="40">
                                 {cfg.chave} · U+{cfg.chave.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}
                             </text>
                             <text x="30" y="58" opacity="0.6">
@@ -236,10 +275,10 @@ function CartaoDivisa({ cfg }: { cfg: Bloco }) {
                         <circle cx="0" cy={cy} r="20" fill="#f8f8f8" stroke="#111" strokeWidth="1.4" />
                         <path d={`M-7 ${cy - 6}l-6 6 6 6M7 ${cy - 6}l6 6-6 6`} fill="none" stroke="#111" strokeWidth="1.4" />
                     </g>
-                    <text className="fx-divisa-rotulo" x="-16" y="40" textAnchor="end" style={ROTULO}>
+                    <text ref={nomeCut} className="fx-divisa-rotulo" x="-16" y="40" textAnchor="end" style={ROTULO}>
                         CUT{!pequeno && <tspan className="fx-divisa-longo"> · σ 0</tspan>}
                     </text>
-                    <text className="fx-divisa-rotulo" x="16" y="40" style={ROTULO}>
+                    <text ref={nomeWorn} className="fx-divisa-rotulo" x="16" y="40" style={ROTULO}>
                         WORN{!pequeno && <tspan className="fx-divisa-longo"> · σ 50</tspan>}
                     </text>
                 </g>
