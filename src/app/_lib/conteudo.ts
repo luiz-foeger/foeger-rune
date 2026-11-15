@@ -41,15 +41,14 @@ export const VARIACOES = [
     { estilo: 'cut' as Estilo, titulo: 'Cut, com as variações', linhas: ['Sonhei ontem', 'que uma pedra', 'rolava, rolava', 'e não paraaava!'] },
     { estilo: 'worn' as Estilo, titulo: 'Worn, com as variações', linhas: ['Nossa, essssa', 'correnteeeeza', 'tá me deixando', 'tooooda lisa.'] },
 ];
-// o título das variações (as trocas do calt), solto, com a nota embaixo; os 78 são os desenhos a mais de cada estilo
-// (a–z em .v2, .v3 e .v4, menos o f, que só tem o .v2, e mais o L.alt e o f.ini)
-export const TITULO_VARIACOES = { texto: 'Variações', nota: 'A letra muda pela vizinha: 78 desenhos a mais em cada estilo' };
+// o título das variações (as trocas do calt), solto e sem nota
+export const TITULO_VARIACOES = { texto: 'Variações', nota: null };
 // o título do playground, solto e sem nota
 export const TITULO_ESCREVA = { texto: 'Playground', nota: null };
 // o título da seção dos caracteres, solto (na fonte de texto, como o dos estilos), com a nota embaixo
 export const TITULO_CARACTERES = { texto: 'Caracteres', nota: 'Números, acentos, pontuação e símbolos: 177 em cada estilo' };
-// o título do livro, digitado como o dos estilos, com a nota no pé do painel
-export const TITULO_LIVRO = { texto: 'O Livro', asteriscoDepois: 7, nota: '* O espécime da Föeger Rune, para folhear aqui ou baixar em PDF' };
+// o título do livro, solto como os outros (na fonte de texto, centrado), sem o asterisco e a nota
+export const TITULO_LIVRO = { texto: 'O Livro', nota: null };
 
 // a segunda página: a fonte em uso (as peças das faixas) e o playground. Os endereços (as páginas, as âncoras e o PDF)
 // ficam sempre em inglês, numa palavra só: sem acento e curtos

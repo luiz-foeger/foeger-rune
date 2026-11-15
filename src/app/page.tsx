@@ -37,7 +37,7 @@ export default function Pagina() {
                 <TituloEstilos texto={TITULO_VARIACOES.texto} asteriscoDepois={null} nota={TITULO_VARIACOES.nota} ancora="variations" livre />
                 <SecaoVariacoes />
                 {/* o livro: o espécime para folhear (o livro realista do clone-tantan) e o PDF para baixar */}
-                <TituloEstilos texto={TITULO_LIVRO.texto} asteriscoDepois={TITULO_LIVRO.asteriscoDepois} nota={TITULO_LIVRO.nota} ancora="book" />
+                <TituloEstilos texto={TITULO_LIVRO.texto} asteriscoDepois={null} nota={TITULO_LIVRO.nota} ancora="book" livre />
                 <SecaoLivro />
             </main>
         </>
