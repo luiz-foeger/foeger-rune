@@ -834,14 +834,11 @@ html:has([data-clone]) {
     line-height: 1.24;
     text-align: center;
 }
-.fx-hero-legenda p {
-    margin: 0;
-}
-/* a logo da Föeger, só a assinatura, na segunda linha da legenda (no lugar do "Desenhada por"), na cor dela */
+/* a logo da Föeger, sozinha na legenda (no lugar do "Föeger Rune / Desenhada por"), assinando, na cor dela */
 .fx-hero-logo {
     display: block;
     width: fit-content;
-    margin: 0.35em auto 0;
+    margin: 0 auto;
 }
 .fx-hero-logo svg {
     display: block;

@@ -1172,10 +1172,9 @@ export function HeroPedras() {
                     role="img"
                     aria-label="Rune"
                 />
-                {/* o nome da fonte e, no lugar do "Desenhada por" (o da legenda da Feixen), só a logo da Föeger,
-                    assinando */}
+                {/* a legenda é só a logo da Föeger, assinando, no lugar do "Föeger Rune / Desenhada por" da legenda da
+                    Feixen (o nome e o crédito ficam para o leitor de tela, no rótulo da seção) */}
                 <div className="fx-hero-legenda">
-                    <p>{HERO.nome}</p>
                     <span className="fx-hero-logo">
                         <Logo />
                     </span>
