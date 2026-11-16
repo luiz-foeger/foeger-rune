@@ -1355,6 +1355,38 @@ html[data-paleta='azul'] [data-clone] {
         font-size: 19px;
     }
 }
+/* a palavra no meio da tela: --base é a linha de base dela na cena, em u (a tinta vai de 413 u acima dela, o topo do R,
+   a 13 u abaixo, o pé do e, então o meio fica 200 u acima), e a logo da Föeger fica pendurada embaixo, a 93 u da base.
+   No celular, a cena encolhe (0,56) em volta de 55% da altura dela, e o meio da tela cai em 391,1 u da cena. Na opção
+   em estudo (/intro?logo=cima), a logo vai em cima e maior (2,1 da letra da legenda), a 59 u da palavra, e o bloco das
+   duas fica no meio */
+.fx-hero-pedras {
+    --base: 624.5;
+}
+.fx-hero-pedras .fx-hero-legenda {
+    top: calc((var(--base) + 93) * var(--u));
+}
+.fx-hero-pedras[data-logo='cima'] {
+    --base: 675;
+}
+.fx-hero-pedras[data-logo='cima'] .fx-hero-legenda {
+    top: calc(160.85 * var(--u));
+}
+.fx-hero-pedras[data-logo='cima'] .fx-hero-logo svg {
+    height: 2.1em;
+    width: calc(2.1em * 2580 / 890);
+}
+@media (max-width: 899px) {
+    .fx-hero-pedras {
+        --base: 591.1;
+    }
+    .fx-hero-pedras[data-logo='cima'] {
+        --base: 669;
+    }
+    .fx-hero-pedras[data-logo='cima'] .fx-hero-legenda {
+        top: calc(100.1 * var(--u));
+    }
+}
 .fx-hero-medida {
     visibility: hidden;
 }

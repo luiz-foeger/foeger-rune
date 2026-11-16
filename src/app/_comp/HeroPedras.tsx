@@ -31,7 +31,8 @@ const ESCALA = 400 / LINHAS.maiuscula; // a maiúscula com 400 u
 const MARGEM = 260;
 const TOPO = -1150;
 const ALTURA = 1500;
-const BASE = 560; // a linha de base na cena do hero (849 u de altura, centrada na tela), em u
+// a linha de base na cena do hero (849 u de altura, centrada na tela), em u, vem do CSS (--base, seção 14 do clone.css):
+// a palavra fica no meio da tela, com a logo da Föeger embaixo ou, na opção em estudo, o bloco das duas
 const WORN = 50;
 const SOBE = WORN / 0.3; // σ por segundo, gastando com o cursor
 const DESCE = WORN / 1.2; // σ por segundo, voltando
@@ -422,7 +423,8 @@ function Gasta({ gl, cor }: { gl: Glifo; cor: string }) {
     );
 }
 
-export function HeroPedras() {
+// logoEmCima: a opção em estudo (/intro?logo=cima), com a logo maior em cima da palavra
+export function HeroPedras({ logoEmCima = false }: { logoEmCima?: boolean }) {
     const id = useId().replace(/:/g, '');
     // a rolagem suave, para o clique na fonte voltar ao topo (num ref: o laço do hero nasce antes dela)
     const lenis = useLenis();
@@ -1160,7 +1162,7 @@ export function HeroPedras() {
     const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
     const fino = RACHA_PX / ((escala || 1) * dpr);
     return (
-        <section ref={ref} className="fx-hero fx-hero-pedras" aria-label={`${HERO.nome}. ${HERO.assinatura}`}>
+        <section ref={ref} className="fx-hero fx-hero-pedras" data-logo={logoEmCima ? 'cima' : undefined} aria-label={`${HERO.nome}. ${HERO.assinatura}`}>
             {/* a cena (849 u de altura) fica no meio da tela e encolhe no celular, onde a palavra passaria da largura; o
                 SVG só mede onde as letras moram, e a legenda vai junto */}
             <div className="fx-hero-cena">
@@ -1168,7 +1170,7 @@ export function HeroPedras() {
                     ref={svg}
                     className="fx-hero-palavra fx-hero-medida"
                     viewBox={`${-MARGEM} ${TOPO} ${largura} ${ALTURA}`}
-                    style={{ left: `calc(50% + ${esq.toFixed(1)} * var(--u))`, top: u(BASE + TOPO * ESCALA), width: u(largura * ESCALA), height: u(ALTURA * ESCALA) }}
+                    style={{ left: `calc(50% + ${esq.toFixed(1)} * var(--u))`, top: `calc((var(--base) + ${(TOPO * ESCALA).toFixed(2)}) * var(--u))`, width: u(largura * ESCALA), height: u(ALTURA * ESCALA) }}
                     role="img"
                     aria-label="Rune"
                 />
