@@ -1,3 +1,5 @@
+import { PALAVRAS } from '../_lib/glifos';
+
 // a logo da Föeger, cópia da do site principal (portfolio: src/app/_ideias/nova/rumo/_fa/Pecas.tsx), só a versão
 // escrita, a do cabeçalho de lá
 // as peças da empilhada nas posições da reorganização em linha do cabeçalho do site: a linha de cima desce e a de
@@ -13,6 +15,48 @@ export const PECAS: [string, number, number, number, number, number, boolean?][]
     ['M926.528 871.119L907.028 1171.12L1104.53 1133.12L1052.53 855.619L1097.53 830.619L1126.03 859.119L1129.53 901.119L1237.53 859.119L1258.03 737.619L1135.03 683.619L1038.53 759.619V701.119L892.028 732.619L926.528 871.119Z', 1120, -250, -2, 1075, 927],
     ['M1303.53 1145.12L1156.53 1134.62L1163.03 1011.12L1291.53 997.619L1303.53 1145.12Z', 1120, -250, 2, 1230, 1071],
 ];
+
+// ——— o nome da fonte no jeito da logo: "Föeger Rune" ———
+// a logo não é a fonte digitada: as letras dela vêm juntas (de 3 a 9 unidades entre as caixas, algumas até se
+// sobrepondo), giradas ±2°, alternando, e a linha de base sobe um pouco para a direita. O "Föeger" é a própria logo, sem
+// o ponto; o "Rune" são as letras do Cut no mesmo jeito: na altura das letras dela (as minúsculas com ~505 unidades da
+// logo, o R com o topo perto do do F), com a mesma folga entre as caixas, a inclinação continuando a alternância e a
+// linha de base na das últimas letras (o e e o r), depois do espaço de uma palavra
+const ESCALA_RUNE = 0.87;
+const BASE_RUNE = 930; // nas contas da logo
+const COMECO_RUNE = 2596; // o r da logo termina em 2386
+const FOLGA_RUNE = 6;
+const GIROS_RUNE = [2, -2, 2, -2];
+const LETRAS_RUNE = (() => {
+    let x = COMECO_RUNE;
+    return PALAVRAS.Rune.glifos.map((g, i) => {
+        const vs = g.pedras.flatMap(p => p.vertices.flat());
+        const x0 = Math.min(...vs.map(v => v[0]));
+        const largura = (Math.max(...vs.map(v => v[0])) - x0) * ESCALA_RUNE;
+        const meioY = ((Math.min(...vs.map(v => v[1])) + Math.max(...vs.map(v => v[1]))) / 2) * ESCALA_RUNE;
+        const giro = `rotate(${GIROS_RUNE[i]} ${(x + largura / 2).toFixed(1)} ${(BASE_RUNE + meioY).toFixed(1)})`;
+        const lugar = `translate(${(x - x0 * ESCALA_RUNE).toFixed(1)} ${BASE_RUNE}) scale(${ESCALA_RUNE})`;
+        x += largura + FOLGA_RUNE;
+        return { pedras: g.pedras, transform: `${giro} ${lugar}` };
+    });
+})();
+
+export function NomeDaFonte() {
+    return (
+        <svg viewBox="-140 236 4880 890" fill="currentColor" aria-label="Föeger Rune" role="img">
+            {PECAS.slice(0, 8).map(([d, x, y, r, cx, cy, par], i) => (
+                <path key={i} d={d} fillRule={par ? 'evenodd' : undefined} clipRule={par ? 'evenodd' : undefined} transform={`translate(${x} ${y}) rotate(${r} ${cx} ${cy})`} />
+            ))}
+            {LETRAS_RUNE.map((l, i) => (
+                <g key={`r${i}`} transform={l.transform}>
+                    {l.pedras.map((p, k) => (
+                        <path key={k} d={p.d} fillRule="evenodd" />
+                    ))}
+                </g>
+            ))}
+        </svg>
+    );
+}
 
 export function Logo({ empilhada = false }: { empilhada?: boolean }) {
     return (

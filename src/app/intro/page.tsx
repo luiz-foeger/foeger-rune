@@ -10,14 +10,13 @@ export const metadata: Metadata = { title: 'Abertura · Föeger Rune', robots: {
 
 // o protótipo da abertura (a do clone da Studio Namma com a Rune), para ver antes de levar para a home: o começo da
 // home (o cabeçalho, o hero, o alfabeto, a frase e o desgaste) com a abertura na frente, tocando a cada visita (na home,
-// seria só na primeira da sessão). Com ?logo=cima, a opção em estudo da logo da Föeger em cima da palavra, maior
-export default async function Intro({ searchParams }: { searchParams: Promise<{ logo?: string }> }) {
-    const { logo } = await searchParams;
+// seria só na primeira da sessão)
+export default function Intro() {
     return (
         <>
             <Abertura />
             <Cabecalho />
-            <HeroPedras logoEmCima={logo === 'cima'} />
+            <HeroPedras />
             <main className="fx-corpo">
                 <Alfabeto />
                 <Digitada />

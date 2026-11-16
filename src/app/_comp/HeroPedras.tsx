@@ -4,7 +4,6 @@ import { Fragment, useEffect, useId, useRef, useState, type CSSProperties } from
 import Matter from 'matter-js';
 import { useLenis } from 'lenis/react';
 import { FiltroDesgaste, ajustarDesgaste, corte } from './Desgaste';
-import { Logo } from './LogoFoeger';
 import { HERO } from '../_lib/conteudo';
 import { LINHAS, PALAVRAS, type Glifo } from '../_lib/glifos';
 import { pausado } from '../_lib/movimento';
@@ -32,7 +31,7 @@ const MARGEM = 260;
 const TOPO = -1150;
 const ALTURA = 1500;
 // a linha de base na cena do hero (849 u de altura, centrada na tela), em u, vem do CSS (--base, seção 14 do clone.css):
-// a palavra fica no meio da tela, com a logo da Föeger embaixo ou, na opção em estudo, o bloco das duas
+// a palavra fica no meio da tela
 const WORN = 50;
 const SOBE = WORN / 0.3; // σ por segundo, gastando com o cursor
 const DESCE = WORN / 1.2; // σ por segundo, voltando
@@ -423,8 +422,7 @@ function Gasta({ gl, cor }: { gl: Glifo; cor: string }) {
     );
 }
 
-// logoEmCima: a opção em estudo (/intro?logo=cima), com a logo maior em cima da palavra
-export function HeroPedras({ logoEmCima = false }: { logoEmCima?: boolean }) {
+export function HeroPedras() {
     const id = useId().replace(/:/g, '');
     // a rolagem suave, para o clique na fonte voltar ao topo (num ref: o laço do hero nasce antes dela)
     const lenis = useLenis();
@@ -1162,9 +1160,9 @@ export function HeroPedras({ logoEmCima = false }: { logoEmCima?: boolean }) {
     const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
     const fino = RACHA_PX / ((escala || 1) * dpr);
     return (
-        <section ref={ref} className="fx-hero fx-hero-pedras" data-logo={logoEmCima ? 'cima' : undefined} aria-label={`${HERO.nome}. ${HERO.assinatura}`}>
+        <section ref={ref} className="fx-hero fx-hero-pedras" aria-label={`${HERO.nome}. ${HERO.assinatura}`}>
             {/* a cena (849 u de altura) fica no meio da tela e encolhe no celular, onde a palavra passaria da largura; o
-                SVG só mede onde as letras moram, e a legenda vai junto */}
+                SVG só mede onde as letras moram. Sem legenda: o nome da fonte fica no cabeçalho (Topo.tsx) */}
             <div className="fx-hero-cena">
                 <svg
                     ref={svg}
@@ -1174,13 +1172,6 @@ export function HeroPedras({ logoEmCima = false }: { logoEmCima?: boolean }) {
                     role="img"
                     aria-label="Rune"
                 />
-                {/* a legenda é só a logo da Föeger, assinando, no lugar do "Föeger Rune / Desenhada por" da legenda da
-                    Feixen (o nome e o crédito ficam para o leitor de tela, no rótulo da seção) */}
-                <div className="fx-hero-legenda">
-                    <span className="fx-hero-logo">
-                        <Logo />
-                    </span>
-                </div>
             </div>
             {/* o desgaste para os canvas da escavação (em px do canvas; os dois se revezam a cada uso) */}
             <svg width="0" height="0" aria-hidden style={{ position: 'absolute', pointerEvents: 'none' }}>
