@@ -8,8 +8,8 @@ import { RUNE } from '../_lib/conteudo';
 // ——— a abertura ———
 // a do clone da Studio Namma (portfolio-simulacao, nova/clone-namma/_comp/Abertura.tsx), com a Rune no lugar da palavra
 // da Föeger: a câmera começa colada no u, com a palavra em linhas de construção (o contorno fino do Cut, as guias das
-// linhas da fonte, com as medidas, e as das bordas de cada letra atravessando a tela, e as quinas marcadas com as
-// cores de cada letra do RUNE da seção escura), e se afasta até a palavra inteira; a tinta sobe por dentro das letras
+// linhas da fonte, com as medidas, e as das bordas de cada letra atravessando a tela, e as quinas marcadas), e se
+// afasta até a palavra inteira; a tinta sobe por dentro das letras
 // nas cores dos três estilos e no preto por último. A palavra fica onde o "Rune" do hero mora (o SVG de medida dele) e
 // não sai dali: cheia de preto, ela é o próprio nome do hero, e a capa esmaece por cima dele (o hero não faz a entrada
 // dele nem gasta letras enquanto ela está na tela, HeroPedras.tsx). Cobre a página desde o primeiro quadro; o
@@ -42,8 +42,22 @@ const QUINAS: { p: Ponto; letra: number }[] = palavra.glifos
     .flatMap((g, letra) => g.pedras.flatMap(p => p.vertices.flat()).map(p => ({ p, letra })))
     .sort((a, b) => a.p[0] - b.p[0]);
 
+// as marcas das quinas, em estudo (no protótipo, /intro?quinas=...): azul, a cor forte do site, como as marcas azuis da
+// abertura da Namma (a padrão); tinta, a cor do estilo de cada letra, as da tinta que vem depois; brancas, como as
+// coordenadas dos cartões do desgaste; letras, as cores de cada letra do RUNE da seção escura. As pretas saíram
+type Quinas = 'azul' | 'tinta' | 'brancas' | 'letras';
+const TINTA_DA_LETRA = ['var(--p-cut)', 'var(--p-polished)', 'var(--p-worn)', 'var(--p-cut)'];
+const marca = (q: Quinas, letra: number) =>
+    q === 'azul'
+        ? { fill: 'var(--p-frio)', stroke: 'var(--p-frio)' }
+        : q === 'tinta'
+          ? { fill: TINTA_DA_LETRA[letra], stroke: 'var(--tinta)' }
+          : q === 'brancas'
+            ? { fill: '#fff', stroke: 'var(--tinta)' }
+            : { fill: RUNE[letra].cor, stroke: 'var(--tinta)' };
+
 // k: px da tela por unidade da fonte; (ox, oy): onde fica o (0, 0) da fonte na tela; fs: a letra dos rótulos
-type Medidas = { W: number; H: number; k: number; ox: number; oy: number; fs: number };
+type Medidas = { W: number; H: number; k: number; ox: number; oy: number; fs: number; quinas: Quinas };
 
 export default function Abertura() {
     const id = useId().replace(/:/g, '');
@@ -71,7 +85,9 @@ export default function Abertura() {
         const k = r.width / vb.width;
         const W = window.innerWidth;
         const H = window.innerHeight;
-        setM({ W, H, k, ox: r.left - vb.x * k, oy: r.top - vb.y * k, fs: Math.max(9, (14 * W) / (W < 900 ? 945 : 1889)) });
+        const pedido = new URLSearchParams(window.location.search).get('quinas');
+        const quinas: Quinas = pedido === 'tinta' || pedido === 'brancas' || pedido === 'letras' ? pedido : 'azul';
+        setM({ W, H, k, ox: r.left - vb.x * k, oy: r.top - vb.y * k, fs: Math.max(9, (14 * W) / (W < 900 ? 945 : 1889)), quinas });
     }, []);
 
     // a rolagem fica parada enquanto a capa cobre a página
@@ -182,7 +198,7 @@ export default function Abertura() {
         <div className="fx-abertura" data-saindo={saindo || undefined} aria-hidden>
             {m &&
                 (() => {
-                    const { W, H, k, ox, oy, fs } = m;
+                    const { W, H, k, ox, oy, fs, quinas } = m;
                     const sx = (x: number) => ox + x * k;
                     const sy = (y: number) => oy + y * k;
                     const xs = CAIXAS.flatMap(c => [sx(c.x0), sx(c.x1)]);
@@ -243,10 +259,10 @@ export default function Abertura() {
                                         </g>
                                     ))}
                                 </g>
-                                {/* as quinas do Cut, marcadas como nos cartões do desgaste, na cor da letra (a do RUNE da seção escura) */}
+                                {/* as quinas do Cut, marcadas */}
                                 <g ref={pontos}>
                                     {QUINAS.map(({ p: [x, y], letra }, i) => (
-                                        <circle key={i} cx={sx(x)} cy={sy(y)} r={raio} fill={RUNE[letra].cor} stroke="var(--tinta)" strokeWidth={1.2} vectorEffect="non-scaling-stroke" style={{ opacity: 0 }} />
+                                        <circle key={i} cx={sx(x)} cy={sy(y)} r={raio} {...marca(quinas, letra)} strokeWidth={1.2} vectorEffect="non-scaling-stroke" style={{ opacity: 0 }} />
                                     ))}
                                 </g>
                             </g>
