@@ -13,9 +13,9 @@ import { LINHAS, PALAVRAS, type Ponto } from '../_lib/glifos';
 // não sai dali: cheia de preto, ela é o próprio nome do hero, e a capa esmaece por cima dele (o hero não faz a entrada
 // dele nem gasta letras enquanto ela está na tela, HeroPedras.tsx). Cobre a página desde o primeiro quadro; o
 // cabeçalho espera escondido e o painel do alfabeto, embaixo, sobe e acende quando ela sai (clone.css, seção 28).
-// Qualquer rolagem, toque, clique ou tecla pula para o fim da tinta. Com movimento reduzido, ela não existe. ~4 s
+// Ela não pula: enquanto ela está na tela, a página fica parada. Com movimento reduzido, ela não existe. ~4 s
 const palavra = PALAVRAS.Rune;
-const SAIDA = 3.45; // a tinta preta cobriu tudo: daqui a capa esmaece (e é aonde o pulo leva)
+const SAIDA = 3.45; // a tinta preta cobriu tudo: daqui a capa esmaece
 const ESMAECE = 0.7; // o tempo da capa sumindo (o do clone.css, com folga)
 const ZOOM = 3.4;
 const CORES = ['var(--p-cut)', 'var(--p-polished)', 'var(--p-worn)', 'var(--tinta)'];
@@ -114,26 +114,21 @@ export default function Abertura() {
         const deOnda = F * 0.12;
         const ateOnda = -F * 1.35;
         const inicio = performance.now();
-        let salto = 0;
         let quadro = 0;
-        // o pulo: daqui para o fim da tinta (a linha do tempo é toda conta do tempo, então nada fica pela metade)
-        const pular = () => {
-            const t = (performance.now() - inicio) / 1000 + salto;
-            if (t < SAIDA) salto += SAIDA - t;
-        };
-        const segurar = (e: Event) => {
-            e.preventDefault();
-            pular();
+        // ela não pula: a roda, o arrasto e as teclas de rolar ficam parados até ela sair (a página por baixo não anda)
+        const segurar = (e: Event) => e.preventDefault();
+        const TECLAS = [' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End'];
+        const teclas = (e: KeyboardEvent) => {
+            if (TECLAS.includes(e.key)) e.preventDefault();
         };
         // com a janela mudando de tamanho, a palavra já não está no lugar do hero: a capa sai
         const mudou = () => setSaindo(true);
         window.addEventListener('wheel', segurar, { passive: false });
         window.addEventListener('touchmove', segurar, { passive: false });
-        window.addEventListener('pointerdown', pular);
-        window.addEventListener('keydown', pular);
+        window.addEventListener('keydown', teclas);
         window.addEventListener('resize', mudou);
         const passo = (agora: number) => {
-            const t = (agora - inicio) / 1000 + salto;
+            const t = (agora - inicio) / 1000;
             // a câmera (0–2,2 s)
             const c = power3InOut(trecho(t, 0, 2.2));
             const s = misturar(ZOOM, 1, c);
@@ -174,8 +169,7 @@ export default function Abertura() {
             cancelAnimationFrame(quadro);
             window.removeEventListener('wheel', segurar);
             window.removeEventListener('touchmove', segurar);
-            window.removeEventListener('pointerdown', pular);
-            window.removeEventListener('keydown', pular);
+            window.removeEventListener('keydown', teclas);
             window.removeEventListener('resize', mudou);
         };
     }, [m]);
