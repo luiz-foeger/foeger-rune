@@ -5657,16 +5657,21 @@ html[data-paleta='azul'] [data-clone] {
 }
 
 /* 28. a abertura (Abertura.tsx), a do clone da Studio Namma com a Rune: cobre a página desde o primeiro quadro, por
-   cima do hero, e o cabeçalho e a faixa de desfoque esperam escondidos por baixo dela; quando ela sai, eles acendem.
-   Com movimento reduzido, ela não existe */
-/* o mesmo papel do hero (a trama de pontos, começando no mesmo canto), para nada mudar no fundo quando ela sai */
+   cima do hero, num fundo liso. O nome que ela desenha é o do hero, no mesmo lugar: quando a tinta acaba, ela esmaece
+   por cima dele (data-saindo) e o nome fica. Enquanto ela cobre, o cabeçalho e a faixa de desfoque esperam escondidos,
+   e o painel do alfabeto (a régua de cima dele é a que aparece no pé da tela) espera mais embaixo; quando ela esmaece,
+   eles acendem e o painel sobe e acende, com a entrada dos outros painéis (.fx-revela). Com movimento reduzido, ela
+   não existe */
 .fx-abertura {
     position: fixed;
     inset: 0;
     z-index: 60;
-    background-color: var(--fundo);
-    background-image: var(--trama);
-    background-size: calc(29.5 * var(--u)) calc(29.5 * var(--u));
+    background: var(--fundo);
+    transition: opacity 0.6s ease;
+}
+.fx-abertura[data-saindo] {
+    opacity: 0;
+    pointer-events: none;
 }
 .fx-abertura svg {
     position: absolute;
@@ -5684,10 +5689,19 @@ html[data-paleta='azul'] [data-clone] {
 .fx-desfoque {
     transition: opacity 0.6s ease;
 }
-html:has(.fx-abertura) .fx-cab,
-html:has(.fx-abertura) .fx-desfoque {
+#alphabet {
+    transition:
+        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s,
+        transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+}
+html:has(.fx-abertura:not([data-saindo])) .fx-cab,
+html:has(.fx-abertura:not([data-saindo])) .fx-desfoque {
     opacity: 0;
     visibility: hidden;
+}
+html:has(.fx-abertura:not([data-saindo])) #alphabet {
+    opacity: 0;
+    transform: translateY(calc(80 * var(--u)));
 }
 @media (prefers-reduced-motion: reduce) {
     .fx-abertura {
@@ -5697,5 +5711,9 @@ html:has(.fx-abertura) .fx-desfoque {
     html:has(.fx-abertura) .fx-desfoque {
         opacity: 1;
         visibility: visible;
+    }
+    html:has(.fx-abertura) #alphabet {
+        opacity: 1;
+        transform: none;
     }
 }

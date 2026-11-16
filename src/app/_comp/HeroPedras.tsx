@@ -156,8 +156,10 @@ const suave = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2,
 // Mascara de desde 0,9, segurar 0,3 e duração 1,2): cada letra começa abaixo da linha mais baixa da palavra, com só uma
 // fatia do topo à mostra (o "— — — —" que faz de carregamento), fica assim um pouco e sobe para casa (power3.out).
 // A camada das letras é cortada nessa linha enquanto isso. Na troca de página, espera a cortina subir (data-trocando);
-// com movimento reduzido, não há. Se alguém rolar e soltar uma letra no meio, a entrada acaba na hora
+// com movimento reduzido, não há. Se alguém rolar e soltar uma letra no meio, a entrada acaba na hora. Com a abertura
+// na página (Abertura.tsx), também não há: o nome dela é este, no mesmo lugar, e ela esmaece por cima dele
 const ENTRADA_FORA = 0.94; // quanto da altura da letra começa escondido
+const comAbertura = () => !!document.querySelector('.fx-abertura');
 const ENTRADA_SEGURA = 0.3;
 const ENTRADA_SOBE = 1.2;
 const power3Out = (x: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 4);
@@ -852,7 +854,7 @@ export function HeroPedras() {
         };
 
         // a entrada do nome: o instante em que começou (-1, ainda não; -2, acabou)
-        let entradaDesde = reduzido ? -2 : -1;
+        let entradaDesde = reduzido || comAbertura() ? -2 : -1;
         const passo = () => {
             quadro = requestAnimationFrame(passo);
             const s = performance.now() / 1000;
@@ -995,6 +997,8 @@ export function HeroPedras() {
                     cam.style.clipPath = `inset(0 0 ${Math.max(0, o.height - linha).toFixed(1)}px 0)`;
                 }
             }
+            // com a abertura na tela, as letras ficam paradas e novas, iguais às dela (a vez de cada uma começa 3 s depois)
+            if (comAbertura()) mexeu = s;
             const sozinha = s - mexeu > 3 ? Math.floor(s / VEZ) % ps.length : -1;
             const naVez = sozinha >= 0 && s % VEZ < 0.35 ? sozinha : -1;
             const pu = sPx * (window.devicePixelRatio || 1);
