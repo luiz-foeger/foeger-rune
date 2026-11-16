@@ -1162,7 +1162,8 @@ export function HeroPedras() {
     return (
         <section ref={ref} className="fx-hero fx-hero-pedras" aria-label={`${HERO.nome}. ${HERO.assinatura}`}>
             {/* a cena (849 u de altura) fica no meio da tela e encolhe no celular, onde a palavra passaria da largura; o
-                SVG só mede onde as letras moram. Sem legenda: o nome da fonte fica no cabeçalho (Topo.tsx) */}
+                SVG só mede onde as letras moram. Sem legenda embaixo da palavra (a da Feixen): o nome da fonte e os
+                estilos ficam nos cantos de baixo, como numa folha de espécime */}
             <div className="fx-hero-cena">
                 <svg
                     ref={svg}
@@ -1173,6 +1174,12 @@ export function HeroPedras() {
                     aria-label="Rune"
                 />
             </div>
+            <p className="fx-hero-canto" data-lado="esq">
+                {HERO.nome}
+            </p>
+            <p className="fx-hero-canto" data-lado="dir">
+                {HERO.estilos}
+            </p>
             {/* o desgaste para os canvas da escavação (em px do canvas; os dois se revezam a cada uso) */}
             <svg width="0" height="0" aria-hidden style={{ position: 'absolute', pointerEvents: 'none' }}>
                 {[0, 1].map(k => (

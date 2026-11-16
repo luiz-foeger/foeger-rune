@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useLenis } from 'lenis/react';
-import { NomeDaFonte } from './LogoFoeger';
 import { Rola } from './Rola';
 import { useNavegar } from './Transicao';
 import { CABECALHO } from '../_lib/conteudo';
@@ -13,14 +11,12 @@ import { CABECALHO } from '../_lib/conteudo';
 // o topo: o cabeçalho (o hero com as pedras está em HeroPedras.tsx)
 
 // ——— o cabeçalho, nascido do cabeçalho do site principal (luizfoeger.vercel.app; portfolio: rumo/_fa/Cabecalho.tsx) ———
-// Fixo e transparente, em modo diferença, com a letra, as medidas e o hover de lá (o texto que rola), mas sem o menu:
-// à esquerda as duas páginas ("A fonte" e "Na prática", a atual apagada), no meio o nome da fonte, "Föeger Rune", no
-// jeito da logo (LogoFoeger.tsx: a logo da Föeger e o Rune com as mesmas folgas e inclinações; leva ao topo da home), e
-// à direita só o "Baixar", que baixa a fonte (o PDF do espécime fica no botão do livro). O hero fica só com a palavra,
-// sem a legenda, que era a da Feixen. Fica num portal num div posto no começo do body: fora do [data-clone], que tem
+// Fixo e transparente, em modo diferença, com a letra, as medidas e o hover de lá (o texto que rola), mas sem o menu e
+// sem a logo: à esquerda as duas páginas ("A fonte" e "Na prática", a atual apagada) e à direita só o "Baixar", que
+// baixa a fonte (o PDF do espécime fica no botão do livro). O nome da fonte fica no canto de baixo do hero, como numa
+// folha de espécime (HeroPedras.tsx). Fica num portal num div posto no começo do body: fora do [data-clone], que tem
 // container-type e prenderia o fixed, e antes do conteúdo, para o Tab e o leitor de tela chegarem à navegação primeiro.
 export function Cabecalho() {
-    const lenis = useLenis();
     const caminho = usePathname();
     const navegar = useNavegar();
     const [lugar, setLugar] = useState<HTMLElement | null>(null);
@@ -58,23 +54,6 @@ export function Cabecalho() {
                         </Link>
                     ))}
                 </nav>
-                <a
-                    className="fx-cab-nome"
-                    href="/"
-                    aria-label="Föeger Rune"
-                    onClick={e => {
-                        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-                        e.preventDefault();
-                        // na home, volta ao topo (direto, com movimento reduzido); na outra página, leva à home (pela
-                        // transição, Transicao.tsx)
-                        const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                        if (caminho !== '/') navegar('/');
-                        else if (lenis) lenis.scrollTo(0, { immediate: reduzido });
-                        else window.scrollTo({ top: 0, behavior: reduzido ? 'auto' : 'smooth' });
-                    }}
-                >
-                    <NomeDaFonte />
-                </a>
                 {/* o leitor de tela ouve "Baixar a fonte" (na home também há o "Baixar o PDF" do livro) */}
                 <a className="fx-cab-acao fx-cab-baixar" href={CABECALHO.acao.href} download aria-label={CABECALHO.acao.rotulo}>
                     <Rola>

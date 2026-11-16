@@ -78,5 +78,6 @@ export const RODAPE = {
     ],
     credito: { texto: '© 2026 Luiz Föeger', href: 'https://luizfoeger.vercel.app' },
 };
-// o nome e o crédito no hero, só para o leitor de tela (na tela, o nome da fonte fica no cabeçalho)
-export const HERO = { nome: 'Föeger Rune', assinatura: 'Desenhada por Luiz Föeger' };
+// o hero: nos cantos de baixo, o nome da fonte e os estilos, como numa folha de espécime; o crédito fica para o leitor
+// de tela (no rótulo da seção)
+export const HERO = { nome: 'Föeger Rune', estilos: 'Cut, Polished e Worn', assinatura: 'Desenhada por Luiz Föeger' };
