@@ -22,7 +22,8 @@ import { pausado } from '../_lib/movimento';
 // novas, e o hero passa a rolar com a página, como uma seção comum: ao subir, a palavra desce junto. O meio, e não o
 // topo, dá margem: quem passa um pouco do alfabeto e volta encontra as letras ainda soltas. No topo, o hero
 // se prende de novo e a próxima rolagem empurra outra vez. Até lá, as letras ficam soltas, onde a física deixar. O
-// clique no logo do cabeçalho leva as letras (ou os cacos, que se juntam) de volta para o lugar.
+// clique na própria fonte, com alguma letra fora do lugar, leva as letras (ou os cacos, que se juntam) de volta para o
+// lugar, com a página no topo; sobre elas, o cursor vira a mão.
 // As letras são desenhadas numa camada dentro do hero, por baixo da página. As contas são a partir do canto do hero
 // (preso no alto, é o canto da tela). O SVG da cena só mede onde cada letra mora. A física é a matter-js, com o
 // contorno convexo de cada letra e de cada caco (o furo do R e os vãos não contam no choque).
@@ -423,7 +424,12 @@ function Gasta({ gl, cor }: { gl: Glifo; cor: string }) {
 
 export function HeroPedras() {
     const id = useId().replace(/:/g, '');
+    // a rolagem suave, para o clique na fonte voltar ao topo (num ref: o laço do hero nasce antes dela)
     const lenis = useLenis();
+    const lenisRef = useRef(lenis);
+    useEffect(() => {
+        lenisRef.current = lenis;
+    }, [lenis]);
     const ref = useRef<HTMLElement>(null);
     const svg = useRef<SVGSVGElement>(null);
     const camada = useRef<HTMLDivElement>(null); // a camada das letras (cortada durante a entrada do nome)
@@ -1090,11 +1096,31 @@ export function HeroPedras() {
             ocioso(proxima);
         });
 
-        // o cursor, nas contas do hero (as letras soltas ficam sempre por cima da página, onde o hero aparece)
+        // o clique na própria fonte (uma letra, em casa ou solta, ou um caco), com alguma letra fora do lugar, leva todas
+        // de volta para o lugar, com a página no topo (era o clique na logo do cabeçalho, que saiu dele)
+        const naFonte = (pt: { x: number; y: number }) => {
+            if (!ps.some(p => p.estado === 'solta' || p.estado === 'quebrada')) return false;
+            const corpos = [...ps.filter(p => p.corpo && (p.estado === 'casa' || p.estado === 'solta')).map(p => p.corpo!), ...[...cacos.values()].map(k => k.corpo)];
+            return Matter.Query.point(corpos, pt).length > 0;
+        };
+        const clicar = (e: MouseEvent) => {
+            const o = sec.getBoundingClientRect();
+            if (!naFonte({ x: e.clientX - o.left, y: e.clientY - o.top })) return;
+            const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const rolagem = lenisRef.current;
+            if (rolagem) rolagem.scrollTo(0, { immediate: reduzido });
+            else window.scrollTo({ top: 0, behavior: reduzido ? 'auto' : 'smooth' });
+            recolher();
+            sec.style.cursor = '';
+        };
+        // o cursor, nas contas do hero (as letras soltas ficam sempre por cima da página, onde o hero aparece); sobre a
+        // fonte que o clique remonta, a mão
         const mover = (e: PointerEvent) => {
             const o = sec.getBoundingClientRect();
             ponteiro = { x: e.clientX - o.left, y: e.clientY - o.top };
             mexeu = performance.now() / 1000;
+            const mao = naFonte(ponteiro) ? 'pointer' : '';
+            if (sec.style.cursor !== mao) sec.style.cursor = mao;
         };
         const sair = () => {
             ponteiro = null;
@@ -1103,14 +1129,14 @@ export function HeroPedras() {
         sec.addEventListener('pointermove', mover);
         sec.addEventListener('pointerdown', mover);
         sec.addEventListener('pointerleave', sair);
-        window.addEventListener('fx-logo', recolher);
+        sec.addEventListener('click', clicar);
         return () => {
             vivo = false;
             cancelAnimationFrame(quadro);
             sec.removeEventListener('pointermove', mover);
             sec.removeEventListener('pointerdown', mover);
             sec.removeEventListener('pointerleave', sair);
-            window.removeEventListener('fx-logo', recolher);
+            sec.removeEventListener('click', clicar);
             Matter.Events.off(motor, 'collisionStart');
             Matter.Events.off(motor, 'collisionActive');
             Matter.Engine.clear(motor);
@@ -1146,25 +1172,13 @@ export function HeroPedras() {
                     role="img"
                     aria-label="Rune"
                 />
-                {/* o nome da fonte e, no lugar do "Desenhada por" (o da legenda da Feixen), a logo da Föeger assinando;
-                    o clique nela volta ao topo e recolhe as letras soltas (e os cacos), como o da logo que ficava no
-                    cabeçalho */}
+                {/* o nome da fonte e, no lugar do "Desenhada por" (o da legenda da Feixen), só a logo da Föeger,
+                    assinando */}
                 <div className="fx-hero-legenda">
                     <p>{HERO.nome}</p>
-                    <a
-                        className="fx-hero-logo"
-                        href="#"
-                        aria-label="Föeger"
-                        onClick={e => {
-                            e.preventDefault();
-                            const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                            if (lenis) lenis.scrollTo(0, { immediate: reduzido });
-                            else window.scrollTo({ top: 0, behavior: reduzido ? 'auto' : 'smooth' });
-                            window.dispatchEvent(new Event('fx-logo'));
-                        }}
-                    >
+                    <span className="fx-hero-logo">
                         <Logo />
-                    </a>
+                    </span>
                 </div>
             </div>
             {/* o desgaste para os canvas da escavação (em px do canvas; os dois se revezam a cada uso) */}

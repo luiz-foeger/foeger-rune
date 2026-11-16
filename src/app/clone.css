@@ -837,21 +837,11 @@ html:has([data-clone]) {
 .fx-hero-legenda p {
     margin: 0;
 }
-/* a logo da Föeger, na segunda linha da legenda (no lugar do "Desenhada por"), na cor dela; escurece sob o mouse */
+/* a logo da Föeger, só a assinatura, na segunda linha da legenda (no lugar do "Desenhada por"), na cor dela */
 .fx-hero-logo {
     display: block;
     width: fit-content;
     margin: 0.35em auto 0;
-    color: inherit;
-    transition: color 0.3s ease;
-}
-.fx-hero-logo:hover,
-.fx-hero-logo:focus-visible {
-    color: var(--tinta);
-}
-.fx-hero-logo:focus-visible {
-    outline: 1px solid currentColor;
-    outline-offset: 4px;
 }
 .fx-hero-logo svg {
     display: block;
