@@ -1170,7 +1170,7 @@ export function HeroPedras({ logoEmCima = false }: { logoEmCima?: boolean }) {
                     ref={svg}
                     className="fx-hero-palavra fx-hero-medida"
                     viewBox={`${-MARGEM} ${TOPO} ${largura} ${ALTURA}`}
-                    style={{ left: `calc(50% + ${esq.toFixed(1)} * var(--u))`, top: `calc((var(--base) + ${(TOPO * ESCALA).toFixed(2)}) * var(--u))`, width: u(largura * ESCALA), height: u(ALTURA * ESCALA) }}
+                    style={{ left: `calc(50% + ${esq.toFixed(1)} * var(--u))`, top: `calc((var(--base) + ${(TOPO * ESCALA).toFixed(2)}) * var(--u) + var(--desce, 0px))`, width: u(largura * ESCALA), height: u(ALTURA * ESCALA) }}
                     role="img"
                     aria-label="Rune"
                 />
