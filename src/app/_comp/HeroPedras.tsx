@@ -2,7 +2,9 @@
 
 import { Fragment, useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import Matter from 'matter-js';
+import { useLenis } from 'lenis/react';
 import { FiltroDesgaste, ajustarDesgaste, corte } from './Desgaste';
+import { Logo } from './LogoFoeger';
 import { HERO } from '../_lib/conteudo';
 import { LINHAS, PALAVRAS, type Glifo } from '../_lib/glifos';
 import { pausado } from '../_lib/movimento';
@@ -421,6 +423,7 @@ function Gasta({ gl, cor }: { gl: Glifo; cor: string }) {
 
 export function HeroPedras() {
     const id = useId().replace(/:/g, '');
+    const lenis = useLenis();
     const ref = useRef<HTMLElement>(null);
     const svg = useRef<SVGSVGElement>(null);
     const camada = useRef<HTMLDivElement>(null); // a camada das letras (cortada durante a entrada do nome)
@@ -1131,7 +1134,7 @@ export function HeroPedras() {
     const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
     const fino = RACHA_PX / ((escala || 1) * dpr);
     return (
-        <section ref={ref} className="fx-hero fx-hero-pedras" aria-label={HERO.legenda.join('. ')}>
+        <section ref={ref} className="fx-hero fx-hero-pedras" aria-label={`${HERO.nome}. ${HERO.assinatura}`}>
             {/* a cena (849 u de altura) fica no meio da tela e encolhe no celular, onde a palavra passaria da largura; o
                 SVG só mede onde as letras moram, e a legenda vai junto */}
             <div className="fx-hero-cena">
@@ -1143,11 +1146,26 @@ export function HeroPedras() {
                     role="img"
                     aria-label="Rune"
                 />
-                <p className="fx-hero-legenda">
-                    {HERO.legenda[0]}
-                    <br />
-                    {HERO.legenda[1]}
-                </p>
+                {/* o nome da fonte e, no lugar do "Desenhada por" (o da legenda da Feixen), a logo da Föeger assinando;
+                    o clique nela volta ao topo e recolhe as letras soltas (e os cacos), como o da logo que ficava no
+                    cabeçalho */}
+                <div className="fx-hero-legenda">
+                    <p>{HERO.nome}</p>
+                    <a
+                        className="fx-hero-logo"
+                        href="#"
+                        aria-label="Föeger"
+                        onClick={e => {
+                            e.preventDefault();
+                            const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                            if (lenis) lenis.scrollTo(0, { immediate: reduzido });
+                            else window.scrollTo({ top: 0, behavior: reduzido ? 'auto' : 'smooth' });
+                            window.dispatchEvent(new Event('fx-logo'));
+                        }}
+                    >
+                        <Logo />
+                    </a>
+                </div>
             </div>
             {/* o desgaste para os canvas da escavação (em px do canvas; os dois se revezam a cada uso) */}
             <svg width="0" height="0" aria-hidden style={{ position: 'absolute', pointerEvents: 'none' }}>

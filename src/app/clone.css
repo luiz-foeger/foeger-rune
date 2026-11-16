@@ -834,6 +834,31 @@ html:has([data-clone]) {
     line-height: 1.24;
     text-align: center;
 }
+.fx-hero-legenda p {
+    margin: 0;
+}
+/* a logo da Föeger, na segunda linha da legenda (no lugar do "Desenhada por"), na cor dela; escurece sob o mouse */
+.fx-hero-logo {
+    display: block;
+    width: fit-content;
+    margin: 0.35em auto 0;
+    color: inherit;
+    transition: color 0.3s ease;
+}
+.fx-hero-logo:hover,
+.fx-hero-logo:focus-visible {
+    color: var(--tinta);
+}
+.fx-hero-logo:focus-visible {
+    outline: 1px solid currentColor;
+    outline-offset: 4px;
+}
+.fx-hero-logo svg {
+    display: block;
+    height: 1.4em;
+    width: calc(1.4em * 2580 / 890);
+    overflow: visible;
+}
 
 /* 9. o que muda com variáveis (tamanhos que o celular ajusta) e a versão de celular */
 .fx-so-celular {
@@ -1129,7 +1154,8 @@ html:has([data-clone]) {
 }
 
 /* 11. o cabeçalho, nascido do cabeçalho do site principal (portfolio: rumo/fa.css, .fa-cab): fixo, transparente e em
-   modo diferença, com as duas páginas à esquerda, a logo da Föeger no meio e o "Baixar" da fonte à direita; as medidas
+   modo diferença, com as duas páginas à esquerda e o "Baixar" da fonte à direita (a logo da Föeger saiu para a legenda
+   do hero); as medidas
    são as de lá (--fa-r, a unidade do site). Fica num portal no body, fora do [data-clone]. O rodapé (seção 26) usa a
    mesma unidade, a mesma letra e o mesmo hover; a faixa de desfoque, a unidade (no celular, ela mede a barra) */
 .fx-cab,
@@ -1139,16 +1165,14 @@ html:has([data-clone]) {
     --power3Out: cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 .fx-cab {
-    --logo-h: max(18px, calc(2.7933 * var(--fa-r)));
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 100;
     display: grid;
-    /* a logo numa coluna do tamanho dela, e as laterais iguais: ela fica no meio, e as páginas cabem numa linha até
-       nos celulares de 320 px (com três colunas iguais, "A fonte" e "Na prática" quebravam abaixo de 342 px) */
-    grid-template-columns: 1fr auto 1fr;
+    /* as páginas à esquerda e o "Baixar" à direita (a logo, que ficava no meio, assina o nome no hero) */
+    grid-template-columns: 1fr auto;
     align-items: start;
     padding: max(18px, calc(4.8 * var(--fa-r)));
     color: #fff;
@@ -1229,18 +1253,6 @@ html:has([data-clone]) {
         transform: translateY(0);
     }
 }
-.fx-cab-logo {
-    justify-self: center;
-    display: block;
-    height: var(--logo-h);
-    width: calc(var(--logo-h) * 2580 / 890);
-}
-.fx-cab-logo svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-}
 .fx-cab-acao {
     justify-self: end;
     margin-top: calc(0.5 * var(--fa-r));
@@ -1266,13 +1278,14 @@ html:has([data-clone]) {
     -webkit-mask-image: linear-gradient(0deg, transparent, #000);
     mask-image: linear-gradient(0deg, transparent, #000);
 }
-/* no celular, a faixa fica só atrás da barra do cabeçalho (o respiro, a logo e o respiro de novo, as medidas do
-   .fx-cab), e não em 30% da tela: cheia até o pé dos textos e sumindo no respiro de baixo. Com os 30% (uns 250 px),
-   ela borrava os títulos das seções no alto da tela, como a 120 px, onde a navegação por âncora os deixa */
+/* no celular, a faixa fica só atrás da barra do cabeçalho (o respiro, a linha dos textos e o respiro de novo, as
+   medidas do .fx-cab e do .fx-cab-acao), e não em 30% da tela: cheia até o pé dos textos e sumindo no respiro de
+   baixo. Com os 30% (uns 250 px), ela borrava os títulos das seções no alto da tela, como a 120 px, onde a navegação
+   por âncora os deixa */
 @media (max-width: 899px) {
     .fx-desfoque {
         --respiro: max(18px, calc(4.8 * var(--fa-r)));
-        height: calc(2 * var(--respiro) + max(18px, calc(2.7933 * var(--fa-r))) + 5px);
+        height: calc(2 * var(--respiro) + max(13px, 0.88vw) + 0.5 * var(--fa-r) + 5px);
         -webkit-mask-image: linear-gradient(#000 calc(100% - var(--respiro)), transparent);
         mask-image: linear-gradient(#000 calc(100% - var(--respiro)), transparent);
     }

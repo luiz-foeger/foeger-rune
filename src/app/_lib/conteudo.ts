@@ -78,4 +78,5 @@ export const RODAPE = {
     ],
     credito: { texto: '© 2026 Luiz Föeger', href: 'https://luizfoeger.vercel.app' },
 };
-export const HERO = { legenda: ['Föeger Rune', 'Desenhada por Luiz Föeger'] };
+// a legenda do hero: o nome da fonte e a assinatura, que na tela é a logo da Föeger (o texto fica para o leitor de tela)
+export const HERO = { nome: 'Föeger Rune', assinatura: 'Desenhada por Luiz Föeger' };
