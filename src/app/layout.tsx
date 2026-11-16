@@ -26,12 +26,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        // a paleta escolhida pelo endereço (?paleta=azul) vai no html antes de a página aparecer
+        // antes de a página aparecer, vão no html a paleta escolhida pelo endereço (?paleta=azul) e, se a abertura da home
+        // já tocou nesta sessão (Abertura.tsx), a marca de que ela não toca de novo (a capa nem chega a aparecer)
         <html lang="pt-BR" suppressHydrationWarning>
             <head>
                 <script
                     dangerouslySetInnerHTML={{
-                        __html: "try{var p=new URLSearchParams(location.search).get('paleta');if(p)document.documentElement.dataset.paleta=p}catch(e){}",
+                        __html: "try{var p=new URLSearchParams(location.search).get('paleta');if(p)document.documentElement.dataset.paleta=p;if(sessionStorage.getItem('fx-abertura'))document.documentElement.setAttribute('data-sem-abertura','')}catch(e){}",
                     }}
                 />
             </head>

@@ -5656,8 +5656,12 @@ html[data-paleta='azul'] [data-clone] {
    cima do hero, num fundo liso. O nome que ela desenha é o do hero, no mesmo lugar: quando a tinta acaba, ela esmaece
    por cima dele (data-saindo) e o nome fica. Enquanto ela cobre, o cabeçalho e a faixa de desfoque esperam escondidos,
    e o painel do alfabeto (a régua de cima dele é a que aparece no pé da tela) espera mais embaixo; quando ela esmaece,
-   eles acendem e o painel sobe e acende, com a entrada dos outros painéis (.fx-revela). Com movimento reduzido, ela
-   não existe */
+   eles acendem e o painel sobe e acende, com a entrada dos outros painéis (.fx-revela). Ela só toca na primeira visita
+   da sessão: com o html marcado (data-sem-abertura, pelo script do layout ou por ela mesma), a capa nem aparece e nada
+   espera. Com movimento reduzido, ela não existe */
+html[data-sem-abertura] .fx-abertura {
+    display: none;
+}
 .fx-abertura {
     position: fixed;
     inset: 0;
@@ -5690,12 +5694,12 @@ html[data-paleta='azul'] [data-clone] {
         opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s,
         transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
 }
-html:has(.fx-abertura:not([data-saindo])) .fx-cab,
-html:has(.fx-abertura:not([data-saindo])) .fx-desfoque {
+html:not([data-sem-abertura]):has(.fx-abertura:not([data-saindo])) .fx-cab,
+html:not([data-sem-abertura]):has(.fx-abertura:not([data-saindo])) .fx-desfoque {
     opacity: 0;
     visibility: hidden;
 }
-html:has(.fx-abertura:not([data-saindo])) #alphabet {
+html:not([data-sem-abertura]):has(.fx-abertura:not([data-saindo])) #alphabet {
     opacity: 0;
     transform: translateY(calc(80 * var(--u)));
 }

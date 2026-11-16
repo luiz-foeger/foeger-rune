@@ -1,3 +1,4 @@
+import Abertura from './_comp/Abertura';
 import Alfabeto from './_comp/Alfabeto';
 import Caracteres from './_comp/Caracteres';
 import Digitada from './_comp/Digitada';
@@ -11,7 +12,8 @@ import Rodape from './_comp/Rodape';
 import Titulo from './_comp/Titulo';
 import { TITULO_CARACTERES, TITULO_ESTILOS, TITULO_LIVRO, TITULO_VARIACOES } from './_lib/conteudo';
 
-// a home da Föeger Rune, a fonte e a ideia: o cabeçalho preso no alto e o hero da palavra Rune; o alfabeto com os três
+// a home da Föeger Rune, a fonte e a ideia: na primeira visita da sessão, a abertura (o Rune em linhas de construção
+// que se enche de tinta e vira o hero); o cabeçalho preso no alto e o hero da palavra Rune; o alfabeto com os três
 // desgastes e a frase digitada; a seção do desgaste (os cartões de perto, movidos pelo mesmo σ); o "Três Estilos" e o
 // testador (as faixas de cada estilo com as peças em uso, a seção escura e o playground ficam na página "Na prática",
 // com o link no cabeçalho); os caracteres; as variações; e, no fim, o livro do espécime e o PDF
@@ -20,6 +22,7 @@ import { TITULO_CARACTERES, TITULO_ESTILOS, TITULO_LIVRO, TITULO_VARIACOES } fro
 export default function Pagina() {
     return (
         <>
+            <Abertura />
             <Cabecalho />
             <HeroPedras />
             <main className="fx-corpo">

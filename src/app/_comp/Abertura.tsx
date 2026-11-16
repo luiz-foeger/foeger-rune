@@ -9,11 +9,13 @@ import { LINHAS, PALAVRAS, type Ponto } from '../_lib/glifos';
 // da Föeger: a câmera começa colada no u, com a palavra em linhas de construção (o contorno fino do Cut, as guias das
 // linhas da fonte, com as medidas, e as das bordas de cada letra atravessando a tela, e as quinas marcadas, uma cor por
 // letra), e se afasta até a palavra inteira; a tinta sobe por dentro das letras nas cores dos três estilos e no preto
-// por último. A palavra fica onde o "Rune" do hero mora (o SVG de medida dele) e
-// não sai dali: cheia de preto, ela é o próprio nome do hero, e a capa esmaece por cima dele (o hero não faz a entrada
-// dele nem gasta letras enquanto ela está na tela, HeroPedras.tsx). Cobre a página desde o primeiro quadro; o
-// cabeçalho espera escondido e o painel do alfabeto, embaixo, sobe e acende quando ela sai (clone.css, seção 28).
-// Ela não pula: enquanto ela está na tela, a página fica parada. Com movimento reduzido, ela não existe. ~4 s
+// por último. A palavra fica onde o "Rune" do hero mora (o SVG de medida dele) e não sai dali: cheia de preto, ela é o
+// próprio nome do hero, e a capa esmaece por cima dele (o hero não faz a entrada dele nem gasta letras enquanto ela
+// está na tela, HeroPedras.tsx). Cobre a página desde o primeiro quadro; o cabeçalho espera escondido e o painel do
+// alfabeto, embaixo, sobe e acende quando ela sai (clone.css, seção 28). Ela não pula: enquanto ela está na tela, a
+// página fica parada. Toca só na primeira visita da sessão (sessionStorage 'fx-abertura'; nas outras, o script do
+// layout marca o html com data-sem-abertura antes de a página aparecer, e a capa nem chega a aparecer), e não toca para
+// quem chega pela troca de página (a cortina, data-trocando) nem com movimento reduzido. ~4 s
 const palavra = PALAVRAS.Rune;
 const SAIDA = 3.45; // a tinta preta cobriu tudo: daqui a capa esmaece
 const ESMAECE = 0.7; // o tempo da capa sumindo (o do clone.css, com folga)
@@ -61,10 +63,28 @@ export default function Abertura() {
     const pontos = useRef<SVGGElement>(null);
     const ondas = useRef<(SVGPathElement | null)[]>([]);
 
-    // antes do primeiro quadro: volta ao topo e mede onde o "Rune" do hero mora
+    // antes do primeiro quadro: decide se ela toca e, se tocar, volta ao topo e mede onde o "Rune" do hero mora. Quando
+    // não toca, o html leva a marca (data-sem-abertura) antes de o hero começar, para ele fazer a entrada dele
+    // (a decisão fica guardada: em desenvolvimento o React roda o efeito duas vezes, e na segunda a marca da sessão já
+    // estaria lá)
+    const toca = useRef<boolean | null>(null);
     useLayoutEffect(() => {
+        const html = document.documentElement;
         const medida = document.querySelector<SVGSVGElement>('.fx-hero-medida');
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !medida) {
+        if (toca.current === null) {
+            let jaTocou = html.hasAttribute('data-sem-abertura');
+            try {
+                jaTocou ||= !!sessionStorage.getItem('fx-abertura');
+            } catch {}
+            toca.current = !(jaTocou || html.hasAttribute('data-trocando') || window.matchMedia('(prefers-reduced-motion: reduce)').matches || !medida);
+            if (toca.current) {
+                try {
+                    sessionStorage.setItem('fx-abertura', '1');
+                } catch {}
+            }
+        }
+        if (!toca.current || !medida) {
+            html.setAttribute('data-sem-abertura', '');
             setAcabou(true);
             return;
         }

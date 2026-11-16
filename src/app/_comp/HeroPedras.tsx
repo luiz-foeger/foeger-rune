@@ -162,7 +162,7 @@ const suave = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2,
 // com movimento reduzido, não há. Se alguém rolar e soltar uma letra no meio, a entrada acaba na hora. Com a abertura
 // na página (Abertura.tsx), também não há: o nome dela é este, no mesmo lugar, e ela esmaece por cima dele
 const ENTRADA_FORA = 0.94; // quanto da altura da letra começa escondido
-const comAbertura = () => !!document.querySelector('.fx-abertura');
+const comAbertura = () => !document.documentElement.hasAttribute('data-sem-abertura') && !!document.querySelector('.fx-abertura');
 const ENTRADA_SEGURA = 0.3;
 const ENTRADA_SOBE = 1.2;
 const power3Out = (x: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 4);
