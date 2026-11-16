@@ -1358,20 +1358,17 @@ html[data-paleta='azul'] [data-clone] {
 /* a palavra no meio da tela: --base é a linha de base dela na cena, em u (a tinta vai de 413 u acima dela, o topo do R,
    a 13 u abaixo, o pé do e, então o meio fica 200 u acima), e a logo da Föeger fica pendurada embaixo, a 93 u da base.
    No celular, a cena encolhe (0,56) em volta de 55% da altura dela, e o meio da tela cai em 391,1 u da cena. Na opção
-   em estudo (/intro?logo=cima), a logo vai em cima e maior (2,1 da letra da legenda, L), a meia altura dela da palavra
-   (L/2, em qualquer largura: no celular a letra da legenda é fixa em px), e o bloco das duas fica no meio: a palavra
-   desce 0,75 L (--desce) e a logo começa 0,75 L acima do topo que o bloco sem ela teria (213,15 u acima do meio) */
+   em estudo (/intro?logo=cima), a logo vai em cima e maior (2,1 da letra da legenda, L) e desce até o que está embaixo
+   dela, o topo do u (291 u acima da base, a altura do x; o R, ao lado, sobe mais), a meia altura dela (L/2, em qualquer
+   largura: no celular a letra da legenda é fixa em px); a palavra continua no meio */
 .fx-hero-pedras {
     --base: 624.5;
 }
 .fx-hero-pedras .fx-hero-legenda {
     top: calc((var(--base) + 93) * var(--u));
 }
-.fx-hero-pedras[data-logo='cima'] {
-    --desce: calc(1.575 * var(--t-sec));
-}
 .fx-hero-pedras[data-logo='cima'] .fx-hero-legenda {
-    top: calc(211.35 * var(--u) - 1.575em);
+    top: calc((var(--base) - 291.05) * var(--u) - 3.15em);
 }
 .fx-hero-pedras[data-logo='cima'] .fx-hero-logo svg {
     height: 2.1em;
@@ -1380,12 +1377,6 @@ html[data-paleta='azul'] [data-clone] {
 @media (max-width: 899px) {
     .fx-hero-pedras {
         --base: 591.1;
-    }
-    .fx-hero-pedras[data-logo='cima'] {
-        --desce: calc(1.575 * 19px);
-    }
-    .fx-hero-pedras[data-logo='cima'] .fx-hero-legenda {
-        top: calc(177.95 * var(--u) - 1.575em);
     }
 }
 .fx-hero-medida {
